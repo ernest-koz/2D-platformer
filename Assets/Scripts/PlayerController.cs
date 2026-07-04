@@ -30,6 +30,7 @@ public class PlayerController : MonoBehaviour
     private float _jumpBufferTimer;
     private float _horizontalVelSmoothing;
     private bool _facingRight = true;
+    private bool _isDead;
 
     public bool IsGrounded => _isGrounded;
     public bool IsMoving => Mathf.Abs(_horizontalInput) > 0.01f;
@@ -53,9 +54,17 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    public void SetDead(bool dead)
+    {
+        _isDead = dead;
+        if (dead && _rb != null)
+            _rb.velocity = Vector2.zero;
+    }
+
     private void Update()
     {
-        // === Movement input (KeyCode = layout-independent) ===
+        if (_isDead) return;
+
         _horizontalInput = 0f;
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))  _horizontalInput -= 1f;
         if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) _horizontalInput += 1f;
@@ -88,7 +97,12 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        // Ground check
+        if (_isDead)
+        {
+            _rb.velocity = Vector2.zero;
+            return;
+        }
+
         _isGrounded = groundCheck != null &&
             Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
 

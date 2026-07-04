@@ -7,8 +7,8 @@ public class PlayerHealth : MonoBehaviour
     [SerializeField] private float invincibilityTime = 1.0f;
     [SerializeField] private Vector3 spawnPoint;
 
-    [Header("Stomp threshold (sync with PlayerCombat.IsFalling)")]
-    [SerializeField] private float minStompVelocity = -0.5f;
+    [Header("Falling death")]
+    [SerializeField] private float deathY = -20f;
 
     [Header("UI (optional)")]
     [SerializeField] private Text healthText;
@@ -19,25 +19,33 @@ public class PlayerHealth : MonoBehaviour
     private SpriteRenderer _spriteRenderer;
     private PlayerCombat _combat;
     private Rigidbody2D _rb;
+    private Animator _animator;
+    private PlayerController _controller;
+    private bool _isDead;
 
     public int CurrentHealth => _currentHealth;
     public int MaxHealth => maxHealth;
-    public bool IsAlive => _currentHealth > 0;
+    public bool IsAlive => _currentHealth > 0 && !_isDead;
 
-    public static event System.Action OnPlayerRespawn;
+    private static readonly int HurtTriggerHash = Animator.StringToHash("Hurt");
+    private static readonly int DieTriggerHash = Animator.StringToHash("Die");
 
     private void Awake()
     {
         _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         _combat = GetComponent<PlayerCombat>();
         _rb = GetComponent<Rigidbody2D>();
+        _animator = GetComponent<Animator>();
+        _controller = GetComponent<PlayerController>();
         _currentHealth = maxHealth;
         spawnPoint = transform.position;
-        UpdateUI();
+        UpdateHealthUI();
     }
 
     private void Update()
     {
+        CheckFallingDeath();
+
         if (_invincibilityTimer > 0f)
         {
             _invincibilityTimer -= Time.deltaTime;
@@ -60,28 +68,43 @@ public class PlayerHealth : MonoBehaviour
         _invincibilityTimer = invincibilityTime;
 
         if (_combat != null) _combat.ApplyKnockbackFrom(damageSourcePosition);
+        if (_animator != null) _animator.SetTrigger(HurtTriggerHash);
+        UpdateHealthUI();
 
-        UpdateUI();
+        if (_currentHealth <= 0) Die();
+    }
 
-        if (_currentHealth <= 0) Respawn();
+    private void Die()
+    {
+        if (_isDead) return;
+        _isDead = true;
+
+        if (_animator != null) _animator.SetTrigger(DieTriggerHash);
+        if (_controller != null) _controller.SetDead(true);
+        if (_rb != null) _rb.velocity = Vector2.zero;
+
+        if (GameManager.Instance != null)
+            GameManager.Instance.GameOver();
+    }
+
+    private void CheckFallingDeath()
+    {
+        if (_isDead) return;
+        if (transform.position.y < deathY)
+        {
+            _isDead = true;
+            if (GameManager.Instance != null)
+                GameManager.Instance.GameOver();
+        }
     }
 
     public void Heal(int amount)
     {
         _currentHealth = Mathf.Min(_currentHealth + amount, maxHealth);
-        UpdateUI();
+        UpdateHealthUI();
     }
 
-    public void Respawn()
-    {
-        _currentHealth = maxHealth;
-        if (_rb != null) _rb.velocity = Vector2.zero;
-        transform.position = spawnPoint;
-        UpdateUI();
-        OnPlayerRespawn?.Invoke();
-    }
-
-    private void UpdateUI()
+    private void UpdateHealthUI()
     {
         if (healthText != null)
             healthText.text = string.Format(healthFormat, _currentHealth, maxHealth);
@@ -93,10 +116,8 @@ public class PlayerHealth : MonoBehaviour
         var enemy = col.collider.GetComponentInParent<Enemy>();
         if (enemy == null || enemy.IsDead) return;
 
-        // If the player is mostly above the enemy and falling, treat as stomp (handled in PlayerCombat)
-        // threshold matches PlayerCombat.IsFalling
         bool playerAboveAndFalling =
-            transform.position.y > col.transform.position.y + 0.4f && _rb.velocity.y < minStompVelocity;
+            transform.position.y > col.transform.position.y + 0.4f && _rb.velocity.y < -0.5f;
         if (playerAboveAndFalling) return;
 
         TakeDamage(col.transform.position);

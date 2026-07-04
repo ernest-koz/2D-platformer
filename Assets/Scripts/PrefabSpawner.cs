@@ -10,17 +10,9 @@ public class PrefabSpawner : MonoBehaviour
     [Tooltip("Local scale applied to each spawned instance.")]
     [SerializeField] private Vector3 spawnScale = Vector3.one;
 
-    private readonly List<GameObject> _instances = new List<GameObject>();
-
     private void Awake()
     {
         SpawnAll();
-        PlayerHealth.OnPlayerRespawn += RespawnAll;
-    }
-
-    private void OnDestroy()
-    {
-        PlayerHealth.OnPlayerRespawn -= RespawnAll;
     }
 
     private void SpawnAll()
@@ -31,15 +23,6 @@ public class PrefabSpawner : MonoBehaviour
             var go = Instantiate(prefab, p, Quaternion.identity);
             go.transform.SetParent(transform, true);
             go.transform.localScale = spawnScale;
-            _instances.Add(go);
         }
-    }
-
-    private void RespawnAll()
-    {
-        foreach (var go in _instances)
-            if (go != null) Destroy(go);
-        _instances.Clear();
-        SpawnAll();
     }
 }
