@@ -1,14 +1,15 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class PrefabSpawner : MonoBehaviour
 {
     [Tooltip("Prefab to instantiate at every position in spawnPoints.")]
-    [SerializeField] private GameObject prefab;
+    [FormerlySerializedAs("prefab")] [SerializeField] private GameObject _prefab;
     [Tooltip("World positions where instances should appear.")]
-    [SerializeField] private Vector3[] spawnPoints;
+    [FormerlySerializedAs("spawnPoints")] [SerializeField] private Vector3[] _spawnPoints;
     [Tooltip("Local scale applied to each spawned instance.")]
-    [SerializeField] private Vector3 spawnScale = Vector3.one;
+    [FormerlySerializedAs("spawnScale")] [SerializeField] private Vector3 _spawnScale = Vector3.one;
 
     private void Awake()
     {
@@ -17,12 +18,13 @@ public class PrefabSpawner : MonoBehaviour
 
     private void SpawnAll()
     {
-        if (prefab == null) return;
-        foreach (var p in spawnPoints)
+        if (_prefab == null) return;
+
+        foreach (var p in _spawnPoints)
         {
-            var go = Instantiate(prefab, p, Quaternion.identity);
+            var go = Instantiate(_prefab, p, Quaternion.identity);
             go.transform.SetParent(transform, true);
-            go.transform.localScale = spawnScale;
+            go.transform.localScale = _spawnScale;
         }
     }
 }

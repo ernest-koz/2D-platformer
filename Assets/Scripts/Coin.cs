@@ -1,9 +1,10 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [RequireComponent(typeof(Collider2D))]
 public class Coin : MonoBehaviour, ICollectible
 {
-    [SerializeField] private int value = 1;
+    [FormerlySerializedAs("value")] [SerializeField] private int _value = 1;
 
     private void Awake()
     {
@@ -11,16 +12,18 @@ public class Coin : MonoBehaviour, ICollectible
         col.isTrigger = true;
     }
 
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Player") == false) return;
+
+        Collect(other.gameObject);
+    }
+
     public void Collect(GameObject collector)
     {
         if (GameManager.Instance != null)
-            GameManager.Instance.AddCoin(value);
-        Destroy(gameObject);
-    }
+            GameManager.Instance.AddCoin(_value);
 
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (!other.CompareTag("Player")) return;
-        Collect(other.gameObject);
+        Destroy(gameObject);
     }
 }

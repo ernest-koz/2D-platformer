@@ -1,24 +1,26 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [RequireComponent(typeof(PlayerController))]
 [RequireComponent(typeof(PlayerHealth))]
 public class PlayerCombat : MonoBehaviour
 {
     [Header("Melee attack")]
-    [SerializeField] private float attackRange = 1.1f;
-    [SerializeField] private float attackRadius = 0.55f;
-    [SerializeField] private int attackDamage = 1;
-    [SerializeField] private float attackCooldown = 0.45f;
-    [SerializeField] private LayerMask enemyLayer;
+    [FormerlySerializedAs("attackRange")] [SerializeField] private float _attackRange = 1.1f;
+    [FormerlySerializedAs("attackRadius")] [SerializeField] private float _attackRadius = 0.55f;
+    [FormerlySerializedAs("attackDamage")] [SerializeField] private int _attackDamage = 1;
+    [FormerlySerializedAs("attackCooldown")] [SerializeField] private float _attackCooldown = 0.45f;
+    [FormerlySerializedAs("enemyLayer")] [SerializeField] private LayerMask _enemyLayer;
 
     [Header("Stomp")]
-    [SerializeField] private float stompBounceForce = 14f;
-    [SerializeField] private float stompCheckRadius = 0.35f;
-    [SerializeField] private Transform stompCheck; // place at player's feet
+    [FormerlySerializedAs("stompBounceForce")] [SerializeField] private float _stompBounceForce = 14f;
+    [FormerlySerializedAs("stompCheckRadius")] [SerializeField] private float _stompCheckRadius = 0.35f;
+    [FormerlySerializedAs("stompCheck")] [SerializeField] private Transform _stompCheck;
 
     [Header("Knockback on hit")]
-    [SerializeField] private float selfKnockbackX = 4.5f;
-    [SerializeField] private float selfKnockbackY = 7.5f;
+    [FormerlySerializedAs("selfKnockbackX")] [SerializeField] private float _selfKnockbackX = 4.5f;
+    [FormerlySerializedAs("selfKnockbackY")] [SerializeField] private float _selfKnockbackY = 7.5f;
+    [FormerlySerializedAs("meleeSelfKnockbackX")] [SerializeField] private float _meleeSelfKnockbackX = 1.5f;
 
     private PlayerController _controller;
     private PlayerHealth _health;
@@ -35,66 +37,93 @@ public class PlayerCombat : MonoBehaviour
         _animator = GetComponent<Animator>();
         _rb = GetComponent<Rigidbody2D>();
 
-        if (stompCheck == null)
+        if (_stompCheck == null)
         {
             var go = new GameObject("StompCheck");
             go.transform.SetParent(transform, false);
             go.transform.localPosition = new Vector3(0f, -0.95f, 0f);
-            stompCheck = go.transform;
+            _stompCheck = go.transform;
         }
     }
 
     private void Update()
     {
         bool attackKey = Input.GetKeyDown(KeyCode.F) || Input.GetMouseButtonDown(0);
+
         if (attackKey) TryAttack();
     }
 
     private void FixedUpdate()
     {
-        // Stomp detection: only when falling
-        if (_controller.IsFalling && stompCheck != null)
+        if (_controller.IsFalling && _stompCheck != null)
         {
-            var hit = Physics2D.OverlapCircle(stompCheck.position, stompCheckRadius, enemyLayer);
+            var hit = Physics2D.OverlapCircle(_stompCheck.position, _stompCheckRadius, _enemyLayer);
+
             if (hit != null)
             {
                 var enemy = hit.GetComponentInParent<Enemy>();
-                if (enemy != null && !enemy.IsDead)
+
+                if (enemy != null && enemy.IsDead == false)
                 {
-                    enemy.Die(); // instant kill on stomp (Mario-style)
-                    Bounce(stompBounceForce);
+                    enemy.Die();
+                    Bounce(_stompBounceForce);
                 }
             }
         }
     }
 
+    private void OnDrawGizmosSelected()
+    {
+        if (_stompCheck != null)
+        {
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawWireSphere(_stompCheck.position, _stompCheckRadius);
+        }
+
+        Vector2 dir = _controller != null ? _controller.GetFacingDirection() : Vector2.right;
+        Vector2 origin = (Vector2)transform.position + dir * (_attackRange * 0.5f);
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(origin, _attackRadius);
+    }
+
+    public void ApplyKnockbackFrom(Vector2 source)
+    {
+        if (_rb == null) return;
+
+        Vector2 dir = ((Vector2)transform.position - source).normalized;
+        _rb.velocity = new Vector2(dir.x * _selfKnockbackX, _selfKnockbackY);
+    }
+
     private void TryAttack()
     {
-        if (Time.time - _lastAttackTime < attackCooldown) return;
-        if (!_health.IsAlive) return;
+        if (Time.time - _lastAttackTime < _attackCooldown) return;
+
+        if (_health.IsAlive == false) return;
+
         _lastAttackTime = Time.time;
 
         if (_animator != null) _animator.SetTrigger(AttackTriggerHash);
 
         Vector2 dir = _controller.GetFacingDirection();
-        Vector2 origin = (Vector2)transform.position + dir * (attackRange * 0.5f);
+        Vector2 origin = (Vector2)transform.position + dir * (_attackRange * 0.5f);
 
-        var hits = Physics2D.CircleCastAll(origin, attackRadius, dir, attackRange * 0.5f, enemyLayer);
+        var hits = Physics2D.CircleCastAll(origin, _attackRadius, dir, _attackRange * 0.5f, _enemyLayer);
         bool hitSomething = false;
+
         foreach (var h in hits)
         {
             var enemy = h.collider.GetComponentInParent<Enemy>();
-            if (enemy != null && !enemy.IsDead)
+
+            if (enemy != null && enemy.IsDead == false)
             {
-                enemy.TakeDamage(attackDamage, transform.position);
+                enemy.TakeDamage(_attackDamage, transform.position);
                 hitSomething = true;
             }
         }
 
-        // Apply small knockback to self if we hit something
         if (hitSomething && _rb != null)
         {
-            _rb.velocity = new Vector2(-dir.x * 1.5f, _rb.velocity.y);
+            _rb.velocity = new Vector2(-dir.x * _meleeSelfKnockbackX, _rb.velocity.y);
         }
     }
 
@@ -102,25 +131,5 @@ public class PlayerCombat : MonoBehaviour
     {
         if (_rb != null)
             _rb.velocity = new Vector2(_rb.velocity.x, force);
-    }
-
-    public void ApplyKnockbackFrom(Vector2 source)
-    {
-        if (_rb == null) return;
-        Vector2 dir = ((Vector2)transform.position - source).normalized;
-        _rb.velocity = new Vector2(dir.x * selfKnockbackX, selfKnockbackY);
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        if (stompCheck != null)
-        {
-            Gizmos.color = Color.cyan;
-            Gizmos.DrawWireSphere(stompCheck.position, stompCheckRadius);
-        }
-        Vector2 dir = _controller != null ? _controller.GetFacingDirection() : Vector2.right;
-        Vector2 origin = (Vector2)transform.position + dir * (attackRange * 0.5f);
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(origin, attackRadius);
     }
 }
