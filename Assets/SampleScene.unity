@@ -5246,7 +5246,7 @@ MonoBehaviour:
   _invincibilityTime: 1
   _spawnPoint: {x: 0, y: 0, z: 0}
   _deathY: -20
-  _healthText: {fileID: 0}
+  _healthText: {fileID: 520256704}
   _healthFormat: 'HP: {0}/{1}'
   _gameSession: {fileID: 693280909}
 --- !u!61 &1729192362
