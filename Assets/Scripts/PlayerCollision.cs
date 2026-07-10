@@ -7,17 +7,17 @@ public class PlayerCollision : MonoBehaviour
     private const float StompHeightThreshold = 0.4f;
     private const float FallSpeedThreshold = 0.5f;
 
+    [SerializeField] private GameSession _gameSession;
+
     private PlayerHealth _playerHealth;
     private PlayerCombat _playerCombat;
     private Rigidbody2D _rigidbody;
-    private GameSession _gameSession;
 
     private void Awake()
     {
         _playerHealth = GetComponent<PlayerHealth>();
         _playerCombat = GetComponent<PlayerCombat>();
         _rigidbody = GetComponent<Rigidbody2D>();
-        _gameSession = GetComponent<GameSession>();
     }
 
     private void OnTriggerEnter2D(Collider2D other)

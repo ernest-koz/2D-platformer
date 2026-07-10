@@ -17,6 +17,7 @@ public class EnemyAwareness : MonoBehaviour
 
     private State _state = State.Patrol;
     private Animator _animator;
+    private Rigidbody2D _rigidbody;
 
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
     private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
@@ -24,6 +25,7 @@ public class EnemyAwareness : MonoBehaviour
     private void Awake()
     {
         _animator = GetComponentInChildren<Animator>();
+        _rigidbody = GetComponent<Rigidbody2D>();
 
         if (_death != null)
         {
@@ -56,9 +58,9 @@ public class EnemyAwareness : MonoBehaviour
             return;
         }
 
-        if (_animator != null && _locomotion != null)
+        if (_animator != null && _rigidbody != null)
         {
-            _animator.SetFloat(SpeedHash, Mathf.Abs(_locomotion.FacingDirection));
+            _animator.SetFloat(SpeedHash, Mathf.Abs(_rigidbody.velocity.x));
         }
     }
 
