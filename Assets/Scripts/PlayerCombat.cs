@@ -52,7 +52,7 @@ public class PlayerCombat : MonoBehaviour
 
     private void Update()
     {
-        if (_input.AttackPressed)
+        if (_input != null && _input.AttackPressed)
         {
             TryAttack();
         }

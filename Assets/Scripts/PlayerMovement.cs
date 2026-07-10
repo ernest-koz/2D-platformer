@@ -56,6 +56,11 @@ public class PlayerMovement : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody2D>();
         _animator = GetComponent<Animator>();
 
+        if (_input == null)
+        {
+            Debug.LogError($"PlayerMovement: PlayerInput not assigned on {gameObject.name}. Drag PlayerInput component in the inspector.", gameObject);
+        }
+
         if (_groundCheck == null)
         {
             var groundCheckGameObject = new GameObject("GroundCheck");
@@ -90,14 +95,14 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        _horizontalInput = _input.HorizontalInput;
+        _horizontalInput = _input != null ? _input.HorizontalInput : 0f;
 
-        if (_input.JumpPressed)
+        if (_input != null && _input.JumpPressed)
         {
             _jumpBufferTimer = _jumpBufferTime;
         }
 
-        _jumpHeld = _input.JumpHeld;
+        _jumpHeld = _input != null && _input.JumpHeld;
 
         _jumpBufferTimer -= Time.deltaTime;
         _coyoteTimer = _isGrounded ? _coyoteTime : _coyoteTimer - Time.deltaTime;

@@ -54,7 +54,7 @@ public class GameSession : MonoBehaviour
 
     private void Update()
     {
-        if (_input.RestartPressed && (_state == GameState.GameOver || _state == GameState.Finish))
+        if (_input != null && _input.RestartPressed && (_state == GameState.GameOver || _state == GameState.Finish))
         {
             RestartLevel();
             return;
