@@ -1,29 +1,20 @@
+using System;
 using UnityEngine;
-using UnityEngine.Serialization;
 
-[RequireComponent(typeof(Collider2D))]
-public class Coin : MonoBehaviour, ICollectible
+public class Coin : MonoBehaviour
 {
-    [FormerlySerializedAs("value")] [SerializeField] private int _value = 1;
+    public event Action<Coin> Collected;
 
-    private void Awake()
-    {
-        var col = GetComponent<Collider2D>();
-        col.isTrigger = true;
-    }
-
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.CompareTag("Player") == false) return;
-
-        Collect(other.gameObject);
-    }
+    [SerializeField] private int _value = 1;
+    [SerializeField] private GameSession _gameSession;
 
     public void Collect(GameObject collector)
     {
-        if (GameManager.Instance != null)
-            GameManager.Instance.AddCoin(_value);
+        if (_gameSession != null)
+        {
+            _gameSession.AddCoin(_value);
+        }
 
-        Destroy(gameObject);
+        Collected?.Invoke(this);
     }
 }

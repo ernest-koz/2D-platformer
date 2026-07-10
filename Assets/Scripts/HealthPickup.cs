@@ -1,33 +1,27 @@
+using System;
 using UnityEngine;
-using UnityEngine.Serialization;
 
-[RequireComponent(typeof(Collider2D))]
-public class HealthPickup : MonoBehaviour, ICollectible
+public class HealthPickup : MonoBehaviour
 {
-    [FormerlySerializedAs("healAmount")] [SerializeField] private int _healAmount = 1;
+    public event Action<HealthPickup> Collected;
 
-    private void Awake()
-    {
-        var col = GetComponent<Collider2D>();
-        col.isTrigger = true;
-    }
-
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.CompareTag("Player") == false) return;
-
-        Collect(other.gameObject);
-    }
+    [SerializeField] private int _healAmount = 1;
 
     public void Collect(GameObject collector)
     {
-        var health = collector.GetComponentInParent<PlayerHealth>();
+        var playerHealth = collector.GetComponent<PlayerHealth>();
 
-        if (health == null || health.IsAlive == false) return;
+        if (playerHealth == null || playerHealth.IsAlive == false)
+        {
+            return;
+        }
 
-        if (health.CurrentHealth >= health.MaxHealth) return;
+        if (playerHealth.CurrentHealth >= playerHealth.MaxHealth)
+        {
+            return;
+        }
 
-        health.Heal(_healAmount);
-        Destroy(gameObject);
+        playerHealth.Heal(_healAmount);
+        Collected?.Invoke(this);
     }
 }

@@ -1,71 +1,76 @@
 using UnityEngine;
-using UnityEngine.Serialization;
 
-[RequireComponent(typeof(PlayerController))]
+[RequireComponent(typeof(PlayerMovement))]
 [RequireComponent(typeof(PlayerHealth))]
 public class PlayerCombat : MonoBehaviour
 {
     [Header("Melee attack")]
-    [FormerlySerializedAs("attackRange")] [SerializeField] private float _attackRange = 1.1f;
-    [FormerlySerializedAs("attackRadius")] [SerializeField] private float _attackRadius = 0.55f;
-    [FormerlySerializedAs("attackDamage")] [SerializeField] private int _attackDamage = 1;
-    [FormerlySerializedAs("attackCooldown")] [SerializeField] private float _attackCooldown = 0.45f;
-    [FormerlySerializedAs("enemyLayer")] [SerializeField] private LayerMask _enemyLayer;
+    [SerializeField] private float _attackRange = 1.1f;
+    [SerializeField] private float _attackRadius = 0.55f;
+    [SerializeField] private float _attackCooldown = 0.45f;
+    [SerializeField] private LayerMask _enemyLayer;
 
     [Header("Stomp")]
-    [FormerlySerializedAs("stompBounceForce")] [SerializeField] private float _stompBounceForce = 14f;
-    [FormerlySerializedAs("stompCheckRadius")] [SerializeField] private float _stompCheckRadius = 0.35f;
-    [FormerlySerializedAs("stompCheck")] [SerializeField] private Transform _stompCheck;
+    [SerializeField] private float _stompBounceForce = 14f;
+    [SerializeField] private float _stompCheckRadius = 0.35f;
+    [SerializeField] private Transform _stompCheck;
 
     [Header("Knockback on hit")]
-    [FormerlySerializedAs("selfKnockbackX")] [SerializeField] private float _selfKnockbackX = 4.5f;
-    [FormerlySerializedAs("selfKnockbackY")] [SerializeField] private float _selfKnockbackY = 7.5f;
-    [FormerlySerializedAs("meleeSelfKnockbackX")] [SerializeField] private float _meleeSelfKnockbackX = 1.5f;
+    [SerializeField] private float _selfKnockbackX = 4.5f;
+    [SerializeField] private float _selfKnockbackY = 7.5f;
+    [SerializeField] private float _meleeSelfKnockbackX = 1.5f;
 
-    private PlayerController _controller;
-    private PlayerHealth _health;
+    [Header("References")]
+    [SerializeField] private PlayerInput _input;
+
+    private const float StompCheckVerticalOffset = -0.95f;
+    private const float AttackRangeHalfFraction = 0.5f;
+
+    private PlayerMovement _playerMovement;
+    private PlayerHealth _playerHealth;
     private Animator _animator;
-    private Rigidbody2D _rb;
+    private Rigidbody2D _rigidbody;
     private float _lastAttackTime = -999f;
 
     private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
 
     private void Awake()
     {
-        _controller = GetComponent<PlayerController>();
-        _health = GetComponent<PlayerHealth>();
+        _playerMovement = GetComponent<PlayerMovement>();
+        _playerHealth = GetComponent<PlayerHealth>();
         _animator = GetComponent<Animator>();
-        _rb = GetComponent<Rigidbody2D>();
+        _rigidbody = GetComponent<Rigidbody2D>();
 
         if (_stompCheck == null)
         {
-            var go = new GameObject("StompCheck");
-            go.transform.SetParent(transform, false);
-            go.transform.localPosition = new Vector3(0f, -0.95f, 0f);
-            _stompCheck = go.transform;
+            var stompCheckGameObject = new GameObject("StompCheck");
+            stompCheckGameObject.transform.SetParent(transform, false);
+            stompCheckGameObject.transform.localPosition = new Vector3(0f, StompCheckVerticalOffset, 0f);
+            _stompCheck = stompCheckGameObject.transform;
         }
     }
 
     private void Update()
     {
-        bool attackKey = Input.GetKeyDown(KeyCode.F) || Input.GetMouseButtonDown(0);
-
-        if (attackKey) TryAttack();
+        if (_input.AttackPressed)
+        {
+            TryAttack();
+        }
     }
 
     private void FixedUpdate()
     {
-        if (_controller.IsFalling && _stompCheck != null)
+        if (_playerMovement.IsFalling && _stompCheck != null)
         {
             var hit = Physics2D.OverlapCircle(_stompCheck.position, _stompCheckRadius, _enemyLayer);
 
             if (hit != null)
             {
-                var enemy = hit.GetComponentInParent<Enemy>();
+                var enemyDeath = hit.GetComponentInParent<EnemyDeath>();
 
-                if (enemy != null && enemy.IsDead == false)
+                if (enemyDeath != null && enemyDeath.IsDead == false)
                 {
-                    enemy.Die();
+                    enemyDeath.Die();
                     Bounce(_stompBounceForce);
                 }
             }
@@ -80,56 +85,79 @@ public class PlayerCombat : MonoBehaviour
             Gizmos.DrawWireSphere(_stompCheck.position, _stompCheckRadius);
         }
 
-        Vector2 dir = _controller != null ? _controller.GetFacingDirection() : Vector2.right;
-        Vector2 origin = (Vector2)transform.position + dir * (_attackRange * 0.5f);
+        Vector2 direction = _playerMovement != null
+            ? _playerMovement.GetFacingDirection()
+            : Vector2.right;
+
+        Vector2 origin = (Vector2)transform.position + direction * (_attackRange * AttackRangeHalfFraction);
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(origin, _attackRadius);
     }
 
     public void ApplyKnockbackFrom(Vector2 source)
     {
-        if (_rb == null) return;
+        if (_rigidbody == null)
+        {
+            return;
+        }
 
-        Vector2 dir = ((Vector2)transform.position - source).normalized;
-        _rb.velocity = new Vector2(dir.x * _selfKnockbackX, _selfKnockbackY);
+        Vector2 direction = ((Vector2)transform.position - source).normalized;
+        _rigidbody.velocity = new Vector2(direction.x * _selfKnockbackX, _selfKnockbackY);
     }
 
     private void TryAttack()
     {
-        if (Time.time - _lastAttackTime < _attackCooldown) return;
+        if (Time.time - _lastAttackTime < _attackCooldown)
+        {
+            return;
+        }
 
-        if (_health.IsAlive == false) return;
+        if (_playerHealth.IsAlive == false)
+        {
+            return;
+        }
 
         _lastAttackTime = Time.time;
 
-        if (_animator != null) _animator.SetTrigger(AttackTriggerHash);
-
-        Vector2 dir = _controller.GetFacingDirection();
-        Vector2 origin = (Vector2)transform.position + dir * (_attackRange * 0.5f);
-
-        var hits = Physics2D.CircleCastAll(origin, _attackRadius, dir, _attackRange * 0.5f, _enemyLayer);
-        bool hitSomething = false;
-
-        foreach (var h in hits)
+        if (_animator != null)
         {
-            var enemy = h.collider.GetComponentInParent<Enemy>();
+            _animator.SetTrigger(AttackTriggerHash);
+        }
 
-            if (enemy != null && enemy.IsDead == false)
+        Vector2 direction = _playerMovement.GetFacingDirection();
+        Vector2 origin = (Vector2)transform.position + direction * (_attackRange * AttackRangeHalfFraction);
+
+        var hits = Physics2D.CircleCastAll(
+            origin,
+            _attackRadius,
+            direction,
+            _attackRange * AttackRangeHalfFraction,
+            _enemyLayer);
+
+        bool hasHitTarget = false;
+
+        foreach (var hit in hits)
+        {
+            var enemyDeath = hit.collider.GetComponentInParent<EnemyDeath>();
+
+            if (enemyDeath != null && enemyDeath.IsDead == false)
             {
-                enemy.TakeDamage(_attackDamage, transform.position);
-                hitSomething = true;
+                enemyDeath.Die();
+                hasHitTarget = true;
             }
         }
 
-        if (hitSomething && _rb != null)
+        if (hasHitTarget && _rigidbody != null)
         {
-            _rb.velocity = new Vector2(-dir.x * _meleeSelfKnockbackX, _rb.velocity.y);
+            _rigidbody.velocity = new Vector2(-direction.x * _meleeSelfKnockbackX, _rigidbody.velocity.y);
         }
     }
 
     private void Bounce(float force)
     {
-        if (_rb != null)
-            _rb.velocity = new Vector2(_rb.velocity.x, force);
+        if (_rigidbody != null)
+        {
+            _rigidbody.velocity = new Vector2(_rigidbody.velocity.x, force);
+        }
     }
 }
