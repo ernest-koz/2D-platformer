@@ -5,7 +5,6 @@ public class PlayerInput : MonoBehaviour
     public float HorizontalInput { get; private set; }
     public bool JumpPressed { get; private set; }
     public bool JumpHeld { get; private set; }
-    public bool AttackPressed { get; private set; }
     public bool RestartPressed { get; private set; }
 
     private void Update()
@@ -32,7 +31,6 @@ public class PlayerInput : MonoBehaviour
                 || Input.GetKey(KeyCode.W)
                 || Input.GetKey(KeyCode.UpArrow);
 
-        AttackPressed = Input.GetKeyDown(KeyCode.F) || Input.GetMouseButtonDown(0);
         RestartPressed = Input.GetKeyDown(KeyCode.R);
     }
 }
