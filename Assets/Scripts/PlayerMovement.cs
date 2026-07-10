@@ -13,6 +13,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Transform _groundCheck;
     [SerializeField] private float _groundCheckRadius = 0.22f;
     [SerializeField] private LayerMask _groundLayer;
+    [SerializeField] private LayerMask _enemyLayer;
 
     [Header("Tuning")]
     [SerializeField] private float _coyoteTime = 0.10f;
@@ -132,7 +133,7 @@ public class PlayerMovement : MonoBehaviour
         }
 
         _isGrounded = _groundCheck != null &&
-            Physics2D.OverlapCircle(_groundCheck.position, _groundCheckRadius, _groundLayer);
+            Physics2D.OverlapCircle(_groundCheck.position, _groundCheckRadius, _groundLayer | _enemyLayer);
 
         float targetHorizontalVelocity = _horizontalInput * _moveSpeed;
         float horizontalVelocity = Mathf.SmoothDamp(

@@ -41,6 +41,11 @@ public class PlayerCombat : MonoBehaviour
         _animator = GetComponent<Animator>();
         _rigidbody = GetComponent<Rigidbody2D>();
 
+        if (_enemyLayer == 0)
+        {
+            _enemyLayer = 1 << 9;
+        }
+
         if (_stompCheck == null)
         {
             var stompCheckGameObject = new GameObject("StompCheck");
