@@ -28,6 +28,11 @@ public class EnemyLocomotion : MonoBehaviour
 
     public void Patrol()
     {
+        if (_direction == 0)
+        {
+            _direction = _startFacingRight ? 1 : -1;
+        }
+
         _rigidbody.velocity = new Vector2(_direction * _patrolSpeed, _rigidbody.velocity.y);
 
         float currentX = transform.position.x;
@@ -44,6 +49,11 @@ public class EnemyLocomotion : MonoBehaviour
 
     public void Chase(Vector3 targetPosition)
     {
+        if (_direction == 0)
+        {
+            _direction = _startFacingRight ? 1 : -1;
+        }
+
         float distanceToTarget = targetPosition.x - transform.position.x;
         int targetDirection = distanceToTarget > 0 ? 1 : -1;
 

@@ -5202,14 +5202,14 @@ MonoBehaviour:
   _attackCooldown: 0.45
   _enemyLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 512
   _stompBounceForce: 14
   _stompCheckRadius: 0.35
   _stompCheck: {fileID: 0}
   _selfKnockbackX: 4.5
   _selfKnockbackY: 7.5
   _meleeSelfKnockbackX: 1.5
-  _input: {fileID: 0}
+  _input: {fileID: 1729192366}
 --- !u!114 &1729192360
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5228,7 +5228,7 @@ MonoBehaviour:
   _deathY: -20
   _healthText: {fileID: 0}
   _healthFormat: 'HP: {0}/{1}'
-  _gameSession: {fileID: 0}
+  _gameSession: {fileID: 693280909}
 --- !u!61 &1729192362
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -5321,6 +5321,9 @@ MonoBehaviour:
   _groundLayer:
     serializedVersion: 2
     m_Bits: 2048
+  _enemyLayer:
+    serializedVersion: 2
+    m_Bits: 512
   _coyoteTime: 0.1
   _jumpBufferTime: 0.12
   _fallMultiplier: 2.4
