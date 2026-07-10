@@ -5,6 +5,7 @@ public class CoinSpawner : MonoBehaviour
     [SerializeField] private Coin _prefab;
     [SerializeField] private Vector3[] _spawnPoints;
     [SerializeField] private Vector3 _spawnScale = Vector3.one;
+    [SerializeField] private GameSession _gameSession;
 
     private void Awake()
     {
@@ -18,6 +19,7 @@ public class CoinSpawner : MonoBehaviour
             var coin = Instantiate(_prefab, spawnPoint, Quaternion.identity);
             coin.transform.SetParent(transform, true);
             coin.transform.localScale = _spawnScale;
+            coin.Initialize(_gameSession);
             coin.Collected += OnCoinCollected;
         }
     }

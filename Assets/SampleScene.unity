@@ -284,6 +284,7 @@ MonoBehaviour:
   - {x: 57, y: 4.5, z: 0}
   - {x: 59, y: 4.5, z: 0}
   _spawnScale: {x: 1, y: 1, z: 1}
+  _gameSession: {fileID: 693280909}
 --- !u!1 &115814937
 GameObject:
   m_ObjectHideFlags: 0
