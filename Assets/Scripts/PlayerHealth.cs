@@ -140,12 +140,7 @@ public class PlayerHealth : MonoBehaviour
 
         if (transform.position.y < _deathY)
         {
-            _isDead = true;
-
-            if (_gameSession != null)
-            {
-                _gameSession.GameOver();
-            }
+            Die();
         }
     }
 

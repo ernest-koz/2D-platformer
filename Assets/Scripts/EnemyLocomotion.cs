@@ -21,10 +21,7 @@ public class EnemyLocomotion : MonoBehaviour
     private Rigidbody2D _rigidbody;
     private int _direction;
 
-    public int FacingDirection => _direction;
     public Vector2 FacingVector => _direction > 0 ? Vector2.right : Vector2.left;
-    public float LeftBoundary => _leftX;
-    public float RightBoundary => _rightX;
 
     private void Awake()
     {

@@ -9,7 +9,7 @@ public class CoinSpawner : MonoBehaviour
 
     private void Awake()
     {
-        if (_prefab == null)
+        if (_prefab == null || _spawnPoints == null)
         {
             return;
         }

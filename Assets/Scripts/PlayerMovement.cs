@@ -36,7 +36,7 @@ public class PlayerMovement : MonoBehaviour
     private float _coyoteTimer;
     private float _jumpBufferTimer;
     private float _horizontalVelocitySmoothing;
-    private bool _facingRight = true;
+    private bool _isFacingRight = true;
     private bool _isDead;
 
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
@@ -105,11 +105,11 @@ public class PlayerMovement : MonoBehaviour
             _animator.SetBool(IsGroundedHash, _isGrounded);
         }
 
-        if (_horizontalInput > InputDeadzone && _facingRight == false)
+        if (_horizontalInput > InputDeadzone && _isFacingRight == false)
         {
             Flip();
         }
-        else if (_horizontalInput < -InputDeadzone && _facingRight)
+        else if (_horizontalInput < -InputDeadzone && _isFacingRight)
         {
             Flip();
         }
@@ -180,7 +180,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void Flip()
     {
-        _facingRight = !_facingRight;
+        _isFacingRight = !_isFacingRight;
         Vector3 scale = transform.localScale;
         scale.x *= -1f;
         transform.localScale = scale;
