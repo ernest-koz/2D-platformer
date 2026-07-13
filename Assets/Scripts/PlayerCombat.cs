@@ -25,6 +25,11 @@ public class PlayerCombat : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (_stompCheck == null)
+        {
+            return;
+        }
+
         if (_playerMovement.IsFalling == false)
         {
             return;

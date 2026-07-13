@@ -68,7 +68,7 @@ public class EnemyStriker : MonoBehaviour
         return true;
     }
 
-    public void Reset()
+    public void CancelWindup()
     {
         _isWindingUp = false;
     }

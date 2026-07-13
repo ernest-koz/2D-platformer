@@ -43,9 +43,6 @@ public class GameSession : MonoBehaviour
     private float _finishTime = 0f;
 
     public GameState State => _state;
-    public int Coins => _totalCoinsCollected;
-    public int EnemiesDefeated => _enemiesDefeated;
-    public float PlayTime => _playTime;
 
     private void Update()
     {

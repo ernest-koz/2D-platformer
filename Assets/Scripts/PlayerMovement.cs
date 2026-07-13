@@ -185,7 +185,4 @@ public class PlayerMovement : MonoBehaviour
         scale.x *= -1f;
         transform.localScale = scale;
     }
-
-    public Vector2 GetFacingDirection() =>
-        _facingRight ? Vector2.right : Vector2.left;
 }

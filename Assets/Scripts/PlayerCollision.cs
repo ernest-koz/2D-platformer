@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(PlayerHealth))]
-[RequireComponent(typeof(PlayerCombat))]
+[RequireComponent(typeof(Rigidbody2D))]
 public class PlayerCollision : MonoBehaviour
 {
     private const float StompHeightThreshold = 0.4f;
@@ -10,13 +10,11 @@ public class PlayerCollision : MonoBehaviour
     [SerializeField] private GameSession _gameSession;
 
     private PlayerHealth _playerHealth;
-    private PlayerCombat _playerCombat;
     private Rigidbody2D _rigidbody;
 
     private void Awake()
     {
         _playerHealth = GetComponent<PlayerHealth>();
-        _playerCombat = GetComponent<PlayerCombat>();
         _rigidbody = GetComponent<Rigidbody2D>();
     }
 

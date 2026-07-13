@@ -15,7 +15,7 @@ public class EnemyLocomotion : MonoBehaviour
     [Header("Ground check")]
     [SerializeField] private Transform _groundCheck;
     [SerializeField] private float _groundCheckRadius = 0.2f;
-    [SerializeField] private float _edgeCheckOffset = 0.25f;
+    [SerializeField] private float _edgeCheckOffset = 0.5f;
     [SerializeField] private LayerMask _groundLayer;
 
     private Rigidbody2D _rigidbody;

@@ -130,7 +130,7 @@ public class EnemyAwareness : MonoBehaviour
 
         if (_striker != null)
         {
-            _striker.Reset();
+            _striker.CancelWindup();
         }
 
         this.enabled = false;
@@ -187,7 +187,6 @@ public class EnemyAwareness : MonoBehaviour
 
         if (_locomotion.HasGroundAhead() == false)
         {
-            Debug.Log($"[{name}] Chase->Patrol: edge detected at x={transform.position.x:F2}");
             _locomotion.Stop();
             _state = State.Patrol;
             return;
