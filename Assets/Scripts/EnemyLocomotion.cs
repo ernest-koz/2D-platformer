@@ -12,6 +12,12 @@ public class EnemyLocomotion : MonoBehaviour
     [Header("Chase")]
     [SerializeField] private float _chaseSpeed = 2.8f;
 
+    [Header("Ground check")]
+    [SerializeField] private Transform _groundCheck;
+    [SerializeField] private float _groundCheckRadius = 0.2f;
+    [SerializeField] private float _edgeCheckOffset = 0.25f;
+    [SerializeField] private LayerMask _groundLayer;
+
     private Rigidbody2D _rigidbody;
     private int _direction;
 
@@ -24,6 +30,13 @@ public class EnemyLocomotion : MonoBehaviour
     {
         _rigidbody = GetComponent<Rigidbody2D>();
         _direction = _startFacingRight ? 1 : -1;
+
+        if (_groundCheck == null)
+        {
+            Debug.LogError(
+                $"EnemyLocomotion: GroundCheck not assigned on {gameObject.name}. Edge detection disabled — enemy may fall off platforms.",
+                gameObject);
+        }
     }
 
     public void Patrol()
@@ -42,6 +55,10 @@ public class EnemyLocomotion : MonoBehaviour
             Flip();
         }
         else if (_direction < 0 && currentX <= _leftX)
+        {
+            Flip();
+        }
+        else if (HasGroundAhead() == false)
         {
             Flip();
         }
@@ -76,5 +93,53 @@ public class EnemyLocomotion : MonoBehaviour
         Vector3 scale = transform.localScale;
         scale.x *= -1f;
         transform.localScale = scale;
+    }
+
+    public void FaceTowards(Vector3 targetPosition)
+    {
+        float distanceToTarget = targetPosition.x - transform.position.x;
+        int targetDirection = distanceToTarget > 0 ? 1 : -1;
+
+        if (targetDirection != _direction)
+        {
+            Flip();
+        }
+    }
+
+    public bool HasGroundAhead()
+    {
+        if (_groundCheck == null)
+        {
+            return true;
+        }
+
+        Collider2D groundUnder = Physics2D.OverlapCircle(_groundCheck.position, _groundCheckRadius, _groundLayer);
+
+        if (groundUnder == null)
+        {
+            return true;
+        }
+
+        Vector2 checkPosition = (Vector2)_groundCheck.position + FacingVector * _edgeCheckOffset;
+
+        return Physics2D.OverlapCircle(checkPosition, _groundCheckRadius, _groundLayer) != null;
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (_groundCheck == null)
+        {
+            return;
+        }
+
+        bool hasGround = HasGroundAhead();
+
+        Gizmos.color = hasGround ? Color.green : Color.red;
+        Gizmos.DrawWireSphere(_groundCheck.position, _groundCheckRadius);
+
+        Vector2 checkPosition = (Vector2)_groundCheck.position + FacingVector * _edgeCheckOffset;
+
+        Gizmos.color = hasGround ? Color.green : Color.red;
+        Gizmos.DrawWireSphere(checkPosition, _groundCheckRadius);
     }
 }

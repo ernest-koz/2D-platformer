@@ -21,6 +21,11 @@ public class EnemyStriker : MonoBehaviour
 
     public void BeginWindup()
     {
+        if (_isWindingUp)
+        {
+            return;
+        }
+
         _isWindingUp = true;
         _windupTimer = _attackWindup;
     }

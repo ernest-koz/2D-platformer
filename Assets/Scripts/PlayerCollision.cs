@@ -50,7 +50,7 @@ public class PlayerCollision : MonoBehaviour
             return;
         }
 
-        if (enemyDeath == null || enemyDeath.IsDead)
+        if (enemyDeath.IsDead)
         {
             return;
         }

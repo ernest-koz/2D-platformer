@@ -5,7 +5,6 @@ public class PlayerHealth : MonoBehaviour
 {
     [SerializeField] private int _maxHealth = 3;
     [SerializeField] private float _invincibilityTime = 1.0f;
-    [SerializeField] private Vector3 _spawnPoint;
 
     [Header("Falling death")]
     [SerializeField] private float _deathY = -20f;
@@ -43,7 +42,6 @@ public class PlayerHealth : MonoBehaviour
         _animator = GetComponent<Animator>();
         _playerMovement = GetComponent<PlayerMovement>();
         _currentHealth = _maxHealth;
-        _spawnPoint = transform.position;
         UpdateHealthUI();
     }
 

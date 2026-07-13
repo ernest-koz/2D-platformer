@@ -14,6 +14,7 @@ public class EnemyAwareness : MonoBehaviour
     [SerializeField] private EnemyLocomotion _locomotion;
     [SerializeField] private EnemyStriker _striker;
     [SerializeField] private EnemyDeath _death;
+    [SerializeField] private GameSession _gameSession;
 
     private State _state = State.Patrol;
     private Animator _animator;
@@ -26,14 +27,17 @@ public class EnemyAwareness : MonoBehaviour
     {
         _animator = GetComponentInChildren<Animator>();
         _rigidbody = GetComponent<Rigidbody2D>();
+    }
 
+    private void OnEnable()
+    {
         if (_death != null)
         {
             _death.Died += OnEnemyDied;
         }
     }
 
-    private void OnDestroy()
+    private void OnDisable()
     {
         if (_death != null)
         {
@@ -68,6 +72,16 @@ public class EnemyAwareness : MonoBehaviour
     {
         if (_state == State.Dead)
         {
+            return;
+        }
+
+        if (_gameSession != null && _gameSession.State != GameState.Playing)
+        {
+            if (_locomotion != null)
+            {
+                _locomotion.Stop();
+            }
+
             return;
         }
 
@@ -124,13 +138,19 @@ public class EnemyAwareness : MonoBehaviour
 
     private void TickPatrol()
     {
-        float playerPositionX = (_playerTarget != null)
-            ? _playerTarget.position.x
-            : Mathf.Infinity;
+        if (_playerTarget == null)
+        {
+            if (_locomotion != null)
+            {
+                _locomotion.Patrol();
+            }
 
-        float distanceToPlayer = playerPositionX - transform.position.x;
+            return;
+        }
 
-        if (_playerTarget != null && Mathf.Abs(distanceToPlayer) <= _detectRange)
+        float distanceToPlayer = _playerTarget.position.x - transform.position.x;
+
+        if (Mathf.Abs(distanceToPlayer) <= _detectRange)
         {
             _state = State.Chase;
             return;
@@ -144,8 +164,6 @@ public class EnemyAwareness : MonoBehaviour
 
     private void TickChase()
     {
-        const float PatrolMargin = 2f;
-
         if (_playerTarget == null || _locomotion == null)
         {
             _state = State.Patrol;
@@ -161,30 +179,17 @@ public class EnemyAwareness : MonoBehaviour
             return;
         }
 
-        float leftX = _locomotion.LeftBoundary;
-        float rightX = _locomotion.RightBoundary;
-
-        bool isOutsidePatrolZone = transform.position.x < leftX - PatrolMargin
-                                || transform.position.x > rightX + PatrolMargin;
-
-        if (isOutsidePatrolZone)
-        {
-            _state = State.Patrol;
-            return;
-        }
-
-        bool isPlayerFarOutside = _playerTarget.position.x < leftX - PatrolMargin
-                               || _playerTarget.position.x > rightX + PatrolMargin;
-
-        if (isPlayerFarOutside)
-        {
-            _state = State.Patrol;
-            return;
-        }
-
         if (absoluteDistance <= (_striker != null ? _striker.AttackRange : 0f))
         {
             _state = State.Attack;
+            return;
+        }
+
+        if (_locomotion.HasGroundAhead() == false)
+        {
+            Debug.Log($"[{name}] Chase->Patrol: edge detected at x={transform.position.x:F2}");
+            _locomotion.Stop();
+            _state = State.Patrol;
             return;
         }
 
@@ -200,6 +205,8 @@ public class EnemyAwareness : MonoBehaviour
         }
 
         _locomotion.Stop();
+
+        _locomotion.FaceTowards(_playerTarget.position);
 
         if (_animator != null && _striker.IsOnCooldown == false)
         {

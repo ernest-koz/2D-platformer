@@ -27,7 +27,6 @@ public class PlayerMovement : MonoBehaviour
 
     private const float InputDeadzone = 0.01f;
     private const float FallThreshold = 0.5f;
-    private const float GroundCheckVerticalOffset = -0.85f;
 
     private Rigidbody2D _rigidbody;
     private Animator _animator;
@@ -60,14 +59,6 @@ public class PlayerMovement : MonoBehaviour
         if (_input == null)
         {
             Debug.LogError($"PlayerMovement: PlayerInput not assigned on {gameObject.name}. Drag PlayerInput component in the inspector.", gameObject);
-        }
-
-        if (_groundCheck == null)
-        {
-            var groundCheckGameObject = new GameObject("GroundCheck");
-            groundCheckGameObject.transform.SetParent(transform, false);
-            groundCheckGameObject.transform.localPosition = new Vector3(0f, GroundCheckVerticalOffset, 0f);
-            _groundCheck = groundCheckGameObject.transform;
         }
     }
 

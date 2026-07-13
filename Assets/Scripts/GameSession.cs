@@ -47,11 +47,6 @@ public class GameSession : MonoBehaviour
     public int EnemiesDefeated => _enemiesDefeated;
     public float PlayTime => _playTime;
 
-    private void Awake()
-    {
-        SetGameState(GameState.Playing);
-    }
-
     private void Update()
     {
         if (_input != null && _input.RestartPressed && (_state == GameState.GameOver || _state == GameState.Finish))
