@@ -13,7 +13,7 @@ public class Coin : MonoBehaviour
         _gameSession = gameSession;
     }
 
-    public void Collect(GameObject collector)
+    public void Collect()
     {
         if (_gameSession != null)
         {

@@ -22,7 +22,7 @@ public class PlayerCollision : MonoBehaviour
     {
         if (other.TryGetComponent(out Coin coin))
         {
-            coin.Collect(gameObject);
+            coin.Collect();
             return;
         }
 
