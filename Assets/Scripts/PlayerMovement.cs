@@ -178,7 +178,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    public void Flip()
+    private void Flip()
     {
         _isFacingRight = !_isFacingRight;
         Vector3 scale = transform.localScale;

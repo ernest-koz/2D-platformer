@@ -5,12 +5,10 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class EnemyDeath : MonoBehaviour
 {
-    public event Action<EnemyDeath> Died;
-
     [Header("Death")]
     [SerializeField] private float _deathDelay = 0.6f;
 
-    [Header("Refs")]
+    [Header("References")]
     [SerializeField] private Animator _animator;
     [SerializeField] private GameSession _gameSession;
 
@@ -21,6 +19,8 @@ public class EnemyDeath : MonoBehaviour
     private static readonly int DieTriggerHash = Animator.StringToHash("Die");
 
     public bool IsDead => _isDead;
+
+    public event Action<EnemyDeath> Died;
 
     private void Awake()
     {

@@ -7,7 +7,7 @@ public class EnemyLocomotion : MonoBehaviour
     [SerializeField] private float _patrolSpeed = 1.6f;
     [SerializeField] private float _leftX = -3f;
     [SerializeField] private float _rightX = 3f;
-    [SerializeField] private bool _startFacingRight = true;
+    [SerializeField] private bool _startsFacingRight = true;
 
     [Header("Chase")]
     [SerializeField] private float _chaseSpeed = 2.8f;
@@ -26,7 +26,7 @@ public class EnemyLocomotion : MonoBehaviour
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody2D>();
-        _direction = _startFacingRight ? 1 : -1;
+        _direction = _startsFacingRight ? 1 : -1;
 
         if (_groundCheck == null)
         {
@@ -40,7 +40,7 @@ public class EnemyLocomotion : MonoBehaviour
     {
         if (_direction == 0)
         {
-            _direction = _startFacingRight ? 1 : -1;
+            _direction = _startsFacingRight ? 1 : -1;
         }
 
         _rigidbody.velocity = new Vector2(_direction * _patrolSpeed, _rigidbody.velocity.y);
@@ -65,7 +65,7 @@ public class EnemyLocomotion : MonoBehaviour
     {
         if (_direction == 0)
         {
-            _direction = _startFacingRight ? 1 : -1;
+            _direction = _startsFacingRight ? 1 : -1;
         }
 
         float distanceToTarget = targetPosition.x - transform.position.x;
@@ -84,7 +84,7 @@ public class EnemyLocomotion : MonoBehaviour
         _rigidbody.velocity = new Vector2(0f, _rigidbody.velocity.y);
     }
 
-    public void Flip()
+    private void Flip()
     {
         _direction *= -1;
         Vector3 scale = transform.localScale;

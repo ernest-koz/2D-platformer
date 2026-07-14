@@ -1,32 +1,9 @@
 using UnityEngine;
 
-public class CoinSpawner : MonoBehaviour
+public class CoinSpawner : PickupSpawner<Coin>
 {
-    [SerializeField] private Coin _prefab;
-    [SerializeField] private Vector3[] _spawnPoints;
-    [SerializeField] private Vector3 _spawnScale = Vector3.one;
     [SerializeField] private GameSession _gameSession;
 
-    private void Awake()
-    {
-        if (_prefab == null || _spawnPoints == null)
-        {
-            return;
-        }
-
-        foreach (var spawnPoint in _spawnPoints)
-        {
-            var coin = Instantiate(_prefab, spawnPoint, Quaternion.identity);
-            coin.transform.SetParent(transform, true);
-            coin.transform.localScale = _spawnScale;
-            coin.Initialize(_gameSession);
-            coin.Collected += OnCoinCollected;
-        }
-    }
-
-    private void OnCoinCollected(Coin coin)
-    {
-        coin.Collected -= OnCoinCollected;
-        Destroy(coin.gameObject);
-    }
+    protected override void Configure(Coin coin) =>
+        coin.Initialize(_gameSession);
 }

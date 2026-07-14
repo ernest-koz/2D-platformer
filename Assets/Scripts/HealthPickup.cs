@@ -1,11 +1,11 @@
 using System;
 using UnityEngine;
 
-public class HealthPickup : MonoBehaviour
+public class HealthPickup : MonoBehaviour, IPickup<HealthPickup>
 {
-    public event Action<HealthPickup> Collected;
-
     [SerializeField] private int _healAmount = 1;
+
+    public event Action<HealthPickup> Collected;
 
     public void Collect(GameObject collector)
     {

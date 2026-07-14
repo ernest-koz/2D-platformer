@@ -2,14 +2,12 @@ using UnityEngine;
 
 public class EnemyAwareness : MonoBehaviour
 {
-    private enum State { Patrol, Chase, Attack, Dead }
-
     [Header("Detection")]
     [SerializeField] private float _detectRange = 5f;
     [SerializeField] private float _chaseRange = 7f;
     [SerializeField] private LayerMask _playerLayer;
 
-    [Header("Refs")]
+    [Header("References")]
     [SerializeField] private Transform _playerTarget;
     [SerializeField] private EnemyLocomotion _locomotion;
     [SerializeField] private EnemyStriker _striker;
@@ -223,4 +221,6 @@ public class EnemyAwareness : MonoBehaviour
             _state = State.Chase;
         }
     }
+
+    private enum State { Patrol, Chase, Attack, Dead }
 }

@@ -1,5 +1,5 @@
+using System;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 public enum GameState
@@ -9,30 +9,22 @@ public enum GameState
     Finish
 }
 
+public readonly struct SessionStats
+{
+    public int TotalCoinsCollected { get; }
+    public int EnemiesDefeated { get; }
+    public float PlayTime { get; }
+
+    public SessionStats(int totalCoinsCollected, int enemiesDefeated, float playTime)
+    {
+        TotalCoinsCollected = totalCoinsCollected;
+        EnemiesDefeated = enemiesDefeated;
+        PlayTime = playTime;
+    }
+}
+
 public class GameSession : MonoBehaviour
 {
-    [Header("UI - Coins")]
-    [SerializeField] private Text _coinText;
-    [SerializeField] private string _coinFormat = "Монеты: {0}";
-
-    [Header("UI - Game Over")]
-    [SerializeField] private GameObject _gameOverPanel;
-    [SerializeField] private Text _gameOverCoinText;
-    [SerializeField] private Text _gameOverTimeText;
-    [SerializeField] private Text _gameOverEnemyText;
-    [SerializeField] private string _gameOverCoinFormat = "Монет собрано: {0}";
-    [SerializeField] private string _gameOverTimeFormat = "Время: {0:F1} с";
-    [SerializeField] private string _gameOverEnemyFormat = "Повержено врагов: {0}";
-
-    [Header("UI - Finish")]
-    [SerializeField] private GameObject _finishPanel;
-    [SerializeField] private Text _finishCoinText;
-    [SerializeField] private Text _finishTimeText;
-    [SerializeField] private Text _finishEnemyText;
-    [SerializeField] private string _finishCoinFormat = "Монет собрано: {0}";
-    [SerializeField] private string _finishTimeFormat = "Время: {0:F1} с";
-    [SerializeField] private string _finishEnemyFormat = "Повержено врагов: {0}";
-
     [Header("References")]
     [SerializeField] private PlayerInput _input;
 
@@ -40,9 +32,12 @@ public class GameSession : MonoBehaviour
     private int _totalCoinsCollected = 0;
     private int _enemiesDefeated = 0;
     private float _playTime = 0f;
-    private float _finishTime = 0f;
 
     public GameState State => _state;
+
+    public event Action<int> CoinChanged;
+    public event Action<SessionStats> GameOverStarted;
+    public event Action<SessionStats> LevelFinished;
 
     private void Update()
     {
@@ -68,7 +63,7 @@ public class GameSession : MonoBehaviour
         }
 
         _totalCoinsCollected += amount;
-        UpdateCoinUI();
+        CoinChanged?.Invoke(_totalCoinsCollected);
     }
 
     public void RegisterEnemyKill()
@@ -88,27 +83,8 @@ public class GameSession : MonoBehaviour
             return;
         }
 
-        SetGameState(GameState.GameOver);
-
-        if (_gameOverCoinText != null)
-        {
-            _gameOverCoinText.text = string.Format(_gameOverCoinFormat, _totalCoinsCollected);
-        }
-
-        if (_gameOverTimeText != null)
-        {
-            _gameOverTimeText.text = string.Format(_gameOverTimeFormat, _playTime);
-        }
-
-        if (_gameOverEnemyText != null)
-        {
-            _gameOverEnemyText.text = string.Format(_gameOverEnemyFormat, _enemiesDefeated);
-        }
-
-        if (_gameOverPanel != null)
-        {
-            _gameOverPanel.SetActive(true);
-        }
+        _state = GameState.GameOver;
+        GameOverStarted?.Invoke(BuildStats());
     }
 
     public void FinishLevel()
@@ -118,28 +94,8 @@ public class GameSession : MonoBehaviour
             return;
         }
 
-        _finishTime = _playTime;
-        SetGameState(GameState.Finish);
-
-        if (_finishCoinText != null)
-        {
-            _finishCoinText.text = string.Format(_finishCoinFormat, _totalCoinsCollected);
-        }
-
-        if (_finishTimeText != null)
-        {
-            _finishTimeText.text = string.Format(_finishTimeFormat, _finishTime);
-        }
-
-        if (_finishEnemyText != null)
-        {
-            _finishEnemyText.text = string.Format(_finishEnemyFormat, _enemiesDefeated);
-        }
-
-        if (_finishPanel != null)
-        {
-            _finishPanel.SetActive(true);
-        }
+        _state = GameState.Finish;
+        LevelFinished?.Invoke(BuildStats());
     }
 
     public void RestartLevel()
@@ -147,16 +103,6 @@ public class GameSession : MonoBehaviour
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    private void SetGameState(GameState newState)
-    {
-        _state = newState;
-    }
-
-    private void UpdateCoinUI()
-    {
-        if (_coinText != null)
-        {
-            _coinText.text = string.Format(_coinFormat, _totalCoinsCollected);
-        }
-    }
+    private SessionStats BuildStats() =>
+        new SessionStats(_totalCoinsCollected, _enemiesDefeated, _playTime);
 }

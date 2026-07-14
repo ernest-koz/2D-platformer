@@ -729,7 +729,7 @@ MonoBehaviour:
   _patrolSpeed: 1.6
   _leftX: 40
   _rightX: 47
-  _startFacingRight: 1
+  _startsFacingRight: 1
   _chaseSpeed: 2.8
   _groundCheck: {fileID: 652434114}
   _groundCheckRadius: 0.2
@@ -2366,6 +2366,7 @@ GameObject:
   m_Component:
   - component: {fileID: 693280908}
   - component: {fileID: 693280909}
+  - component: {fileID: 693280910}
   m_Layer: 0
   m_Name: Control_UI
   m_TagString: Untagged
@@ -2400,6 +2401,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e144058eedcf97b4092de786aceff3a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _input: {fileID: 1729192366}
+--- !u!114 &693280910
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 693280906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4841dde70e0f9cf409f87d7efdc0fa4e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
   _coinText: {fileID: 1168303582}
   _coinFormat: "\u041C\u043E\u043D\u0435\u0442\u044B: {0}"
   _gameOverPanel: {fileID: 782484644}
@@ -2420,7 +2434,7 @@ MonoBehaviour:
   _finishTimeFormat: "\u0412\u0440\u0435\u043C\u044F: {0:F1} \u0441"
   _finishEnemyFormat: "\u041F\u043E\u0432\u0435\u0440\u0436\u0435\u043D\u043E \u0432\u0440\u0430\u0433\u043E\u0432:
     {0}"
-  _input: {fileID: 1729192366}
+  _gameSession: {fileID: 693280909}
 --- !u!1001 &734748728
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2644,7 +2658,7 @@ MonoBehaviour:
   _patrolSpeed: 1.6
   _leftX: 65
   _rightX: 75
-  _startFacingRight: 1
+  _startsFacingRight: 1
   _chaseSpeed: 2.8
   _groundCheck: {fileID: 1308235963}
   _groundCheckRadius: 0.2
@@ -3001,7 +3015,7 @@ MonoBehaviour:
   _patrolSpeed: 1.6
   _leftX: 16
   _rightX: 25
-  _startFacingRight: 1
+  _startsFacingRight: 1
   _chaseSpeed: 2.8
   _groundCheck: {fileID: 646247317}
   _groundCheckRadius: 0.2
@@ -4481,7 +4495,7 @@ MonoBehaviour:
   _patrolSpeed: 1.6
   _leftX: 55
   _rightX: 63
-  _startFacingRight: 1
+  _startsFacingRight: 1
   _chaseSpeed: 2.8
   _groundCheck: {fileID: 161426236}
   _groundCheckRadius: 0.2
@@ -4834,7 +4848,7 @@ MonoBehaviour:
   _patrolSpeed: 1.6
   _leftX: 30
   _rightX: 40
-  _startFacingRight: 1
+  _startsFacingRight: 1
   _chaseSpeed: 2.8
   _groundCheck: {fileID: 92739696}
   _groundCheckRadius: 0.2
@@ -6074,7 +6088,7 @@ MonoBehaviour:
   _patrolSpeed: 1.6
   _leftX: -3
   _rightX: 3
-  _startFacingRight: 1
+  _startsFacingRight: 1
   _chaseSpeed: 2.8
   _groundCheck: {fileID: 1000734775}
   _groundCheckRadius: 0.2

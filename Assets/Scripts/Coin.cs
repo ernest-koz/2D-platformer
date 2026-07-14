@@ -1,12 +1,12 @@
 using System;
 using UnityEngine;
 
-public class Coin : MonoBehaviour
+public class Coin : MonoBehaviour, IPickup<Coin>
 {
-    public event Action<Coin> Collected;
-
     [SerializeField] private int _value = 1;
     [SerializeField] private GameSession _gameSession;
+
+    public event Action<Coin> Collected;
 
     public void Initialize(GameSession gameSession)
     {
