@@ -110,4 +110,4 @@ InitTestScene*.unity*
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
 
 # Project documentation (kept locally; not version-controlled)
-/docs/
+# /docs/

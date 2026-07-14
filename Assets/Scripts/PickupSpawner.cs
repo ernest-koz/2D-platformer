@@ -10,6 +10,16 @@ public abstract class PickupSpawner<T> : MonoBehaviour where T : MonoBehaviour, 
     {
         if (_prefab == null || _spawnPoints == null)
         {
+            if (_prefab == null)
+            {
+                Debug.LogError($"PickupSpawner: prefab not assigned on {gameObject.name}.", gameObject);
+            }
+
+            if (_spawnPoints == null)
+            {
+                Debug.LogError($"PickupSpawner: spawnPoints not assigned on {gameObject.name}.", gameObject);
+            }
+
             return;
         }
 
@@ -29,5 +39,7 @@ public abstract class PickupSpawner<T> : MonoBehaviour where T : MonoBehaviour, 
         Destroy(pickup.gameObject);
     }
 
-    protected virtual void Configure(T pickup) { }
+    protected virtual void Configure(T pickup)
+    {
+    }
 }

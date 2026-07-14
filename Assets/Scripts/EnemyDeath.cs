@@ -31,6 +31,16 @@ public class EnemyDeath : MonoBehaviour
         {
             _animator = GetComponentInChildren<Animator>();
         }
+
+        if (_gameSession == null)
+        {
+            Debug.LogError($"EnemyDeath {name}: GameSession not assigned. Enemy kills will not be tracked.", gameObject);
+        }
+    }
+
+    private void Start()
+    {
+        _gameSession?.RegisterEnemy();
     }
 
     public void Die()
@@ -42,27 +52,14 @@ public class EnemyDeath : MonoBehaviour
 
         _isDead = true;
 
-        if (_animator != null)
-        {
-            _animator.SetTrigger(DieTriggerHash);
-        }
+        _animator?.SetTrigger(DieTriggerHash);
 
-        if (_collider != null)
-        {
-            _collider.enabled = false;
-        }
-
-        if (_rigidbody != null)
-        {
-            _rigidbody.velocity = Vector2.zero;
-        }
+        _collider.enabled = false;
+        _rigidbody.velocity = Vector2.zero;
 
         Died?.Invoke(this);
 
-        if (_gameSession != null)
-        {
-            _gameSession.RegisterEnemyKill();
-        }
+        _gameSession?.RegisterEnemyKill();
 
         Destroy(gameObject, _deathDelay);
     }

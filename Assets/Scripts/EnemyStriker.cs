@@ -11,8 +11,9 @@ public class EnemyStriker : MonoBehaviour
     [SerializeField] private LayerMask _obstacleLayer;
 
     private const float AttackCircleRadiusFraction = 0.6f;
+    private const float InitialLastAttackTime = -999f;
 
-    private float _lastAttackTime = -999f;
+    private float _lastAttackTime = InitialLastAttackTime;
     private float _windupTimer;
     private bool _isWindingUp;
 
@@ -48,14 +49,17 @@ public class EnemyStriker : MonoBehaviour
         _lastAttackTime = Time.time;
 
         Vector2 attackOrigin = origin + Vector2.up * _attackOriginHeight;
-        var hit = Physics2D.CircleCast(
+        RaycastHit2D hit = Physics2D.CircleCast(
             attackOrigin,
             _attackRange * AttackCircleRadiusFraction,
             direction,
             _attackRange,
             playerLayer | _obstacleLayer);
 
-        if (hit.collider != null && hit.collider.TryGetComponent(out PlayerHealth health))
+        if (hit.collider == null)
+        {
+        }
+        else if (hit.collider.TryGetComponent(out PlayerHealth health))
         {
             health.TakeDamage(_attackDamage, transform.position);
         }

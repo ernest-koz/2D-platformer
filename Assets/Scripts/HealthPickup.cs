@@ -9,9 +9,7 @@ public class HealthPickup : MonoBehaviour, IPickup<HealthPickup>
 
     public void Collect(GameObject collector)
     {
-        var playerHealth = collector.GetComponent<PlayerHealth>();
-
-        if (playerHealth == null || playerHealth.IsAlive == false)
+        if (collector.TryGetComponent(out PlayerHealth playerHealth) == false || playerHealth.IsAlive == false)
         {
             return;
         }

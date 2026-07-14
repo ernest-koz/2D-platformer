@@ -8,6 +8,17 @@ public class Coin : MonoBehaviour, IPickup<Coin>
 
     public event Action<Coin> Collected;
 
+    private void Start()
+    {
+        if (_gameSession == null)
+        {
+            Debug.LogError($"Coin {name}: GameSession not assigned. Assign in Inspector or use CoinSpawner.", gameObject);
+            return;
+        }
+
+        _gameSession.RegisterCoin();
+    }
+
     public void Initialize(GameSession gameSession)
     {
         _gameSession = gameSession;
@@ -15,11 +26,14 @@ public class Coin : MonoBehaviour, IPickup<Coin>
 
     public void Collect()
     {
-        if (_gameSession != null)
+        if (_gameSession == null)
         {
-            _gameSession.AddCoin(_value);
+            Debug.LogError($"Coin {name}: GameSession not assigned on Collect(). Assign in Inspector or use CoinSpawner.", gameObject);
+            Collected?.Invoke(this);
+            return;
         }
 
+        _gameSession.AddCoin(_value);
         Collected?.Invoke(this);
     }
 }

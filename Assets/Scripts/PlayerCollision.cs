@@ -34,10 +34,7 @@ public class PlayerCollision : MonoBehaviour
 
         if (other.TryGetComponent(out FinishTrigger _))
         {
-            if (_gameSession != null)
-            {
-                _gameSession.FinishLevel();
-            }
+            _gameSession?.FinishLevel();
         }
     }
 
@@ -62,9 +59,6 @@ public class PlayerCollision : MonoBehaviour
             return;
         }
 
-        if (_playerHealth != null)
-        {
-            _playerHealth.TakeDamage(collision.transform.position);
-        }
+        _playerHealth.TakeDamage(collision.transform.position);
     }
 }

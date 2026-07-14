@@ -3,9 +3,9 @@ using UnityEngine;
 public class PlayerInput : MonoBehaviour
 {
     public float HorizontalInput { get; private set; }
-    public bool JumpPressed { get; private set; }
-    public bool JumpHeld { get; private set; }
-    public bool RestartPressed { get; private set; }
+    public bool IsJumpPressed { get; private set; }
+    public bool IsJumpHeld { get; private set; }
+    public bool IsRestartPressed { get; private set; }
 
     private void Update()
     {
@@ -23,14 +23,14 @@ public class PlayerInput : MonoBehaviour
 
         HorizontalInput = horizontal;
 
-        JumpPressed = Input.GetKeyDown(KeyCode.Space)
+        IsJumpPressed = Input.GetKeyDown(KeyCode.Space)
                    || Input.GetKeyDown(KeyCode.W)
                    || Input.GetKeyDown(KeyCode.UpArrow);
 
-        JumpHeld = Input.GetKey(KeyCode.Space)
+        IsJumpHeld = Input.GetKey(KeyCode.Space)
                 || Input.GetKey(KeyCode.W)
                 || Input.GetKey(KeyCode.UpArrow);
 
-        RestartPressed = Input.GetKeyDown(KeyCode.R);
+        IsRestartPressed = Input.GetKeyDown(KeyCode.R);
     }
 }

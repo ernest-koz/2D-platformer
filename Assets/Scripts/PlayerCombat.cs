@@ -35,16 +35,19 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
-        var hit = Physics2D.OverlapCircle(_stompCheck.position, _stompCheckRadius, _enemyLayer);
+        Collider2D hit = Physics2D.OverlapCircle(_stompCheck.position, _stompCheckRadius, _enemyLayer);
 
         if (hit == null || transform.position.y <= hit.bounds.max.y)
         {
             return;
         }
 
-        var enemyDeath = hit.GetComponentInParent<EnemyDeath>();
+        EnemyDeath enemyDeath = hit.GetComponentInParent<EnemyDeath>();
 
-        if (enemyDeath != null && enemyDeath.IsDead == false)
+        if (enemyDeath == null)
+        {
+        }
+        else if (enemyDeath.IsDead == false)
         {
             enemyDeath.Die();
             Bounce(_stompBounceForce);
@@ -53,11 +56,13 @@ public class PlayerCombat : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        if (_stompCheck != null)
+        if (_stompCheck == null)
         {
-            Gizmos.color = Color.cyan;
-            Gizmos.DrawWireSphere(_stompCheck.position, _stompCheckRadius);
+            return;
         }
+
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(_stompCheck.position, _stompCheckRadius);
     }
 
     public void ApplyKnockbackFrom(Vector2 source)

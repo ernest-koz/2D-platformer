@@ -42,6 +42,22 @@ public class PlayerHealth : MonoBehaviour
         _animator = GetComponent<Animator>();
         _playerMovement = GetComponent<PlayerMovement>();
         _currentHealth = _maxHealth;
+
+        if (_playerCombat == null)
+        {
+            Debug.LogError($"PlayerHealth: PlayerCombat not found on {gameObject.name}. Knockback disabled.", gameObject);
+        }
+
+        if (_animator == null)
+        {
+            Debug.LogError($"PlayerHealth: Animator not found on {gameObject.name}. Damage animations disabled.", gameObject);
+        }
+
+        if (_gameSession == null)
+        {
+            Debug.LogError($"PlayerHealth: GameSession not assigned on {gameObject.name}. GameOver will not trigger.", gameObject);
+        }
+
         UpdateHealthUI();
     }
 
@@ -52,16 +68,32 @@ public class PlayerHealth : MonoBehaviour
         if (_invincibilityTimer > 0f)
         {
             _invincibilityTimer -= Time.deltaTime;
-
-            if (_spriteRenderer != null)
-            {
-                _spriteRenderer.enabled = Mathf.FloorToInt(Time.time * FlickerFrequency) % 2 == 0;
-            }
+            UpdateFlicker();
         }
-        else if (_spriteRenderer != null && _spriteRenderer.enabled == false)
+        else
         {
-            _spriteRenderer.enabled = true;
+            ResetFlicker();
         }
+    }
+
+    private void UpdateFlicker()
+    {
+        if (_spriteRenderer == null)
+        {
+            return;
+        }
+
+        _spriteRenderer.enabled = Mathf.FloorToInt(Time.time * FlickerFrequency) % 2 == 0;
+    }
+
+    private void ResetFlicker()
+    {
+        if (_spriteRenderer == null)
+        {
+            return;
+        }
+
+        _spriteRenderer.enabled = true;
     }
 
     public void TakeDamage(Vector2 damageSourcePosition) =>
@@ -77,15 +109,8 @@ public class PlayerHealth : MonoBehaviour
         _currentHealth -= amount;
         _invincibilityTimer = _invincibilityTime;
 
-        if (_playerCombat != null)
-        {
-            _playerCombat.ApplyKnockbackFrom(damageSourcePosition);
-        }
-
-        if (_animator != null)
-        {
-            _animator.SetTrigger(HurtTriggerHash);
-        }
+        _playerCombat?.ApplyKnockbackFrom(damageSourcePosition);
+        _animator?.SetTrigger(HurtTriggerHash);
 
         UpdateHealthUI();
 
@@ -110,25 +135,10 @@ public class PlayerHealth : MonoBehaviour
 
         _isDead = true;
 
-        if (_animator != null)
-        {
-            _animator.SetTrigger(DieTriggerHash);
-        }
-
-        if (_playerMovement != null)
-        {
-            _playerMovement.SetDead(true);
-        }
-
-        if (_rigidbody != null)
-        {
-            _rigidbody.velocity = Vector2.zero;
-        }
-
-        if (_gameSession != null)
-        {
-            _gameSession.GameOver();
-        }
+        _animator?.SetTrigger(DieTriggerHash);
+        _playerMovement?.SetDead(true);
+        _rigidbody.velocity = Vector2.zero;
+        _gameSession?.GameOver();
     }
 
     private void CheckFallingDeath()
@@ -146,9 +156,11 @@ public class PlayerHealth : MonoBehaviour
 
     private void UpdateHealthUI()
     {
-        if (_healthText != null)
+        if (_healthText == null)
         {
-            _healthText.text = string.Format(_healthFormat, _currentHealth, _maxHealth);
+            return;
         }
+
+        _healthText.text = string.Format(_healthFormat, _currentHealth, _maxHealth);
     }
 }

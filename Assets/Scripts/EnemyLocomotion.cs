@@ -36,13 +36,26 @@ public class EnemyLocomotion : MonoBehaviour
         }
     }
 
-    public void Patrol()
+    private void OnDrawGizmos()
     {
-        if (_direction == 0)
+        if (_groundCheck == null)
         {
-            _direction = _startsFacingRight ? 1 : -1;
+            return;
         }
 
+        bool hasGround = HasGroundAhead();
+
+        Gizmos.color = hasGround ? Color.green : Color.red;
+        Gizmos.DrawWireSphere(_groundCheck.position, _groundCheckRadius);
+
+        Vector2 checkPosition = (Vector2)_groundCheck.position + FacingVector * _edgeCheckOffset;
+
+        Gizmos.color = hasGround ? Color.green : Color.red;
+        Gizmos.DrawWireSphere(checkPosition, _groundCheckRadius);
+    }
+
+    public void Patrol()
+    {
         _rigidbody.velocity = new Vector2(_direction * _patrolSpeed, _rigidbody.velocity.y);
 
         float currentX = transform.position.x;
@@ -63,15 +76,13 @@ public class EnemyLocomotion : MonoBehaviour
 
     public void Chase(Vector3 targetPosition)
     {
-        if (_direction == 0)
-        {
-            _direction = _startsFacingRight ? 1 : -1;
-        }
-
         float distanceToTarget = targetPosition.x - transform.position.x;
         int targetDirection = distanceToTarget > 0 ? 1 : -1;
 
-        if (targetDirection != _direction)
+        if (targetDirection == _direction)
+        {
+        }
+        else
         {
             Flip();
         }
@@ -97,10 +108,12 @@ public class EnemyLocomotion : MonoBehaviour
         float distanceToTarget = targetPosition.x - transform.position.x;
         int targetDirection = distanceToTarget > 0 ? 1 : -1;
 
-        if (targetDirection != _direction)
+        if (targetDirection == _direction)
         {
-            Flip();
+            return;
         }
+
+        Flip();
     }
 
     public bool HasGroundAhead()
@@ -119,24 +132,11 @@ public class EnemyLocomotion : MonoBehaviour
 
         Vector2 checkPosition = (Vector2)_groundCheck.position + FacingVector * _edgeCheckOffset;
 
-        return Physics2D.OverlapCircle(checkPosition, _groundCheckRadius, _groundLayer) != null;
-    }
-
-    private void OnDrawGizmos()
-    {
-        if (_groundCheck == null)
+        if (Physics2D.OverlapCircle(checkPosition, _groundCheckRadius, _groundLayer) == null)
         {
-            return;
+            return false;
         }
 
-        bool hasGround = HasGroundAhead();
-
-        Gizmos.color = hasGround ? Color.green : Color.red;
-        Gizmos.DrawWireSphere(_groundCheck.position, _groundCheckRadius);
-
-        Vector2 checkPosition = (Vector2)_groundCheck.position + FacingVector * _edgeCheckOffset;
-
-        Gizmos.color = hasGround ? Color.green : Color.red;
-        Gizmos.DrawWireSphere(checkPosition, _groundCheckRadius);
+        return true;
     }
 }

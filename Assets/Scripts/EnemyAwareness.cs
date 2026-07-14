@@ -20,6 +20,8 @@ public class EnemyAwareness : MonoBehaviour
 
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
     private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
+    private const float AttackGizmoHeightFraction = 0.5f;
+    private const float DefaultAttackGizmoRadius = 1f;
 
     private void Awake()
     {
@@ -29,18 +31,22 @@ public class EnemyAwareness : MonoBehaviour
 
     private void OnEnable()
     {
-        if (_death != null)
+        if (_death == null)
         {
-            _death.Died += OnEnemyDied;
+            return;
         }
+
+        _death.Died += OnEnemyDied;
     }
 
     private void OnDisable()
     {
-        if (_death != null)
+        if (_death == null)
         {
-            _death.Died -= OnEnemyDied;
+            return;
         }
+
+        _death.Died -= OnEnemyDied;
     }
 
     private void Start()
@@ -49,6 +55,27 @@ public class EnemyAwareness : MonoBehaviour
         {
             Debug.LogError(
                 $"EnemyAwareness {name}: playerTarget not assigned. Enemy will patrol without chasing.",
+                gameObject);
+        }
+
+        if (_locomotion == null)
+        {
+            Debug.LogError(
+                $"EnemyAwareness {name}: Locomotion not assigned. Enemy cannot move.",
+                gameObject);
+        }
+
+        if (_striker == null)
+        {
+            Debug.LogError(
+                $"EnemyAwareness {name}: Striker not assigned. Enemy cannot attack.",
+                gameObject);
+        }
+
+        if (_death == null)
+        {
+            Debug.LogError(
+                $"EnemyAwareness {name}: Death not assigned. Enemy death handling disabled.",
                 gameObject);
         }
     }
@@ -60,10 +87,7 @@ public class EnemyAwareness : MonoBehaviour
             return;
         }
 
-        if (_animator != null && _rigidbody != null)
-        {
-            _animator.SetFloat(SpeedHash, Mathf.Abs(_rigidbody.velocity.x));
-        }
+        _animator?.SetFloat(SpeedHash, Mathf.Abs(_rigidbody.velocity.x));
     }
 
     private void FixedUpdate()
@@ -73,13 +97,18 @@ public class EnemyAwareness : MonoBehaviour
             return;
         }
 
-        if (_gameSession != null && _gameSession.State != GameState.Playing)
+        if (_gameSession == null)
         {
-            if (_locomotion != null)
-            {
-                _locomotion.Stop();
-            }
+            _locomotion?.Stop();
+            return;
+        }
 
+        if (_gameSession.State == GameState.Playing)
+        {
+        }
+        else
+        {
+            _locomotion?.Stop();
             return;
         }
 
@@ -111,26 +140,20 @@ public class EnemyAwareness : MonoBehaviour
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(position, _detectRange);
 
+        float attackRadius = _striker?.AttackRange ?? DefaultAttackGizmoRadius;
+
         Gizmos.color = Color.magenta;
         Gizmos.DrawWireSphere(
-            position + Vector3.up * (_striker != null ? _striker.AttackRange * 0.5f : 0.5f),
-            _striker != null ? _striker.AttackRange : 1f);
+            position + Vector3.up * attackRadius * AttackGizmoHeightFraction,
+            attackRadius);
     }
 
     private void OnEnemyDied(EnemyDeath death)
     {
         _state = State.Dead;
 
-        if (_locomotion != null)
-        {
-            _locomotion.Stop();
-        }
-
-        if (_striker != null)
-        {
-            _striker.CancelWindup();
-        }
-
+        _locomotion?.Stop();
+        _striker?.CancelWindup();
         this.enabled = false;
     }
 
@@ -138,11 +161,7 @@ public class EnemyAwareness : MonoBehaviour
     {
         if (_playerTarget == null)
         {
-            if (_locomotion != null)
-            {
-                _locomotion.Patrol();
-            }
-
+            _locomotion?.Patrol();
             return;
         }
 
@@ -154,10 +173,7 @@ public class EnemyAwareness : MonoBehaviour
             return;
         }
 
-        if (_locomotion != null)
-        {
-            _locomotion.Patrol();
-        }
+        _locomotion?.Patrol();
     }
 
     private void TickChase()
@@ -177,7 +193,7 @@ public class EnemyAwareness : MonoBehaviour
             return;
         }
 
-        if (absoluteDistance <= (_striker != null ? _striker.AttackRange : 0f))
+        if (absoluteDistance <= (_striker?.AttackRange ?? 0f))
         {
             _state = State.Attack;
             return;
@@ -205,10 +221,11 @@ public class EnemyAwareness : MonoBehaviour
 
         _locomotion.FaceTowards(_playerTarget.position);
 
-        if (_animator != null && _striker.IsOnCooldown == false)
+        if (_striker.IsOnCooldown == false)
         {
             _striker.BeginWindup();
-            _animator.SetTrigger(AttackTriggerHash);
+
+            _animator?.SetTrigger(AttackTriggerHash);
         }
 
         bool attackCompleted = _striker.TickWindup(
@@ -222,5 +239,11 @@ public class EnemyAwareness : MonoBehaviour
         }
     }
 
-    private enum State { Patrol, Chase, Attack, Dead }
+    private enum State
+    {
+        Patrol,
+        Chase,
+        Attack,
+        Dead
+    }
 }

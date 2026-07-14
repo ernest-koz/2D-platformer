@@ -59,7 +59,27 @@ public class PlayerMovement : MonoBehaviour
         if (_input == null)
         {
             Debug.LogError($"PlayerMovement: PlayerInput not assigned on {gameObject.name}. Drag PlayerInput component in the inspector.", gameObject);
+            this.enabled = false;
+            return;
         }
+
+        if (_groundCheck == null)
+        {
+            Debug.LogError($"PlayerMovement: GroundCheck not assigned on {gameObject.name}. Assign a Transform child for ground detection.", gameObject);
+            this.enabled = false;
+            return;
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (_groundCheck == null)
+        {
+            return;
+        }
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(_groundCheck.position, _groundCheckRadius);
     }
 
     private void Update()
@@ -74,36 +94,26 @@ public class PlayerMovement : MonoBehaviour
             _horizontalInput = 0f;
             _jumpBufferTimer = 0f;
 
-            if (_rigidbody != null)
-            {
-                _rigidbody.velocity = new Vector2(0f, _rigidbody.velocity.y);
-            }
-
-            if (_animator != null)
-            {
-                _animator.SetFloat(SpeedHash, 0f);
-            }
+            _rigidbody.velocity = new Vector2(0f, _rigidbody.velocity.y);
+            _animator.SetFloat(SpeedHash, 0f);
 
             return;
         }
 
-        _horizontalInput = _input != null ? _input.HorizontalInput : 0f;
+        _horizontalInput = _input.HorizontalInput;
 
-        if (_input != null && _input.JumpPressed)
+        if (_input.IsJumpPressed)
         {
             _jumpBufferTimer = _jumpBufferTime;
         }
 
-        _jumpHeld = _input != null && _input.JumpHeld;
+        _jumpHeld = _input.IsJumpHeld;
 
         _jumpBufferTimer -= Time.deltaTime;
         _coyoteTimer = _isGrounded ? _coyoteTime : _coyoteTimer - Time.deltaTime;
 
-        if (_animator != null)
-        {
-            _animator.SetFloat(SpeedHash, Mathf.Abs(_horizontalInput));
-            _animator.SetBool(IsGroundedHash, _isGrounded);
-        }
+        _animator.SetFloat(SpeedHash, Mathf.Abs(_horizontalInput));
+        _animator.SetBool(IsGroundedHash, _isGrounded);
 
         if (_horizontalInput > InputDeadzone && _isFacingRight == false)
         {
@@ -123,8 +133,7 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        _isGrounded = _groundCheck != null &&
-            Physics2D.OverlapCircle(_groundCheck.position, _groundCheckRadius, _groundLayer | _enemyLayer);
+        _isGrounded = Physics2D.OverlapCircle(_groundCheck.position, _groundCheckRadius, _groundLayer | _enemyLayer);
 
         float targetHorizontalVelocity = _horizontalInput * _moveSpeed;
         float horizontalVelocity = Mathf.SmoothDamp(
@@ -150,29 +159,17 @@ public class PlayerMovement : MonoBehaviour
             _jumpBufferTimer = 0f;
             _coyoteTimer = 0f;
 
-            if (_animator != null)
-            {
-                _animator.SetTrigger(JumpTriggerHash);
-            }
+            _animator.SetTrigger(JumpTriggerHash);
         }
 
         _rigidbody.velocity = new Vector2(horizontalVelocity, verticalVelocity);
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        if (_groundCheck != null)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(_groundCheck.position, _groundCheckRadius);
-        }
     }
 
     public void SetDead(bool dead)
     {
         _isDead = dead;
 
-        if (dead && _rigidbody != null)
+        if (dead)
         {
             _rigidbody.velocity = Vector2.zero;
         }
