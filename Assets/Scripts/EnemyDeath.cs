@@ -5,6 +5,8 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class EnemyDeath : MonoBehaviour
 {
+    private static readonly int DieTriggerHash = Animator.StringToHash("Die");
+
     [Header("Death")]
     [SerializeField] private float _deathDelay = 0.6f;
 
@@ -15,8 +17,6 @@ public class EnemyDeath : MonoBehaviour
     private Collider2D _collider;
     private Rigidbody2D _rigidbody;
     private bool _isDead;
-
-    private static readonly int DieTriggerHash = Animator.StringToHash("Die");
 
     public bool IsDead => _isDead;
 

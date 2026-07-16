@@ -1,7 +1,6 @@
 using UnityEngine;
 
 [RequireComponent(typeof(PlayerMovement))]
-[RequireComponent(typeof(PlayerHealth))]
 public class PlayerCombat : MonoBehaviour
 {
     [Header("Stomp")]
@@ -9,10 +8,6 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float _stompCheckRadius = 0.35f;
     [SerializeField] private Transform _stompCheck;
     [SerializeField] private LayerMask _enemyLayer;
-
-    [Header("Knockback on hit")]
-    [SerializeField] private float _selfKnockbackX = 4.5f;
-    [SerializeField] private float _selfKnockbackY = 7.5f;
 
     private PlayerMovement _playerMovement;
     private Rigidbody2D _rigidbody;
@@ -44,10 +39,7 @@ public class PlayerCombat : MonoBehaviour
 
         EnemyDeath enemyDeath = hit.GetComponentInParent<EnemyDeath>();
 
-        if (enemyDeath == null)
-        {
-        }
-        else if (enemyDeath.IsDead == false)
+        if (enemyDeath != null && enemyDeath.IsDead == false)
         {
             enemyDeath.Die();
             Bounce(_stompBounceForce);
@@ -63,12 +55,6 @@ public class PlayerCombat : MonoBehaviour
 
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(_stompCheck.position, _stompCheckRadius);
-    }
-
-    public void ApplyKnockbackFrom(Vector2 source)
-    {
-        Vector2 direction = ((Vector2)transform.position - source).normalized;
-        _rigidbody.velocity = new Vector2(direction.x * _selfKnockbackX, _selfKnockbackY);
     }
 
     private void Bounce(float force)

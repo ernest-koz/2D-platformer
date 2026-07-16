@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public abstract class PickupSpawner<T> : MonoBehaviour where T : MonoBehaviour, IPickup<T>
+public abstract class PickupSpawner<T> : MonoBehaviour where T : Pickup
 {
     [SerializeField] private T _prefab;
     [SerializeField] private Vector3[] _spawnPoints;
@@ -8,18 +8,15 @@ public abstract class PickupSpawner<T> : MonoBehaviour where T : MonoBehaviour, 
 
     private void Awake()
     {
-        if (_prefab == null || _spawnPoints == null)
+        if (_prefab == null)
         {
-            if (_prefab == null)
-            {
-                Debug.LogError($"PickupSpawner: prefab not assigned on {gameObject.name}.", gameObject);
-            }
+            Debug.LogError($"PickupSpawner: prefab not assigned on {gameObject.name}.", gameObject);
+            return;
+        }
 
-            if (_spawnPoints == null)
-            {
-                Debug.LogError($"PickupSpawner: spawnPoints not assigned on {gameObject.name}.", gameObject);
-            }
-
+        if (_spawnPoints == null || _spawnPoints.Length == 0)
+        {
+            Debug.LogError($"PickupSpawner: spawnPoints empty on {gameObject.name}.", gameObject);
             return;
         }
 
@@ -28,16 +25,13 @@ public abstract class PickupSpawner<T> : MonoBehaviour where T : MonoBehaviour, 
             T pickup = Instantiate(_prefab, spawnPoint, Quaternion.identity);
             pickup.transform.SetParent(transform, true);
             pickup.transform.localScale = _spawnScale;
+            pickup.PickedUp += OnPickedUp;
             Configure(pickup);
-            pickup.Collected += OnCollected;
         }
     }
 
-    private void OnCollected(T pickup)
-    {
-        pickup.Collected -= OnCollected;
+    protected virtual void OnPickedUp(Pickup pickup) =>
         Destroy(pickup.gameObject);
-    }
 
     protected virtual void Configure(T pickup)
     {

@@ -4,6 +4,12 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 public class PlayerMovement : MonoBehaviour
 {
+    private const float InputDeadzone = 0.01f;
+    private const float FallThreshold = 0.5f;
+    private static readonly int SpeedHash = Animator.StringToHash("Speed");
+    private static readonly int IsGroundedHash = Animator.StringToHash("IsGrounded");
+    private static readonly int JumpTriggerHash = Animator.StringToHash("Jump");
+
     [Header("Movement")]
     [SerializeField] private float _moveSpeed = 5.5f;
     [SerializeField] private float _jumpForce = 15f;
@@ -22,39 +28,33 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _lowJumpMultiplier = 2f;
 
     [Header("References")]
-    [SerializeField] private GameSession _gameSession;
     [SerializeField] private PlayerInput _input;
-
-    private const float InputDeadzone = 0.01f;
-    private const float FallThreshold = 0.5f;
+    [SerializeField] private SpriteFacing _facing;
 
     private Rigidbody2D _rigidbody;
     private Animator _animator;
     private float _horizontalInput;
     private bool _isGrounded;
-    private bool _jumpHeld;
+    private bool _isJumpHeld;
     private float _coyoteTimer;
     private float _jumpBufferTimer;
     private float _horizontalVelocitySmoothing;
-    private bool _isFacingRight = true;
     private bool _isDead;
-
-    private static readonly int SpeedHash = Animator.StringToHash("Speed");
-    private static readonly int IsGroundedHash = Animator.StringToHash("IsGrounded");
-    private static readonly int JumpTriggerHash = Animator.StringToHash("Jump");
 
     public bool IsGrounded => _isGrounded;
     public bool IsMoving => Mathf.Abs(_horizontalInput) > InputDeadzone;
     public bool IsFalling => _rigidbody.velocity.y < -FallThreshold;
     public float VerticalVelocity => _rigidbody.velocity.y;
 
-    private bool IsGameplayActive =>
-        _gameSession == null || _gameSession.State == GameState.Playing;
-
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody2D>();
         _animator = GetComponent<Animator>();
+
+        if (_facing == null)
+        {
+            _facing = GetComponent<SpriteFacing>();
+        }
 
         if (_input == null)
         {
@@ -68,60 +68,6 @@ public class PlayerMovement : MonoBehaviour
             Debug.LogError($"PlayerMovement: GroundCheck not assigned on {gameObject.name}. Assign a Transform child for ground detection.", gameObject);
             this.enabled = false;
             return;
-        }
-    }
-
-    private void OnDrawGizmosSelected()
-    {
-        if (_groundCheck == null)
-        {
-            return;
-        }
-
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(_groundCheck.position, _groundCheckRadius);
-    }
-
-    private void Update()
-    {
-        if (_isDead)
-        {
-            return;
-        }
-
-        if (IsGameplayActive == false)
-        {
-            _horizontalInput = 0f;
-            _jumpBufferTimer = 0f;
-
-            _rigidbody.velocity = new Vector2(0f, _rigidbody.velocity.y);
-            _animator.SetFloat(SpeedHash, 0f);
-
-            return;
-        }
-
-        _horizontalInput = _input.HorizontalInput;
-
-        if (_input.IsJumpPressed)
-        {
-            _jumpBufferTimer = _jumpBufferTime;
-        }
-
-        _jumpHeld = _input.IsJumpHeld;
-
-        _jumpBufferTimer -= Time.deltaTime;
-        _coyoteTimer = _isGrounded ? _coyoteTime : _coyoteTimer - Time.deltaTime;
-
-        _animator.SetFloat(SpeedHash, Mathf.Abs(_horizontalInput));
-        _animator.SetBool(IsGroundedHash, _isGrounded);
-
-        if (_horizontalInput > InputDeadzone && _isFacingRight == false)
-        {
-            Flip();
-        }
-        else if (_horizontalInput < -InputDeadzone && _isFacingRight)
-        {
-            Flip();
         }
     }
 
@@ -148,7 +94,7 @@ public class PlayerMovement : MonoBehaviour
         {
             verticalVelocity += Physics2D.gravity.y * (_fallMultiplier - 1f) * Time.fixedDeltaTime;
         }
-        else if (verticalVelocity > 0f && _jumpHeld == false)
+        else if (verticalVelocity > 0f && _isJumpHeld == false)
         {
             verticalVelocity += Physics2D.gravity.y * (_lowJumpMultiplier - 1f) * Time.fixedDeltaTime;
         }
@@ -165,21 +111,64 @@ public class PlayerMovement : MonoBehaviour
         _rigidbody.velocity = new Vector2(horizontalVelocity, verticalVelocity);
     }
 
-    public void SetDead(bool dead)
+    private void Update()
     {
-        _isDead = dead;
-
-        if (dead)
+        if (_isDead)
         {
-            _rigidbody.velocity = Vector2.zero;
+            return;
+        }
+
+        _horizontalInput = _input.HorizontalInput;
+
+        if (_input.IsJumpPressed)
+        {
+            _jumpBufferTimer = _jumpBufferTime;
+        }
+
+        _isJumpHeld = _input.IsJumpHeld;
+
+        _jumpBufferTimer -= Time.deltaTime;
+        _coyoteTimer = _isGrounded ? _coyoteTime : _coyoteTimer - Time.deltaTime;
+
+        _animator.SetFloat(SpeedHash, Mathf.Abs(_horizontalInput));
+        _animator.SetBool(IsGroundedHash, _isGrounded);
+
+        if (Mathf.Abs(_horizontalInput) > InputDeadzone)
+        {
+            _facing?.Face(_horizontalInput);
         }
     }
 
-    private void Flip()
+    private void OnDisable()
     {
-        _isFacingRight = !_isFacingRight;
-        Vector3 scale = transform.localScale;
-        scale.x *= -1f;
-        transform.localScale = scale;
+        if (_rigidbody != null)
+        {
+            _rigidbody.velocity = new Vector2(0f, _rigidbody.velocity.y);
+        }
+
+        _horizontalInput = 0f;
+        _jumpBufferTimer = 0f;
+        _isJumpHeld = false;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (_groundCheck == null)
+        {
+            return;
+        }
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(_groundCheck.position, _groundCheckRadius);
+    }
+
+    public void SetDead(bool isDead)
+    {
+        _isDead = isDead;
+
+        if (isDead)
+        {
+            _rigidbody.velocity = Vector2.zero;
+        }
     }
 }

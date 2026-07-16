@@ -1,27 +1,27 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class EnemyAwareness : MonoBehaviour
 {
+    private static readonly int SpeedHash = Animator.StringToHash("Speed");
+    private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
+    private const float AttackGizmoHeightFraction = 0.5f;
+    private const float DefaultAttackGizmoRadius = 1f;
+
     [Header("Detection")]
     [SerializeField] private float _detectRange = 5f;
     [SerializeField] private float _chaseRange = 7f;
     [SerializeField] private LayerMask _playerLayer;
 
     [Header("References")]
-    [SerializeField] private Transform _playerTarget;
     [SerializeField] private EnemyLocomotion _locomotion;
     [SerializeField] private EnemyStriker _striker;
     [SerializeField] private EnemyDeath _death;
-    [SerializeField] private GameSession _gameSession;
 
+    private readonly Collider2D[] _targetBuffer = new Collider2D[8];
     private State _state = State.Patrol;
     private Animator _animator;
     private Rigidbody2D _rigidbody;
-
-    private static readonly int SpeedHash = Animator.StringToHash("Speed");
-    private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
-    private const float AttackGizmoHeightFraction = 0.5f;
-    private const float DefaultAttackGizmoRadius = 1f;
 
     private void Awake()
     {
@@ -39,25 +39,8 @@ public class EnemyAwareness : MonoBehaviour
         _death.Died += OnEnemyDied;
     }
 
-    private void OnDisable()
-    {
-        if (_death == null)
-        {
-            return;
-        }
-
-        _death.Died -= OnEnemyDied;
-    }
-
     private void Start()
     {
-        if (_playerTarget == null)
-        {
-            Debug.LogError(
-                $"EnemyAwareness {name}: playerTarget not assigned. Enemy will patrol without chasing.",
-                gameObject);
-        }
-
         if (_locomotion == null)
         {
             Debug.LogError(
@@ -80,35 +63,10 @@ public class EnemyAwareness : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        if (_state == State.Dead)
-        {
-            return;
-        }
-
-        _animator?.SetFloat(SpeedHash, Mathf.Abs(_rigidbody.velocity.x));
-    }
-
     private void FixedUpdate()
     {
         if (_state == State.Dead)
         {
-            return;
-        }
-
-        if (_gameSession == null)
-        {
-            _locomotion?.Stop();
-            return;
-        }
-
-        if (_gameSession.State == GameState.Playing)
-        {
-        }
-        else
-        {
-            _locomotion?.Stop();
             return;
         }
 
@@ -126,6 +84,26 @@ public class EnemyAwareness : MonoBehaviour
                 TickAttack();
                 break;
         }
+    }
+
+    private void Update()
+    {
+        if (_state == State.Dead)
+        {
+            return;
+        }
+
+        _animator?.SetFloat(SpeedHash, Mathf.Abs(_rigidbody.velocity.x));
+    }
+
+    private void OnDisable()
+    {
+        if (_death != null)
+        {
+            _death.Died -= OnEnemyDied;
+        }
+
+        _locomotion?.Stop();
     }
 
     private void OnDrawGizmosSelected()
@@ -148,26 +126,11 @@ public class EnemyAwareness : MonoBehaviour
             attackRadius);
     }
 
-    private void OnEnemyDied(EnemyDeath death)
-    {
-        _state = State.Dead;
-
-        _locomotion?.Stop();
-        _striker?.CancelWindup();
-        this.enabled = false;
-    }
-
     private void TickPatrol()
     {
-        if (_playerTarget == null)
-        {
-            _locomotion?.Patrol();
-            return;
-        }
+        ITargetable target = FindNearestTarget(_detectRange);
 
-        float distanceToPlayer = _playerTarget.position.x - transform.position.x;
-
-        if (Mathf.Abs(distanceToPlayer) <= _detectRange)
+        if (target != null)
         {
             _state = State.Chase;
             return;
@@ -178,22 +141,23 @@ public class EnemyAwareness : MonoBehaviour
 
     private void TickChase()
     {
-        if (_playerTarget == null || _locomotion == null)
+        if (_locomotion == null || _striker == null)
         {
             _state = State.Patrol;
             return;
         }
 
-        float distanceToPlayer = _playerTarget.position.x - transform.position.x;
-        float absoluteDistance = Mathf.Abs(distanceToPlayer);
+        ITargetable target = FindNearestTarget(_chaseRange);
 
-        if (absoluteDistance > _chaseRange)
+        if (target == null)
         {
             _state = State.Patrol;
             return;
         }
 
-        if (absoluteDistance <= (_striker?.AttackRange ?? 0f))
+        float absoluteDistance = Mathf.Abs(target.Position.x - transform.position.x);
+
+        if (absoluteDistance <= _striker.AttackRange)
         {
             _state = State.Attack;
             return;
@@ -206,12 +170,12 @@ public class EnemyAwareness : MonoBehaviour
             return;
         }
 
-        _locomotion.Chase(_playerTarget.position);
+        _locomotion.Chase(target.Position);
     }
 
     private void TickAttack()
     {
-        if (_playerTarget == null || _locomotion == null || _striker == null)
+        if (_locomotion == null || _striker == null)
         {
             _state = State.Patrol;
             return;
@@ -219,7 +183,12 @@ public class EnemyAwareness : MonoBehaviour
 
         _locomotion.Stop();
 
-        _locomotion.FaceTowards(_playerTarget.position);
+        ITargetable target = FindNearestTarget(_chaseRange);
+
+        if (target != null)
+        {
+            _locomotion.FaceTowards(target.Position);
+        }
 
         if (_striker.IsOnCooldown == false)
         {
@@ -228,15 +197,54 @@ public class EnemyAwareness : MonoBehaviour
             _animator?.SetTrigger(AttackTriggerHash);
         }
 
-        bool attackCompleted = _striker.TickWindup(
+        bool isAttackCompleted = _striker.TickWindup(
             transform.position,
             _locomotion.FacingVector,
             _playerLayer);
 
-        if (attackCompleted)
+        if (isAttackCompleted)
         {
             _state = State.Chase;
         }
+    }
+
+    private void OnEnemyDied(EnemyDeath death)
+    {
+        _state = State.Dead;
+
+        _striker?.CancelWindup();
+        this.enabled = false;
+    }
+
+    private ITargetable FindNearestTarget(float range)
+    {
+        int count = Physics2D.OverlapCircleNonAlloc(transform.position, range, _targetBuffer, _playerLayer);
+
+        ITargetable nearest = null;
+        float nearestSqrDistance = float.MaxValue;
+
+        for (int i = 0; i < count; i++)
+        {
+            if (_targetBuffer[i].TryGetComponent(out ITargetable target) == false)
+            {
+                continue;
+            }
+
+            if (target.IsTargetable == false)
+            {
+                continue;
+            }
+
+            float sqrDistance = (target.Position - transform.position).sqrMagnitude;
+
+            if (sqrDistance < nearestSqrDistance)
+            {
+                nearestSqrDistance = sqrDistance;
+                nearest = target;
+            }
+        }
+
+        return nearest;
     }
 
     private enum State

@@ -2,6 +2,9 @@ using UnityEngine;
 
 public class EnemyStriker : MonoBehaviour
 {
+    private const float AttackCircleRadiusFraction = 0.6f;
+    private const float InitialLastAttackTime = -999f;
+
     [Header("Attack")]
     [SerializeField] private float _attackRange = 1.0f;
     [SerializeField] private int _attackDamage = 1;
@@ -10,15 +13,18 @@ public class EnemyStriker : MonoBehaviour
     [SerializeField] private float _attackOriginHeight = 0.8f;
     [SerializeField] private LayerMask _obstacleLayer;
 
-    private const float AttackCircleRadiusFraction = 0.6f;
-    private const float InitialLastAttackTime = -999f;
-
     private float _lastAttackTime = InitialLastAttackTime;
     private float _windupTimer;
     private bool _isWindingUp;
 
     public float AttackRange => _attackRange;
+
     public bool IsOnCooldown => Time.time - _lastAttackTime < _attackCooldown;
+
+    private void OnDisable()
+    {
+        CancelWindup();
+    }
 
     public void BeginWindup()
     {
@@ -56,12 +62,9 @@ public class EnemyStriker : MonoBehaviour
             _attackRange,
             playerLayer | _obstacleLayer);
 
-        if (hit.collider == null)
+        if (hit.collider != null && hit.collider.TryGetComponent(out ITargetable target))
         {
-        }
-        else if (hit.collider.TryGetComponent(out PlayerHealth health))
-        {
-            health.TakeDamage(_attackDamage, transform.position);
+            target.TakeDamage(_attackDamage, transform.position);
         }
 
         return true;

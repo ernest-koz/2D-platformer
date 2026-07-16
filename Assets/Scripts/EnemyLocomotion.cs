@@ -1,13 +1,13 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(SpriteFacing))]
 public class EnemyLocomotion : MonoBehaviour
 {
     [Header("Patrol")]
     [SerializeField] private float _patrolSpeed = 1.6f;
     [SerializeField] private float _leftX = -3f;
     [SerializeField] private float _rightX = 3f;
-    [SerializeField] private bool _startsFacingRight = true;
 
     [Header("Chase")]
     [SerializeField] private float _chaseSpeed = 2.8f;
@@ -18,15 +18,28 @@ public class EnemyLocomotion : MonoBehaviour
     [SerializeField] private float _edgeCheckOffset = 0.5f;
     [SerializeField] private LayerMask _groundLayer;
 
-    private Rigidbody2D _rigidbody;
-    private int _direction;
+    [Header("References")]
+    [SerializeField] private SpriteFacing _facing;
 
-    public Vector2 FacingVector => _direction > 0 ? Vector2.right : Vector2.left;
+    private Rigidbody2D _rigidbody;
+
+    public Vector2 FacingVector => _facing != null ? _facing.FacingVector : Vector2.right;
 
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody2D>();
-        _direction = _startsFacingRight ? 1 : -1;
+
+        if (_facing == null)
+        {
+            _facing = GetComponent<SpriteFacing>();
+        }
+
+        if (_facing == null)
+        {
+            Debug.LogError(
+                $"EnemyLocomotion: SpriteFacing not found on {gameObject.name}. Movement disabled — add the component.",
+                gameObject);
+        }
 
         if (_groundCheck == null)
         {
@@ -56,38 +69,40 @@ public class EnemyLocomotion : MonoBehaviour
 
     public void Patrol()
     {
-        _rigidbody.velocity = new Vector2(_direction * _patrolSpeed, _rigidbody.velocity.y);
+        if (_facing == null)
+        {
+            return;
+        }
+
+        _rigidbody.velocity = new Vector2(_facing.FacingDirection * _patrolSpeed, _rigidbody.velocity.y);
 
         float currentX = transform.position.x;
 
-        if (_direction > 0 && currentX >= _rightX)
+        if (_facing.FacingDirection > 0 && currentX >= _rightX)
         {
-            Flip();
+            _facing.Flip();
         }
-        else if (_direction < 0 && currentX <= _leftX)
+        else if (_facing.FacingDirection < 0 && currentX <= _leftX)
         {
-            Flip();
+            _facing.Flip();
         }
         else if (HasGroundAhead() == false)
         {
-            Flip();
+            _facing.Flip();
         }
     }
 
     public void Chase(Vector3 targetPosition)
     {
+        if (_facing == null)
+        {
+            return;
+        }
+
         float distanceToTarget = targetPosition.x - transform.position.x;
-        int targetDirection = distanceToTarget > 0 ? 1 : -1;
+        _facing.Face(distanceToTarget);
 
-        if (targetDirection == _direction)
-        {
-        }
-        else
-        {
-            Flip();
-        }
-
-        _rigidbody.velocity = new Vector2(_direction * _chaseSpeed, _rigidbody.velocity.y);
+        _rigidbody.velocity = new Vector2(_facing.FacingDirection * _chaseSpeed, _rigidbody.velocity.y);
     }
 
     public void Stop()
@@ -95,25 +110,15 @@ public class EnemyLocomotion : MonoBehaviour
         _rigidbody.velocity = new Vector2(0f, _rigidbody.velocity.y);
     }
 
-    private void Flip()
-    {
-        _direction *= -1;
-        Vector3 scale = transform.localScale;
-        scale.x *= -1f;
-        transform.localScale = scale;
-    }
-
     public void FaceTowards(Vector3 targetPosition)
     {
-        float distanceToTarget = targetPosition.x - transform.position.x;
-        int targetDirection = distanceToTarget > 0 ? 1 : -1;
-
-        if (targetDirection == _direction)
+        if (_facing == null)
         {
             return;
         }
 
-        Flip();
+        float distanceToTarget = targetPosition.x - transform.position.x;
+        _facing.Face(distanceToTarget);
     }
 
     public bool HasGroundAhead()

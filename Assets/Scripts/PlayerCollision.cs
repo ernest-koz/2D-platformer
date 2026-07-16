@@ -22,13 +22,25 @@ public class PlayerCollision : MonoBehaviour
     {
         if (other.TryGetComponent(out Coin coin))
         {
-            coin.Collect();
+            _gameSession?.AddCoin(coin.Value);
+            coin.CompletePickup();
             return;
         }
 
         if (other.TryGetComponent(out HealthPickup healthPickup))
         {
-            healthPickup.Collect(gameObject);
+            if (_playerHealth.IsAlive == false)
+            {
+                return;
+            }
+
+            if (_playerHealth.CurrentHealth >= _playerHealth.MaxHealth)
+            {
+                return;
+            }
+
+            _playerHealth.Heal(healthPickup.HealAmount);
+            healthPickup.CompletePickup();
             return;
         }
 

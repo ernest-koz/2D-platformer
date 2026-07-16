@@ -1,99 +1,65 @@
+using System;
 using UnityEngine;
-using UnityEngine.UI;
 
-public class PlayerHealth : MonoBehaviour
+[RequireComponent(typeof(Rigidbody2D))]
+public class PlayerHealth : MonoBehaviour, ITargetable
 {
     [SerializeField] private int _maxHealth = 3;
     [SerializeField] private float _invincibilityTime = 1.0f;
-
-    [Header("Falling death")]
     [SerializeField] private float _deathY = -20f;
-
-    [Header("UI (optional)")]
-    [SerializeField] private Text _healthText;
-    [SerializeField] private string _healthFormat = "HP: {0}/{1}";
-
-    [Header("References")]
     [SerializeField] private GameSession _gameSession;
-
-    private const float FlickerFrequency = 18f;
+    [SerializeField] private PlayerMovement _playerMovement;
 
     private int _currentHealth;
     private float _invincibilityTimer;
-    private SpriteRenderer _spriteRenderer;
-    private PlayerCombat _playerCombat;
     private Rigidbody2D _rigidbody;
-    private Animator _animator;
-    private PlayerMovement _playerMovement;
     private bool _isDead;
-
-    private static readonly int HurtTriggerHash = Animator.StringToHash("Hurt");
-    private static readonly int DieTriggerHash = Animator.StringToHash("Die");
 
     public int CurrentHealth => _currentHealth;
     public int MaxHealth => _maxHealth;
     public bool IsAlive => _currentHealth > 0 && _isDead == false;
+    public bool IsInvincible => _invincibilityTimer > 0f;
+    public Vector3 Position => transform.position;
+    public bool IsTargetable => IsAlive;
+
+    public event Action<int, int> HealthChanged;
+    public event Action<Vector2> Damaged;
+    public event Action Died;
 
     private void Awake()
     {
-        _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        _playerCombat = GetComponent<PlayerCombat>();
         _rigidbody = GetComponent<Rigidbody2D>();
-        _animator = GetComponent<Animator>();
-        _playerMovement = GetComponent<PlayerMovement>();
         _currentHealth = _maxHealth;
 
-        if (_playerCombat == null)
+        if (_playerMovement == null)
         {
-            Debug.LogError($"PlayerHealth: PlayerCombat not found on {gameObject.name}. Knockback disabled.", gameObject);
-        }
-
-        if (_animator == null)
-        {
-            Debug.LogError($"PlayerHealth: Animator not found on {gameObject.name}. Damage animations disabled.", gameObject);
+            _playerMovement = GetComponent<PlayerMovement>();
         }
 
         if (_gameSession == null)
         {
             Debug.LogError($"PlayerHealth: GameSession not assigned on {gameObject.name}. GameOver will not trigger.", gameObject);
         }
+    }
 
-        UpdateHealthUI();
+    private void Start()
+    {
+        HealthChanged?.Invoke(_currentHealth, _maxHealth);
     }
 
     private void Update()
     {
+        if (_gameSession != null && _gameSession.State != GameState.Playing)
+        {
+            return;
+        }
+
         CheckFallingDeath();
 
         if (_invincibilityTimer > 0f)
         {
             _invincibilityTimer -= Time.deltaTime;
-            UpdateFlicker();
         }
-        else
-        {
-            ResetFlicker();
-        }
-    }
-
-    private void UpdateFlicker()
-    {
-        if (_spriteRenderer == null)
-        {
-            return;
-        }
-
-        _spriteRenderer.enabled = Mathf.FloorToInt(Time.time * FlickerFrequency) % 2 == 0;
-    }
-
-    private void ResetFlicker()
-    {
-        if (_spriteRenderer == null)
-        {
-            return;
-        }
-
-        _spriteRenderer.enabled = true;
     }
 
     public void TakeDamage(Vector2 damageSourcePosition) =>
@@ -109,21 +75,28 @@ public class PlayerHealth : MonoBehaviour
         _currentHealth -= amount;
         _invincibilityTimer = _invincibilityTime;
 
-        _playerCombat?.ApplyKnockbackFrom(damageSourcePosition);
-        _animator?.SetTrigger(HurtTriggerHash);
-
-        UpdateHealthUI();
+        HealthChanged?.Invoke(_currentHealth, _maxHealth);
 
         if (_currentHealth <= 0)
         {
             Die();
         }
+        else
+        {
+            Damaged?.Invoke(damageSourcePosition);
+        }
     }
 
     public void Heal(int amount)
     {
+        if (IsAlive == false)
+        {
+            return;
+        }
+
+        amount = Mathf.Max(0, amount);
         _currentHealth = Mathf.Min(_currentHealth + amount, _maxHealth);
-        UpdateHealthUI();
+        HealthChanged?.Invoke(_currentHealth, _maxHealth);
     }
 
     private void Die()
@@ -135,9 +108,10 @@ public class PlayerHealth : MonoBehaviour
 
         _isDead = true;
 
-        _animator?.SetTrigger(DieTriggerHash);
         _playerMovement?.SetDead(true);
         _rigidbody.velocity = Vector2.zero;
+
+        Died?.Invoke();
         _gameSession?.GameOver();
     }
 
@@ -152,15 +126,5 @@ public class PlayerHealth : MonoBehaviour
         {
             Die();
         }
-    }
-
-    private void UpdateHealthUI()
-    {
-        if (_healthText == null)
-        {
-            return;
-        }
-
-        _healthText.text = string.Format(_healthFormat, _currentHealth, _maxHealth);
     }
 }
