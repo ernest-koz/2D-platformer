@@ -49,12 +49,18 @@ public class PlayerHealth : MonoBehaviour, ITargetable
 
     private void Update()
     {
-        if (_gameSession != null && _gameSession.State != GameState.Playing)
+        if (_gameSession == null)
         {
             return;
         }
 
-        CheckFallingDeath();
+        if (_gameSession.State == GameState.Playing)
+        {
+            CheckFallingDeath();
+        }
+
+        if (_invincibilityTimer > 0f)
+        {
 
         if (_invincibilityTimer > 0f)
         {
@@ -108,11 +114,31 @@ public class PlayerHealth : MonoBehaviour, ITargetable
 
         _isDead = true;
 
-        _playerMovement?.SetDead(true);
-        _rigidbody.velocity = Vector2.zero;
+        StopMovement();
+        NotifyDied();
+    }
 
+    private void StopMovement()
+    {
+        if (_playerMovement == null)
+        {
+            return;
+        }
+
+        _playerMovement.SetDead(true);
+        _rigidbody.velocity = Vector2.zero;
+    }
+
+    private void NotifyDied()
+    {
         Died?.Invoke();
-        _gameSession?.GameOver();
+
+        if (_gameSession == null)
+        {
+            return;
+        }
+
+        _gameSession.GameOver();
     }
 
     private void CheckFallingDeath()

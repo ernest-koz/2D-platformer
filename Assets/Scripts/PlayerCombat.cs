@@ -39,7 +39,12 @@ public class PlayerCombat : MonoBehaviour
 
         EnemyDeath enemyDeath = hit.GetComponentInParent<EnemyDeath>();
 
-        if (enemyDeath != null && enemyDeath.IsDead == false)
+        if (enemyDeath == null)
+        {
+            return;
+        }
+
+        if (enemyDeath.IsDead == false)
         {
             enemyDeath.Die();
             Bounce(_stompBounceForce);

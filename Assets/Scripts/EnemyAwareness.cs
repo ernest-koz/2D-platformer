@@ -93,17 +93,29 @@ public class EnemyAwareness : MonoBehaviour
             return;
         }
 
-        _animator?.SetFloat(SpeedHash, Mathf.Abs(_rigidbody.velocity.x));
+        if (_animator == null)
+        {
+            return;
+        }
+
+        _animator.SetFloat(SpeedHash, Mathf.Abs(_rigidbody.velocity.x));
     }
 
     private void OnDisable()
     {
-        if (_death != null)
+        if (_death == null)
         {
-            _death.Died -= OnEnemyDied;
+            return;
         }
 
-        _locomotion?.Stop();
+        _death.Died -= OnEnemyDied;
+
+        if (_locomotion == null)
+        {
+            return;
+        }
+
+        _locomotion.Stop();
     }
 
     private void OnDrawGizmosSelected()
@@ -118,7 +130,7 @@ public class EnemyAwareness : MonoBehaviour
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(position, _detectRange);
 
-        float attackRadius = _striker?.AttackRange ?? DefaultAttackGizmoRadius;
+        float attackRadius = _striker == null ? DefaultAttackGizmoRadius : _striker.AttackRange;
 
         Gizmos.color = Color.magenta;
         Gizmos.DrawWireSphere(
@@ -130,23 +142,17 @@ public class EnemyAwareness : MonoBehaviour
     {
         ITargetable target = FindNearestTarget(_detectRange);
 
-        if (target != null)
+        if (target == null)
         {
-            _state = State.Chase;
+            _locomotion.Patrol();
             return;
         }
 
-        _locomotion?.Patrol();
+        _state = State.Chase;
     }
 
     private void TickChase()
     {
-        if (_locomotion == null || _striker == null)
-        {
-            _state = State.Patrol;
-            return;
-        }
-
         ITargetable target = FindNearestTarget(_chaseRange);
 
         if (target == null)
@@ -175,26 +181,21 @@ public class EnemyAwareness : MonoBehaviour
 
     private void TickAttack()
     {
-        if (_locomotion == null || _striker == null)
-        {
-            _state = State.Patrol;
-            return;
-        }
-
         _locomotion.Stop();
 
         ITargetable target = FindNearestTarget(_chaseRange);
 
-        if (target != null)
+        if (target == null)
         {
-            _locomotion.FaceTowards(target.Position);
+            return;
         }
+
+        _locomotion.FaceTowards(target.Position);
 
         if (_striker.IsOnCooldown == false)
         {
             _striker.BeginWindup();
-
-            _animator?.SetTrigger(AttackTriggerHash);
+            TriggerAttackAnimation();
         }
 
         bool isAttackCompleted = _striker.TickWindup(
@@ -212,8 +213,24 @@ public class EnemyAwareness : MonoBehaviour
     {
         _state = State.Dead;
 
-        _striker?.CancelWindup();
+        if (_striker == null)
+        {
+            this.enabled = false;
+            return;
+        }
+
+        _striker.CancelWindup();
         this.enabled = false;
+    }
+
+    private void TriggerAttackAnimation()
+    {
+        if (_animator == null)
+        {
+            return;
+        }
+
+        _animator.SetTrigger(AttackTriggerHash);
     }
 
     private ITargetable FindNearestTarget(float range)

@@ -135,20 +135,27 @@ public class PlayerMovement : MonoBehaviour
 
         if (Mathf.Abs(_horizontalInput) > InputDeadzone)
         {
-            _facing?.Face(_horizontalInput);
+            _facing.Face(_horizontalInput);
         }
     }
 
     private void OnDisable()
     {
-        if (_rigidbody != null)
-        {
-            _rigidbody.velocity = new Vector2(0f, _rigidbody.velocity.y);
-        }
+        ResetRigidbodyVelocity();
 
         _horizontalInput = 0f;
         _jumpBufferTimer = 0f;
         _isJumpHeld = false;
+    }
+
+    private void ResetRigidbodyVelocity()
+    {
+        if (_rigidbody == null)
+        {
+            return;
+        }
+
+        _rigidbody.velocity = new Vector2(0f, _rigidbody.velocity.y);
     }
 
     private void OnDrawGizmosSelected()

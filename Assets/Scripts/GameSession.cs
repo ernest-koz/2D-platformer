@@ -149,20 +149,26 @@ public class GameSession : MonoBehaviour
 
     private void SuspendGameplay()
     {
-        if (_playerMovement != null)
+        if (_playerMovement == null)
         {
-            _playerMovement.enabled = false;
+            return;
         }
 
-        if (_enemies != null)
+        _playerMovement.enabled = false;
+
+        if (_enemies == null)
         {
-            foreach (EnemyAwareness enemy in _enemies)
+            return;
+        }
+
+        foreach (EnemyAwareness enemy in _enemies)
+        {
+            if (enemy == null)
             {
-                if (enemy != null)
-                {
-                    enemy.enabled = false;
-                }
+                continue;
             }
+
+            enemy.enabled = false;
         }
     }
 

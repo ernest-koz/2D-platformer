@@ -23,7 +23,7 @@ public class EnemyLocomotion : MonoBehaviour
 
     private Rigidbody2D _rigidbody;
 
-    public Vector2 FacingVector => _facing != null ? _facing.FacingVector : Vector2.right;
+    public Vector2 FacingVector => _facing.FacingVector;
 
     private void Awake()
     {
@@ -32,13 +32,6 @@ public class EnemyLocomotion : MonoBehaviour
         if (_facing == null)
         {
             _facing = GetComponent<SpriteFacing>();
-        }
-
-        if (_facing == null)
-        {
-            Debug.LogError(
-                $"EnemyLocomotion: SpriteFacing not found on {gameObject.name}. Movement disabled — add the component.",
-                gameObject);
         }
 
         if (_groundCheck == null)
@@ -69,11 +62,6 @@ public class EnemyLocomotion : MonoBehaviour
 
     public void Patrol()
     {
-        if (_facing == null)
-        {
-            return;
-        }
-
         _rigidbody.velocity = new Vector2(_facing.FacingDirection * _patrolSpeed, _rigidbody.velocity.y);
 
         float currentX = transform.position.x;
@@ -94,11 +82,6 @@ public class EnemyLocomotion : MonoBehaviour
 
     public void Chase(Vector3 targetPosition)
     {
-        if (_facing == null)
-        {
-            return;
-        }
-
         float distanceToTarget = targetPosition.x - transform.position.x;
         _facing.Face(distanceToTarget);
 
@@ -112,11 +95,6 @@ public class EnemyLocomotion : MonoBehaviour
 
     public void FaceTowards(Vector3 targetPosition)
     {
-        if (_facing == null)
-        {
-            return;
-        }
-
         float distanceToTarget = targetPosition.x - transform.position.x;
         _facing.Face(distanceToTarget);
     }

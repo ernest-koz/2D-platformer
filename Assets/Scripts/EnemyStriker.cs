@@ -62,10 +62,17 @@ public class EnemyStriker : MonoBehaviour
             _attackRange,
             playerLayer | _obstacleLayer);
 
-        if (hit.collider != null && hit.collider.TryGetComponent(out ITargetable target))
+        if (hit.collider == null)
         {
-            target.TakeDamage(_attackDamage, transform.position);
+            return true;
         }
+
+        if (hit.collider.TryGetComponent(out ITargetable target) == false)
+        {
+            return true;
+        }
+
+        target.TakeDamage(_attackDamage, transform.position);
 
         return true;
     }
