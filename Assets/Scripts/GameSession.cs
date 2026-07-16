@@ -37,7 +37,7 @@ public class GameSession : MonoBehaviour
     [Header("References")]
     [SerializeField] private PlayerInput _input;
     [SerializeField] private PlayerMovement _playerMovement;
-    [SerializeField] private EnemyAwareness[] _enemies;
+    [SerializeField] private EnemyStateMachine[] _enemies;
 
     private GameState _state = GameState.Playing;
     private int _totalCoinsCollected;
@@ -161,7 +161,7 @@ public class GameSession : MonoBehaviour
             return;
         }
 
-        foreach (EnemyAwareness enemy in _enemies)
+        foreach (EnemyStateMachine enemy in _enemies)
         {
             if (enemy == null)
             {

@@ -61,9 +61,6 @@ public class PlayerHealth : MonoBehaviour, ITargetable
 
         if (_invincibilityTimer > 0f)
         {
-
-        if (_invincibilityTimer > 0f)
-        {
             _invincibilityTimer -= Time.deltaTime;
         }
     }
