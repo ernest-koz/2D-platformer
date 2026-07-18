@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public enum PickupType
@@ -13,4 +14,11 @@ public class Pickup : MonoBehaviour
 
     public PickupType Type => _type;
     public int Amount => _amount;
+
+    public event Action<Pickup> Collected;
+
+    public void Collect()
+    {
+        Collected?.Invoke(this);
+    }
 }

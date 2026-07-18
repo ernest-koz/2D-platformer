@@ -38,6 +38,9 @@ public class GameSession : MonoBehaviour
     [SerializeField] private InputReader _input;
     [SerializeField] private MonoBehaviour[] _gameplayComponents;
     [SerializeField] private Player _player;
+    [SerializeField] private PlayerCollisionHandler _playerCollision;
+    [SerializeField] private Health _playerHealth;
+    [SerializeField] private FallDetector _fallDetector;
 
     [Header("Enemies")]
     [SerializeField] private EnemyBrain[] _enemies;
@@ -63,6 +66,21 @@ public class GameSession : MonoBehaviour
         if (_input == null)
         {
             Debug.LogError($"GameSession: InputReader not assigned on {gameObject.name}. Restart will not work.", gameObject);
+        }
+
+        if (_playerCollision == null)
+        {
+            Debug.LogError($"GameSession: PlayerCollisionHandler not assigned on {gameObject.name}.", gameObject);
+        }
+
+        if (_playerHealth == null)
+        {
+            Debug.LogError($"GameSession: Health not assigned on {gameObject.name}.", gameObject);
+        }
+
+        if (_fallDetector == null)
+        {
+            Debug.LogError($"GameSession: FallDetector not assigned on {gameObject.name}.", gameObject);
         }
 
         if (_gameplayComponents == null)
@@ -151,46 +169,26 @@ public class GameSession : MonoBehaviour
 
     private void TogglePlayerEvents(bool subscribe)
     {
-        if (_player == null)
+        if (_playerCollision == null || _playerHealth == null || _fallDetector == null)
         {
             return;
         }
 
-        PlayerCollisionHandler collision = _player.GetComponent<PlayerCollisionHandler>();
-
         if (subscribe)
         {
-            collision.PickupCollected += OnPickupCollected;
-            collision.EnemyContacted += OnEnemyContacted;
-            collision.LevelFinished += OnLevelFinished;
+            _playerCollision.PickupCollected += OnPickupCollected;
+            _playerCollision.EnemyContacted += OnEnemyContacted;
+            _playerCollision.LevelFinished += OnLevelFinished;
+            _playerHealth.Died += OnPlayerDied;
+            _fallDetector.FellToDeath += OnPlayerDied;
         }
         else
         {
-            collision.PickupCollected -= OnPickupCollected;
-            collision.EnemyContacted -= OnEnemyContacted;
-            collision.LevelFinished -= OnLevelFinished;
-        }
-
-        Health playerHealth = _player.GetComponent<Health>();
-
-        if (subscribe)
-        {
-            playerHealth.Died += OnPlayerDied;
-        }
-        else
-        {
-            playerHealth.Died -= OnPlayerDied;
-        }
-
-        FallDetector fallDetector = _player.GetComponent<FallDetector>();
-
-        if (subscribe)
-        {
-            fallDetector.FellToDeath += OnPlayerDied;
-        }
-        else
-        {
-            fallDetector.FellToDeath -= OnPlayerDied;
+            _playerCollision.PickupCollected -= OnPickupCollected;
+            _playerCollision.EnemyContacted -= OnEnemyContacted;
+            _playerCollision.LevelFinished -= OnLevelFinished;
+            _playerHealth.Died -= OnPlayerDied;
+            _fallDetector.FellToDeath -= OnPlayerDied;
         }
     }
 
@@ -235,16 +233,14 @@ public class GameSession : MonoBehaviour
                 break;
 
             case PickupType.Health:
-                Health playerHealth = _player.GetComponent<Health>();
-
-                if (playerHealth.IsAlive == false)
+                if (_playerHealth.IsAlive == false)
                 {
                     break;
                 }
 
-                if (playerHealth.CurrentHealth < playerHealth.MaximumHealth)
+                if (_playerHealth.CurrentHealth < _playerHealth.MaximumHealth)
                 {
-                    playerHealth.Heal(pickup.Amount);
+                    _playerHealth.Heal(pickup.Amount);
                 }
                 break;
         }
@@ -252,9 +248,7 @@ public class GameSession : MonoBehaviour
 
     private void OnEnemyContacted(Collision2D collision)
     {
-        Health playerHealth = _player.GetComponent<Health>();
-
-        playerHealth.TakeDamage(1, collision.transform.position);
+        _playerHealth.TakeDamage(1, collision.transform.position);
     }
 
     private void OnLevelFinished()
@@ -280,6 +274,12 @@ public class GameSession : MonoBehaviour
         }
 
         _state = GameState.GameOver;
+
+        if (_input != null)
+        {
+            _input.IsBlocked = true;
+        }
+
         SuspendGameplay();
         GameOverStarted?.Invoke(BuildStats());
     }
@@ -292,6 +292,12 @@ public class GameSession : MonoBehaviour
         }
 
         _state = GameState.Finish;
+
+        if (_input != null)
+        {
+            _input.IsBlocked = true;
+        }
+
         SuspendGameplay();
         LevelFinished?.Invoke(BuildStats());
     }

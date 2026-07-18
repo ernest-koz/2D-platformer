@@ -23,7 +23,7 @@ public class PlayerCollisionHandler : MonoBehaviour
         if (other.TryGetComponent(out Pickup pickup))
         {
             PickupCollected?.Invoke(pickup);
-            Destroy(pickup.gameObject);
+            pickup.Collect();
             return;
         }
 

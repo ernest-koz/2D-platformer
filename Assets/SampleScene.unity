@@ -2817,6 +2817,16 @@ MonoBehaviour:
   - {fileID: 1397902533}
   - {fileID: 734748740}
   _player: {fileID: 1729192374}
+  _playerCollision: {fileID: 1729192372}
+  _playerHealth: {fileID: 1729192367}
+  _fallDetector: {fileID: 1729192364}
+  _enemies:
+  - {fileID: 1816948634}
+  - {fileID: 758827296}
+  - {fileID: 1568716872}
+  - {fileID: 165335427}
+  - {fileID: 1397902533}
+  - {fileID: 734748740}
   _coinSpawners:
   - {fileID: 55642810}
 --- !u!114 &693280912

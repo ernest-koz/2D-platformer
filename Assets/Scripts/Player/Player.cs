@@ -50,26 +50,11 @@ public class Player : MonoBehaviour
         _health.Died += OnDied;
     }
 
-    private void OnDisable()
+    private void Start()
     {
-        _health.Died -= OnDied;
-    }
-
-    private void Update()
-    {
-        if (_isDead)
+        if (_input == null)
         {
-            return;
-        }
-
-        float direction = _input.Direction;
-
-        ApplyTimers(direction);
-        UpdateAnimator(direction);
-
-        if (Mathf.Abs(direction) > 0.01f)
-        {
-            _facing.Face(direction);
+            Debug.LogError($"InputReader not found on {gameObject.name}.", gameObject);
         }
     }
 
@@ -91,6 +76,29 @@ public class Player : MonoBehaviour
             _jumpBufferTimer = 0f;
             _coyoteTimer = 0f;
         }
+    }
+
+    private void Update()
+    {
+        if (_isDead)
+        {
+            return;
+        }
+
+        float direction = _input.Direction;
+
+        ApplyTimers(direction);
+        UpdateAnimator(direction);
+
+        if (Mathf.Abs(direction) > 0.01f)
+        {
+            _facing.Face(direction);
+        }
+    }
+
+    private void OnDisable()
+    {
+        _health.Died -= OnDied;
     }
 
     private void ApplyTimers(float direction)

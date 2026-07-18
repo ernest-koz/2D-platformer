@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(Mover))]
@@ -30,6 +31,8 @@ public class EnemyBrain : MonoBehaviour
     private Collider2D _collider;
 
     private State _state = State.Patrol;
+
+    public event Action<EnemyBrain> Died;
 
     private void Awake()
     {
@@ -171,6 +174,7 @@ public class EnemyBrain : MonoBehaviour
 
         _animator.SetTrigger(DieHash);
 
+        Died?.Invoke(this);
         Destroy(gameObject, 2f);
     }
 

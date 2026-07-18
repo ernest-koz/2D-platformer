@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class PickupSpawner : MonoBehaviour
@@ -27,6 +28,24 @@ public class PickupSpawner : MonoBehaviour
             Pickup pickup = Instantiate(_prefab, spawnPoint, Quaternion.identity);
             pickup.transform.SetParent(transform, true);
             pickup.transform.localScale = _spawnScale;
+            pickup.Collected += OnPickupCollected;
         }
+    }
+
+    private void OnDestroy()
+    {
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            if (transform.GetChild(i).TryGetComponent(out Pickup pickup))
+            {
+                pickup.Collected -= OnPickupCollected;
+            }
+        }
+    }
+
+    private void OnPickupCollected(Pickup pickup)
+    {
+        pickup.Collected -= OnPickupCollected;
+        Destroy(pickup.gameObject);
     }
 }

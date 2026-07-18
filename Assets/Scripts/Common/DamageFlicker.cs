@@ -15,7 +15,7 @@ public class DamageFlicker : MonoBehaviour
 
         if (_spriteRenderer == null)
         {
-            _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+            Debug.LogError($"SpriteRenderer not assigned on {gameObject.name}.", gameObject);
         }
     }
 
