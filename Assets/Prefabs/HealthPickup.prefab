@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 6748108003955045058}
   - component: {fileID: 6470348510715912179}
   - component: {fileID: 557249016387497680}
-  - component: {fileID: 3036330554474457277}
-  - component: {fileID: -1324277525812803673}
+  - component: {fileID: 5795003938433259225}
+  - component: {fileID: 653026913481928301}
   m_Layer: 10
   m_Name: HealthPickup
   m_TagString: Untagged
@@ -132,7 +132,7 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.7, y: 0.7}
   m_EdgeRadius: 0
---- !u!114 &3036330554474457277
+--- !u!114 &5795003938433259225
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -141,11 +141,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 4511700124483253374}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a342d566875f18941a1b356d664fe345, type: 3}
+  m_Script: {fileID: 11500000, guid: 679260d0d014d4b4d889e408a0a0bc53, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  healAmount: 1
---- !u!114 &-1324277525812803673
+  _type: 1
+  _amount: 1
+--- !u!114 &653026913481928301
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -154,9 +155,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 4511700124483253374}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8c9d84bfeec77344fbec7cec06002e99, type: 3}
+  m_Script: {fileID: 11500000, guid: 6c4b6432f4fac4247b2f32c855385b46, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spinSpeed: 120
-  bobAmount: 0.1
-  bobSpeed: 3
+  _spinSpeed: 120
+  _bobAmount: 0.1
+  _bobSpeed: 3

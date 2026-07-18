@@ -111,3 +111,11 @@ InitTestScene*.unity*
 
 # Project documentation (kept locally; not version-controlled)
 /docs/
+
+# Local tests (not version-controlled; Unity EditMode + PlayMode tests)
+Tests/
+Assets/Tests/
+Assets/Editor/Tests/
+
+# Screenshots (play-test captures, not version-controlled)
+Assets/Screenshots/
