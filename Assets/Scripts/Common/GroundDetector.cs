@@ -20,7 +20,14 @@ public class GroundDetector : MonoBehaviour
             _groundCheck.position.x + directionX * 0.85f,
             _groundCheck.position.y);
 
-        return Physics2D.OverlapCircle(checkOrigin, _groundCheckRadius, _groundLayer) != null;
+        Collider2D hit = Physics2D.OverlapCircle(checkOrigin, _groundCheckRadius, _groundLayer);
+
+        if (hit == null)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     private void FixedUpdate()
@@ -30,7 +37,15 @@ public class GroundDetector : MonoBehaviour
             return;
         }
 
-        IsGrounded = Physics2D.OverlapCircle(_groundCheck.position, _groundCheckRadius, _groundLayer) != null;
+        Collider2D hit = Physics2D.OverlapCircle(_groundCheck.position, _groundCheckRadius, _groundLayer);
+
+        if (hit == null)
+        {
+            IsGrounded = false;
+            return;
+        }
+
+        IsGrounded = true;
     }
 
     private void OnDrawGizmosSelected()

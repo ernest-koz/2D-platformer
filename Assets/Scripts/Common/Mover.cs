@@ -10,8 +10,6 @@ public class Mover : MonoBehaviour
     private Rigidbody2D _rigidbody;
     private float _velocitySmoothing;
 
-    public float CurrentDirection => Mathf.Sign(_rigidbody.velocity.x);
-
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody2D>();

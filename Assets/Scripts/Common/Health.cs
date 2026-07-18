@@ -12,17 +12,17 @@ public class Health : MonoBehaviour, ITargetable
     private bool _isDead;
     private bool _wasInvincible;
 
-    public event Action<int, int> HealthChanged;
-    public event Action<Vector2> Damaged;
-    public event Action Died;
-    public event Action<bool> InvincibilityChanged;
-
     public int CurrentHealth => _currentHealth;
     public int MaximumHealth => _maximumHealth;
     public bool IsAlive => _isDead == false;
     public bool IsInvincible => _invincibilityTimer > 0f;
     public Vector3 Position => transform.position;
     public bool IsTargetable => IsAlive;
+
+    public event Action<int, int> HealthChanged;
+    public event Action<Vector2> Damaged;
+    public event Action Died;
+    public event Action<bool> InvincibilityChanged;
 
     private void Awake()
     {

@@ -10,6 +10,8 @@ using UnityEngine;
 [RequireComponent(typeof(EnemyPatrol))]
 [RequireComponent(typeof(EnemyChase))]
 [RequireComponent(typeof(Animator))]
+[RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(Collider2D))]
 public class EnemyBrain : MonoBehaviour
 {
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
@@ -56,11 +58,6 @@ public class EnemyBrain : MonoBehaviour
 
     private void Update()
     {
-        if (_animator == null)
-        {
-            return;
-        }
-
         if (_health.IsAlive)
         {
             _animator.SetFloat(SpeedHash, Mathf.Abs(_rigidbody.velocity.x));
@@ -94,13 +91,13 @@ public class EnemyBrain : MonoBehaviour
     {
         ITargetable target = _targeting.FindNearestTarget(_targeting.DetectRange);
 
-        if (target != null)
+        if (target == null)
         {
-            _state = State.Chase;
+            _patrol.Tick();
             return;
         }
 
-        _patrol.Tick();
+        _state = State.Chase;
     }
 
     private void TickChase()
@@ -146,10 +143,7 @@ public class EnemyBrain : MonoBehaviour
             return;
         }
 
-        if (_animator != null)
-        {
-            _animator.SetTrigger(AttackHash);
-        }
+        _animator.SetTrigger(AttackHash);
 
         _strike.BeginWindup();
 
@@ -171,17 +165,11 @@ public class EnemyBrain : MonoBehaviour
         _state = State.Dead;
         _mover.Stop();
 
-        if (_collider != null)
-        {
-            _collider.enabled = false;
-        }
+        _collider.enabled = false;
 
         _rigidbody.velocity = new Vector2(0f, -9f);
 
-        if (_animator != null)
-        {
-            _animator.SetTrigger(DieHash);
-        }
+        _animator.SetTrigger(DieHash);
 
         Destroy(gameObject, 2f);
     }

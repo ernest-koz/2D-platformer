@@ -39,6 +39,9 @@ public class GameSession : MonoBehaviour
     [SerializeField] private MonoBehaviour[] _gameplayComponents;
     [SerializeField] private Player _player;
 
+    [Header("Enemies")]
+    [SerializeField] private EnemyBrain[] _enemies;
+
     [Header("Coin Spawners")]
     [SerializeField] private PickupSpawner[] _coinSpawners;
 
@@ -62,9 +65,13 @@ public class GameSession : MonoBehaviour
             Debug.LogError($"GameSession: InputReader not assigned on {gameObject.name}. Restart will not work.", gameObject);
         }
 
-        if (_gameplayComponents == null || _gameplayComponents.Length == 0)
+        if (_gameplayComponents == null)
         {
-            Debug.LogWarning($"GameSession: gameplayComponents array empty on {gameObject.name}.", gameObject);
+            Debug.LogWarning($"GameSession: gameplayComponents not assigned on {gameObject.name}.", gameObject);
+        }
+        else if (_gameplayComponents.Length == 0)
+        {
+            Debug.LogWarning($"GameSession: gameplayComponents array is empty on {gameObject.name}.", gameObject);
         }
 
         CountLevelPickups();
@@ -126,15 +133,19 @@ public class GameSession : MonoBehaviour
     {
         _totalCoinsInLevel = 0;
 
-        if (_coinSpawners != null)
+        if (_coinSpawners == null)
         {
-            foreach (PickupSpawner spawner in _coinSpawners)
+            return;
+        }
+
+        foreach (PickupSpawner spawner in _coinSpawners)
+        {
+            if (spawner == null)
             {
-                if (spawner != null)
-                {
-                    _totalCoinsInLevel += spawner.TotalCount;
-                }
+                continue;
             }
+
+            _totalCoinsInLevel += spawner.TotalCount;
         }
     }
 
@@ -147,66 +158,52 @@ public class GameSession : MonoBehaviour
 
         PlayerCollisionHandler collision = _player.GetComponent<PlayerCollisionHandler>();
 
-        if (collision != null)
+        if (subscribe)
         {
-            if (subscribe)
-            {
-                collision.PickupCollected += OnPickupCollected;
-                collision.EnemyContacted += OnEnemyContacted;
-                collision.LevelFinished += OnLevelFinished;
-            }
-            else
-            {
-                collision.PickupCollected -= OnPickupCollected;
-                collision.EnemyContacted -= OnEnemyContacted;
-                collision.LevelFinished -= OnLevelFinished;
-            }
+            collision.PickupCollected += OnPickupCollected;
+            collision.EnemyContacted += OnEnemyContacted;
+            collision.LevelFinished += OnLevelFinished;
+        }
+        else
+        {
+            collision.PickupCollected -= OnPickupCollected;
+            collision.EnemyContacted -= OnEnemyContacted;
+            collision.LevelFinished -= OnLevelFinished;
         }
 
         Health playerHealth = _player.GetComponent<Health>();
 
-        if (playerHealth != null)
+        if (subscribe)
         {
-            if (subscribe)
-            {
-                playerHealth.Died += OnPlayerDied;
-            }
-            else
-            {
-                playerHealth.Died -= OnPlayerDied;
-            }
+            playerHealth.Died += OnPlayerDied;
+        }
+        else
+        {
+            playerHealth.Died -= OnPlayerDied;
         }
 
         FallDetector fallDetector = _player.GetComponent<FallDetector>();
 
-        if (fallDetector != null)
+        if (subscribe)
         {
-            if (subscribe)
-            {
-                fallDetector.FellToDeath += OnPlayerDied;
-            }
-            else
-            {
-                fallDetector.FellToDeath -= OnPlayerDied;
-            }
+            fallDetector.FellToDeath += OnPlayerDied;
+        }
+        else
+        {
+            fallDetector.FellToDeath -= OnPlayerDied;
         }
     }
 
     private void ToggleEnemyEvents(bool subscribe)
     {
-        if (_gameplayComponents == null)
+        if (_enemies == null)
         {
             return;
         }
 
-        foreach (MonoBehaviour component in _gameplayComponents)
+        foreach (EnemyBrain enemy in _enemies)
         {
-            if (component == null)
-            {
-                continue;
-            }
-
-            if (component is EnemyBrain == false)
+            if (enemy == null)
             {
                 continue;
             }
@@ -216,18 +213,15 @@ public class GameSession : MonoBehaviour
                 _totalEnemiesInLevel++;
             }
 
-            Health enemyHealth = component.GetComponent<Health>();
+            Health enemyHealth = enemy.GetComponent<Health>();
 
-            if (enemyHealth != null)
+            if (subscribe)
             {
-                if (subscribe)
-                {
-                    enemyHealth.Died += OnEnemyDied;
-                }
-                else
-                {
-                    enemyHealth.Died -= OnEnemyDied;
-                }
+                enemyHealth.Died += OnEnemyDied;
+            }
+            else
+            {
+                enemyHealth.Died -= OnEnemyDied;
             }
         }
     }
@@ -243,7 +237,12 @@ public class GameSession : MonoBehaviour
             case PickupType.Health:
                 Health playerHealth = _player.GetComponent<Health>();
 
-                if (playerHealth != null && playerHealth.IsAlive && playerHealth.CurrentHealth < playerHealth.MaximumHealth)
+                if (playerHealth.IsAlive == false)
+                {
+                    break;
+                }
+
+                if (playerHealth.CurrentHealth < playerHealth.MaximumHealth)
                 {
                     playerHealth.Heal(pickup.Amount);
                 }
@@ -255,10 +254,7 @@ public class GameSession : MonoBehaviour
     {
         Health playerHealth = _player.GetComponent<Health>();
 
-        if (playerHealth != null)
-        {
-            playerHealth.TakeDamage(1, collision.transform.position);
-        }
+        playerHealth.TakeDamage(1, collision.transform.position);
     }
 
     private void OnLevelFinished()

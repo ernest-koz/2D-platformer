@@ -24,11 +24,6 @@ public class DamageFlicker : MonoBehaviour
         _health.InvincibilityChanged += OnInvincibilityChanged;
     }
 
-    private void OnDisable()
-    {
-        _health.InvincibilityChanged -= OnInvincibilityChanged;
-    }
-
     private void Update()
     {
         if (_isInvincible == false)
@@ -42,6 +37,11 @@ public class DamageFlicker : MonoBehaviour
         }
 
         _spriteRenderer.enabled = Mathf.FloorToInt(Time.time * _flickerFrequency) % 2 == 0;
+    }
+
+    private void OnDisable()
+    {
+        _health.InvincibilityChanged -= OnInvincibilityChanged;
     }
 
     private void OnInvincibilityChanged(bool isInvincible)

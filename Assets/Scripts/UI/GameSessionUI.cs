@@ -80,7 +80,7 @@ public class GameSessionUI : MonoBehaviour
         ShowPanel(panel);
     }
 
-    private static void SetText(TMP_Text text, string format, params object[] args)
+    private void SetText(TMP_Text text, string format, params object[] args)
     {
         if (text == null)
         {
@@ -90,7 +90,7 @@ public class GameSessionUI : MonoBehaviour
         text.text = string.Format(format, args);
     }
 
-    private static void ShowPanel(GameObject panel)
+    private void ShowPanel(GameObject panel)
     {
         if (panel == null)
         {

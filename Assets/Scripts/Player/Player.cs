@@ -8,6 +8,8 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerStomp))]
 [RequireComponent(typeof(PlayerCollisionHandler))]
 [RequireComponent(typeof(FallDetector))]
+[RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(Animator))]
 public class Player : MonoBehaviour
 {
     [Header("Jump")]
@@ -25,14 +27,12 @@ public class Player : MonoBehaviour
     private Rigidbody2D _rigidbody;
     private Animator _animator;
 
-    private int _speedHash;
-    private int _isGroundedHash;
+    private static readonly int SpeedHash = Animator.StringToHash("Speed");
+    private static readonly int IsGroundedHash = Animator.StringToHash("IsGrounded");
     private float _jumpBufferTimer;
     private float _coyoteTimer;
     private bool _isJumpHeld;
     private bool _isDead;
-
-    public bool IsAlive => _isDead == false;
 
     private void Awake()
     {
@@ -43,9 +43,6 @@ public class Player : MonoBehaviour
         _facing = GetComponent<SpriteFacing>();
         _rigidbody = GetComponent<Rigidbody2D>();
         _animator = GetComponent<Animator>();
-
-        _speedHash = Animator.StringToHash("Speed");
-        _isGroundedHash = Animator.StringToHash("IsGrounded");
     }
 
     private void OnEnable()
@@ -126,13 +123,8 @@ public class Player : MonoBehaviour
 
     private void UpdateAnimator(float direction)
     {
-        if (_animator == null)
-        {
-            return;
-        }
-
-        _animator.SetFloat(_speedHash, Mathf.Abs(direction));
-        _animator.SetBool(_isGroundedHash, _ground.IsGrounded);
+        _animator.SetFloat(SpeedHash, Mathf.Abs(direction));
+        _animator.SetBool(IsGroundedHash, _ground.IsGrounded);
     }
 
     private void OnDied()
