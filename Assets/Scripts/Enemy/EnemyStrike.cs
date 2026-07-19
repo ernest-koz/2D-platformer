@@ -32,15 +32,16 @@ public class EnemyStrike : MonoBehaviour
         CancelWindup();
     }
 
-    public void BeginWindup()
+    public bool BeginWindup()
     {
         if (_isWindingUp)
         {
-            return;
+            return false;
         }
 
         _isWindingUp = true;
         _windupTimer = _attackWindup;
+        return true;
     }
 
     public bool TickWindup()
@@ -50,7 +51,7 @@ public class EnemyStrike : MonoBehaviour
             return false;
         }
 
-        _windupTimer -= Time.deltaTime;
+        _windupTimer -= Time.fixedDeltaTime;
 
         if (_windupTimer > 0f)
         {

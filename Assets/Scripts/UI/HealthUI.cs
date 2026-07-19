@@ -17,6 +17,7 @@ public class HealthUI : MonoBehaviour
     private void OnEnable()
     {
         _health.HealthChanged += OnHealthChanged;
+        OnHealthChanged(_health.CurrentHealth, _health.MaximumHealth);
     }
 
     private void OnDisable()

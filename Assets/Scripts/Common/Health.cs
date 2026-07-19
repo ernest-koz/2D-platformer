@@ -12,6 +12,11 @@ public class Health : MonoBehaviour, ITargetable
     private bool _isDead;
     private bool _wasInvincible;
 
+    public event Action<int, int> HealthChanged;
+    public event Action<Vector2> Damaged;
+    public event Action Died;
+    public event Action<bool> InvincibilityChanged;
+
     public int CurrentHealth => _currentHealth;
     public int MaximumHealth => _maximumHealth;
     public bool IsAlive => _isDead == false;
@@ -19,10 +24,45 @@ public class Health : MonoBehaviour, ITargetable
     public Vector3 Position => transform.position;
     public bool IsTargetable => IsAlive;
 
-    public event Action<int, int> HealthChanged;
-    public event Action<Vector2> Damaged;
-    public event Action Died;
-    public event Action<bool> InvincibilityChanged;
+    public void TakeDamage(int amount, Vector2 damageSourcePosition)
+    {
+        if (amount <= 0 || IsInvincible || IsAlive == false)
+        {
+            return;
+        }
+
+        _currentHealth = Mathf.Max(_currentHealth - amount, 0);
+        _invincibilityTimer = _invincibilityTime;
+
+        HealthChanged?.Invoke(_currentHealth, _maximumHealth);
+
+        if (_currentHealth == 0)
+        {
+            Die();
+            return;
+        }
+
+        Damaged?.Invoke(damageSourcePosition);
+    }
+
+    public bool Heal(int amount)
+    {
+        if (amount <= 0 || IsAlive == false)
+        {
+            return false;
+        }
+
+        int healedHealth = Mathf.Min(_currentHealth + amount, _maximumHealth);
+
+        if (healedHealth == _currentHealth)
+        {
+            return false;
+        }
+
+        _currentHealth = healedHealth;
+        HealthChanged?.Invoke(_currentHealth, _maximumHealth);
+        return true;
+    }
 
     private void Awake()
     {
@@ -50,50 +90,6 @@ public class Health : MonoBehaviour, ITargetable
             _wasInvincible = isInvincible;
             InvincibilityChanged?.Invoke(isInvincible);
         }
-    }
-
-    public void TakeDamage(int amount, Vector2 damageSourcePosition)
-    {
-        if (amount < 0)
-        {
-            return;
-        }
-
-        if (_invincibilityTimer > 0f || IsAlive == false)
-        {
-            return;
-        }
-
-        _currentHealth -= amount;
-        _invincibilityTimer = _invincibilityTime;
-
-        HealthChanged?.Invoke(_currentHealth, _maximumHealth);
-
-        if (_currentHealth <= 0)
-        {
-            Die();
-        }
-        else
-        {
-            Damaged?.Invoke(damageSourcePosition);
-        }
-    }
-
-    public void Heal(int amount)
-    {
-        if (amount < 0)
-        {
-            return;
-        }
-
-        if (IsAlive == false)
-        {
-            return;
-        }
-
-        _currentHealth = Mathf.Min(_currentHealth + amount, _maximumHealth);
-
-        HealthChanged?.Invoke(_currentHealth, _maximumHealth);
     }
 
     private void Die()

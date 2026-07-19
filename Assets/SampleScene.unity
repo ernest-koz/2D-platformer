@@ -2774,6 +2774,8 @@ GameObject:
   - component: {fileID: 693280908}
   - component: {fileID: 693280911}
   - component: {fileID: 693280912}
+  - component: {fileID: 693280913}
+  - component: {fileID: 693280914}
   m_Layer: 0
   m_Name: Control_UI
   m_TagString: Untagged
@@ -2817,7 +2819,6 @@ MonoBehaviour:
   - {fileID: 1397902533}
   - {fileID: 734748740}
   _player: {fileID: 1729192374}
-  _playerCollision: {fileID: 1729192372}
   _playerHealth: {fileID: 1729192367}
   _fallDetector: {fileID: 1729192364}
   _enemies:
@@ -2843,20 +2844,48 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _coinText: {fileID: 1168303584}
   _coinFormat: "\u041C\u043E\u043D\u0435\u0442\u044B: {0}"
-  _gameOverPanel: {fileID: 782484644}
-  _gameOverCoinText: {fileID: 984834161}
-  _gameOverTimeText: {fileID: 1923255452}
-  _gameOverEnemyText: {fileID: 890000005}
-  _finishPanel: {fileID: 977323295}
-  _finishCoinText: {fileID: 156611973}
-  _finishTimeText: {fileID: 227290115}
-  _finishEnemyText: {fileID: 890000015}
-  _coinResultFormat: "\u041C\u043E\u043D\u0435\u0442 \u0441\u043E\u0431\u0440\u0430\u043D\u043E:
+--- !u!114 &693280913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 693280906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a14d9f1b62f74452a2db6fb8f02668b1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  _panel: {fileID: 782484644}
+  _coinText: {fileID: 984834161}
+  _timeText: {fileID: 1923255452}
+  _enemyText: {fileID: 890000005}
+  _coinFormat: "\u041C\u043E\u043D\u0435\u0442 \u0441\u043E\u0431\u0440\u0430\u043D\u043E:
     {0} \u0438\u0437 {1}"
-  _timeResultFormat: "\u0412\u0440\u0435\u043C\u044F: {0:F1} \u0441"
-  _enemyResultFormat: "\u041F\u043E\u0432\u0435\u0440\u0436\u0435\u043D\u043E \u0432\u0440\u0430\u0433\u043E\u0432:
+  _timeFormat: "\u0412\u0440\u0435\u043C\u044F: {0:F1} \u0441"
+  _enemyFormat: "\u041F\u043E\u0432\u0435\u0440\u0436\u0435\u043D\u043E \u0432\u0440\u0430\u0433\u043E\u0432:
     {0} \u0438\u0437 {1}"
-  _gameSession: {fileID: 693280911}
+--- !u!114 &693280914
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 693280906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b25ea02c83a44f24a7b78c61a9a99411, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  _panel: {fileID: 977323295}
+  _coinText: {fileID: 156611973}
+  _timeText: {fileID: 227290115}
+  _enemyText: {fileID: 890000015}
+  _coinFormat: "\u041C\u043E\u043D\u0435\u0442 \u0441\u043E\u0431\u0440\u0430\u043D\u043E:
+    {0} \u0438\u0437 {1}"
+  _timeFormat: "\u0412\u0440\u0435\u043C\u044F: {0:F1} \u0441"
+  _enemyFormat: "\u041F\u043E\u0432\u0435\u0440\u0436\u0435\u043D\u043E \u0432\u0440\u0430\u0433\u043E\u0432:
+    {0} \u0438\u0437 {1}"
 --- !u!1001 &734748728
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3076,8 +3105,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 84d672516c663a34abe0c90666d585ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
 --- !u!114 &734748741
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6781,6 +6810,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1505905564021469714, guid: fe9f6acd2d5879a45897a3c86a4a5a2d, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1729192375}
+    - targetCorrespondingSourceObject: {fileID: 1505905564021469714, guid: fe9f6acd2d5879a45897a3c86a4a5a2d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1729192379}
   m_SourcePrefab: {fileID: 100100000, guid: fe9f6acd2d5879a45897a3c86a4a5a2d, type: 3}
 --- !u!1 &1729192357 stripped
 GameObject:
@@ -7049,11 +7081,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9274845fbd7dc7d41b6918b6e598d31b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _jumpForce: 15
-  _coyoteTime: 0.1
-  _jumpBufferTime: 0.12
-  _fallMultiplier: 2.4
-  _lowJumpMultiplier: 2
 --- !u!114 &1729192375
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7109,6 +7136,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _healthText: {fileID: 520256706}
   _healthFormat: 'HP: {0}/{1}'
+--- !u!114 &1729192379
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1729192357}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3913c306f5b5eef41a4e9821f173e4e3, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  _jumpForce: 15
+  _coyoteTime: 0.1
+  _jumpBufferTime: 0.12
+  _fallMultiplier: 2.4
+  _lowJumpMultiplier: 2
 --- !u!1 &1787708930
 GameObject:
   m_ObjectHideFlags: 0

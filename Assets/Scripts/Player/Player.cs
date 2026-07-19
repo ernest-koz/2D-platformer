@@ -1,44 +1,47 @@
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(InputReader))]
 [RequireComponent(typeof(Mover))]
+[RequireComponent(typeof(Jumper))]
 [RequireComponent(typeof(GroundDetector))]
 [RequireComponent(typeof(Health))]
 [RequireComponent(typeof(SpriteFacing))]
 [RequireComponent(typeof(PlayerStomp))]
-[RequireComponent(typeof(PlayerCollisionHandler))]
+[RequireComponent(typeof(PlayerCollision))]
 [RequireComponent(typeof(FallDetector))]
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Animator))]
 public class Player : MonoBehaviour
 {
-    [Header("Jump")]
-    [SerializeField] private float _jumpForce = 15f;
-    [SerializeField] private float _coyoteTime = 0.10f;
-    [SerializeField] private float _jumpBufferTime = 0.12f;
-    [SerializeField] private float _fallMultiplier = 2.4f;
-    [SerializeField] private float _lowJumpMultiplier = 2f;
+    private const float StompHeightThreshold = 0.4f;
+    private const float FallSpeedThreshold = 0.5f;
+
+    private static readonly int SpeedHash = Animator.StringToHash("Speed");
+    private static readonly int IsGroundedHash = Animator.StringToHash("IsGrounded");
 
     private InputReader _input;
     private Mover _mover;
+    private Jumper _jumper;
     private GroundDetector _ground;
+    private PlayerCollision _collision;
     private Health _health;
     private SpriteFacing _facing;
     private Rigidbody2D _rigidbody;
     private Animator _animator;
-
-    private static readonly int SpeedHash = Animator.StringToHash("Speed");
-    private static readonly int IsGroundedHash = Animator.StringToHash("IsGrounded");
-    private float _jumpBufferTimer;
-    private float _coyoteTimer;
-    private bool _isJumpHeld;
     private bool _isDead;
+
+    public event Action<Pickup> PickupContacted;
+    public event Action LevelFinished;
+    public event Action<Collision2D> EnemyContacted;
 
     private void Awake()
     {
         _input = GetComponent<InputReader>();
         _mover = GetComponent<Mover>();
+        _jumper = GetComponent<Jumper>();
         _ground = GetComponent<GroundDetector>();
+        _collision = GetComponent<PlayerCollision>();
         _health = GetComponent<Health>();
         _facing = GetComponent<SpriteFacing>();
         _rigidbody = GetComponent<Rigidbody2D>();
@@ -47,6 +50,8 @@ public class Player : MonoBehaviour
 
     private void OnEnable()
     {
+        _collision.TriggerEntered += OnTriggerEntered;
+        _collision.CollisionEntered += OnCollisionEntered;
         _health.Died += OnDied;
     }
 
@@ -67,15 +72,7 @@ public class Player : MonoBehaviour
         }
 
         _mover.Move(_input.Direction);
-
-        ApplyJumpPhysics();
-
-        if (_jumpBufferTimer > 0f && _coyoteTimer > 0f)
-        {
-            _mover.Jump(_jumpForce);
-            _jumpBufferTimer = 0f;
-            _coyoteTimer = 0f;
-        }
+        _jumper.ApplyPhysics(Time.fixedDeltaTime);
     }
 
     private void Update()
@@ -87,7 +84,7 @@ public class Player : MonoBehaviour
 
         float direction = _input.Direction;
 
-        ApplyTimers(direction);
+        _jumper.Tick(_ground.IsGrounded, _input.IsJumpPressed, _input.IsJumpHeld, Time.deltaTime);
         UpdateAnimator(direction);
 
         if (Mathf.Abs(direction) > 0.01f)
@@ -98,35 +95,45 @@ public class Player : MonoBehaviour
 
     private void OnDisable()
     {
+        _collision.TriggerEntered -= OnTriggerEntered;
+        _collision.CollisionEntered -= OnCollisionEntered;
         _health.Died -= OnDied;
     }
 
-    private void ApplyTimers(float direction)
+    private void OnTriggerEntered(Collider2D other)
     {
-        if (_input.IsJumpPressed)
+        if (other.TryGetComponent(out Pickup pickup))
         {
-            _jumpBufferTimer = _jumpBufferTime;
+            PickupContacted?.Invoke(pickup);
+            return;
         }
 
-        _isJumpHeld = _input.IsJumpHeld;
-        _jumpBufferTimer -= Time.deltaTime;
-        _coyoteTimer = _ground.IsGrounded ? _coyoteTime : _coyoteTimer - Time.deltaTime;
+        if (other.TryGetComponent(out FinishTrigger _))
+        {
+            LevelFinished?.Invoke();
+        }
     }
 
-    private void ApplyJumpPhysics()
+    private void OnCollisionEntered(Collision2D collision)
     {
-        float verticalVelocity = _rigidbody.velocity.y;
-
-        if (verticalVelocity < 0f)
+        if (collision.collider.TryGetComponent(out Health enemyHealth) == false)
         {
-            verticalVelocity += Physics2D.gravity.y * (_fallMultiplier - 1f) * Time.fixedDeltaTime;
-        }
-        else if (verticalVelocity > 0f && _isJumpHeld == false)
-        {
-            verticalVelocity += Physics2D.gravity.y * (_lowJumpMultiplier - 1f) * Time.fixedDeltaTime;
+            return;
         }
 
-        _rigidbody.velocity = new Vector2(_rigidbody.velocity.x, verticalVelocity);
+        if (enemyHealth.IsAlive == false)
+        {
+            return;
+        }
+
+        bool isStomp =
+            transform.position.y > collision.transform.position.y + StompHeightThreshold &&
+            _rigidbody.velocity.y < -FallSpeedThreshold;
+
+        if (isStomp == false)
+        {
+            EnemyContacted?.Invoke(collision);
+        }
     }
 
     private void UpdateAnimator(float direction)

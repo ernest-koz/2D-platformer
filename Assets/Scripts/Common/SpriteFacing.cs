@@ -14,8 +14,8 @@ public class SpriteFacing : MonoBehaviour
 
     private void Awake()
     {
-        _rightRotation = Quaternion.identity;
-        _leftRotation = Quaternion.Euler(0f, 180f, 0f);
+        _rightRotation = transform.localRotation;
+        _leftRotation = _rightRotation * Quaternion.Euler(0f, 180f, 0f);
         _direction = _startsFacingRight ? 1 : -1;
 
         ApplyRotation();
@@ -41,6 +41,6 @@ public class SpriteFacing : MonoBehaviour
 
     private void ApplyRotation()
     {
-        transform.rotation = _direction > 0 ? _rightRotation : _leftRotation;
+        transform.localRotation = _direction > 0 ? _rightRotation : _leftRotation;
     }
 }

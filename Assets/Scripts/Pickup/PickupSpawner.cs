@@ -14,15 +14,19 @@ public class PickupSpawner : MonoBehaviour
         if (_prefab == null)
         {
             Debug.LogError($"PickupSpawner: prefab not assigned on {gameObject.name}.", gameObject);
+            enabled = false;
             return;
         }
 
         if (_spawnPoints == null || _spawnPoints.Length == 0)
         {
             Debug.LogError($"PickupSpawner: spawnPoints empty on {gameObject.name}.", gameObject);
-            return;
+            enabled = false;
         }
+    }
 
+    private void Start()
+    {
         foreach (Vector3 spawnPoint in _spawnPoints)
         {
             Pickup pickup = Instantiate(_prefab, spawnPoint, Quaternion.identity);

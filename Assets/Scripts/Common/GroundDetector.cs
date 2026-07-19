@@ -20,23 +20,22 @@ public class GroundDetector : MonoBehaviour
             _groundCheck.position.x + directionX * 0.85f,
             _groundCheck.position.y);
 
-        Collider2D hit = Physics2D.OverlapCircle(checkOrigin, _groundCheckRadius, _groundLayer);
-
-        if (hit == null)
-        {
-            return false;
-        }
-
-        return true;
+        return Physics2D.OverlapCircle(checkOrigin, _groundCheckRadius, _groundLayer) != null;
     }
 
-    private void FixedUpdate()
+    private void Awake()
     {
-        if (_groundCheck == null)
+        if (_groundCheck != null)
         {
             return;
         }
 
+        Debug.LogError($"GroundCheck Transform not assigned on {gameObject.name}.", gameObject);
+        enabled = false;
+    }
+
+    private void FixedUpdate()
+    {
         Collider2D hit = Physics2D.OverlapCircle(_groundCheck.position, _groundCheckRadius, _groundLayer);
 
         if (hit == null)

@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -11,12 +10,6 @@ public enum GameState
 
 public readonly struct SessionStats
 {
-    public int TotalCoinsCollected { get; }
-    public int EnemiesDefeated { get; }
-    public int TotalCoinsInLevel { get; }
-    public int TotalEnemiesInLevel { get; }
-    public float PlayTime { get; }
-
     public SessionStats(
         int totalCoinsCollected,
         int enemiesDefeated,
@@ -30,15 +23,23 @@ public readonly struct SessionStats
         TotalCoinsInLevel = totalCoinsInLevel;
         TotalEnemiesInLevel = totalEnemiesInLevel;
     }
+
+    public int TotalCoinsCollected { get; }
+    public int EnemiesDefeated { get; }
+    public int TotalCoinsInLevel { get; }
+    public int TotalEnemiesInLevel { get; }
+    public float PlayTime { get; }
 }
 
+[RequireComponent(typeof(CoinView))]
+[RequireComponent(typeof(GameOverView))]
+[RequireComponent(typeof(FinishView))]
 public class GameSession : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private InputReader _input;
     [SerializeField] private MonoBehaviour[] _gameplayComponents;
     [SerializeField] private Player _player;
-    [SerializeField] private PlayerCollisionHandler _playerCollision;
     [SerializeField] private Health _playerHealth;
     [SerializeField] private FallDetector _fallDetector;
 
@@ -54,74 +55,11 @@ public class GameSession : MonoBehaviour
     private int _totalCoinsInLevel;
     private int _totalEnemiesInLevel;
     private float _playTime;
-
-    public event Action<int> CoinChanged;
-    public event Action<SessionStats> GameOverStarted;
-    public event Action<SessionStats> LevelFinished;
+    private CoinView _coinView;
+    private GameOverView _gameOverView;
+    private FinishView _finishView;
 
     public GameState State => _state;
-
-    private void Start()
-    {
-        if (_input == null)
-        {
-            Debug.LogError($"GameSession: InputReader not assigned on {gameObject.name}. Restart will not work.", gameObject);
-        }
-
-        if (_playerCollision == null)
-        {
-            Debug.LogError($"GameSession: PlayerCollisionHandler not assigned on {gameObject.name}.", gameObject);
-        }
-
-        if (_playerHealth == null)
-        {
-            Debug.LogError($"GameSession: Health not assigned on {gameObject.name}.", gameObject);
-        }
-
-        if (_fallDetector == null)
-        {
-            Debug.LogError($"GameSession: FallDetector not assigned on {gameObject.name}.", gameObject);
-        }
-
-        if (_gameplayComponents == null)
-        {
-            Debug.LogWarning($"GameSession: gameplayComponents not assigned on {gameObject.name}.", gameObject);
-        }
-        else if (_gameplayComponents.Length == 0)
-        {
-            Debug.LogWarning($"GameSession: gameplayComponents array is empty on {gameObject.name}.", gameObject);
-        }
-
-        CountLevelPickups();
-        TogglePlayerEvents(true);
-        ToggleEnemyEvents(true);
-    }
-
-    private void OnDestroy()
-    {
-        TogglePlayerEvents(false);
-        ToggleEnemyEvents(false);
-    }
-
-    private void Update()
-    {
-        if (_input.IsRestartPressed == false)
-        {
-            if (_state == GameState.Playing)
-            {
-                _playTime += Time.deltaTime;
-            }
-
-            return;
-        }
-
-        if (_state == GameState.Playing)
-        {
-            return;
-        }
-
-        RestartLevel();
-    }
 
     public void AddCoin(int amount)
     {
@@ -131,7 +69,7 @@ public class GameSession : MonoBehaviour
         }
 
         _totalCoinsCollected += amount;
-        CoinChanged?.Invoke(_totalCoinsCollected);
+        _coinView.Render(_totalCoinsCollected);
     }
 
     public void RegisterEnemyKill()
@@ -145,6 +83,66 @@ public class GameSession : MonoBehaviour
     public void RestartLevel()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    private void Awake()
+    {
+        _coinView = GetComponent<CoinView>();
+        _gameOverView = GetComponent<GameOverView>();
+        _finishView = GetComponent<FinishView>();
+
+        if (_input != null &&
+            _player != null &&
+            _playerHealth != null &&
+            _fallDetector != null)
+        {
+            return;
+        }
+
+        Debug.LogError($"GameSession has missing required references on {gameObject.name}.", gameObject);
+        enabled = false;
+    }
+
+    private void OnEnable()
+    {
+        TogglePlayerEvents(true);
+        ToggleEnemyEvents(true);
+    }
+
+    private void Start()
+    {
+        if (_gameplayComponents == null || _gameplayComponents.Length == 0)
+        {
+            Debug.LogWarning($"GameSession: gameplayComponents array is empty on {gameObject.name}.", gameObject);
+        }
+
+        CountLevelPickups();
+        CountEnemies();
+        _coinView.Render(_totalCoinsCollected);
+    }
+
+    private void Update()
+    {
+        if (_input.IsRestartPressed)
+        {
+            if (_state != GameState.Playing)
+            {
+                RestartLevel();
+            }
+
+            return;
+        }
+
+        if (_state == GameState.Playing)
+        {
+            _playTime += Time.deltaTime;
+        }
+    }
+
+    private void OnDisable()
+    {
+        TogglePlayerEvents(false);
+        ToggleEnemyEvents(false);
     }
 
     private void CountLevelPickups()
@@ -169,26 +167,54 @@ public class GameSession : MonoBehaviour
 
     private void TogglePlayerEvents(bool subscribe)
     {
-        if (_playerCollision == null || _playerHealth == null || _fallDetector == null)
+        if (_player == null)
+        {
+            return;
+        }
+
+        if (_playerHealth == null)
+        {
+            return;
+        }
+
+        if (_fallDetector == null)
         {
             return;
         }
 
         if (subscribe)
         {
-            _playerCollision.PickupCollected += OnPickupCollected;
-            _playerCollision.EnemyContacted += OnEnemyContacted;
-            _playerCollision.LevelFinished += OnLevelFinished;
+            _player.PickupContacted += OnPickupContacted;
+            _player.EnemyContacted += OnEnemyContacted;
+            _player.LevelFinished += OnLevelFinished;
             _playerHealth.Died += OnPlayerDied;
             _fallDetector.FellToDeath += OnPlayerDied;
         }
         else
         {
-            _playerCollision.PickupCollected -= OnPickupCollected;
-            _playerCollision.EnemyContacted -= OnEnemyContacted;
-            _playerCollision.LevelFinished -= OnLevelFinished;
+            _player.PickupContacted -= OnPickupContacted;
+            _player.EnemyContacted -= OnEnemyContacted;
+            _player.LevelFinished -= OnLevelFinished;
             _playerHealth.Died -= OnPlayerDied;
             _fallDetector.FellToDeath -= OnPlayerDied;
+        }
+    }
+
+    private void CountEnemies()
+    {
+        if (_enemies == null)
+        {
+            return;
+        }
+
+        foreach (EnemyBrain enemy in _enemies)
+        {
+            if (enemy == null)
+            {
+                continue;
+            }
+
+            _totalEnemiesInLevel++;
         }
     }
 
@@ -206,42 +232,45 @@ public class GameSession : MonoBehaviour
                 continue;
             }
 
-            if (subscribe)
-            {
-                _totalEnemiesInLevel++;
-            }
-
             Health enemyHealth = enemy.GetComponent<Health>();
 
             if (subscribe)
             {
                 enemyHealth.Died += OnEnemyDied;
+                enemy.Died += OnEnemyBrainDied;
             }
             else
             {
                 enemyHealth.Died -= OnEnemyDied;
+                enemy.Died -= OnEnemyBrainDied;
             }
         }
     }
 
-    private void OnPickupCollected(Pickup pickup)
+    private void OnEnemyBrainDied(EnemyBrain enemy)
+    {
+        enemy.Died -= OnEnemyBrainDied;
+        Destroy(enemy.gameObject, 2f);
+    }
+
+    private void OnPickupContacted(Pickup pickup)
     {
         switch (pickup.Type)
         {
             case PickupType.Coin:
                 AddCoin(pickup.Amount);
+                pickup.Collect();
                 break;
 
             case PickupType.Health:
-                if (_playerHealth.IsAlive == false)
+                if (_playerHealth.Heal(pickup.Amount))
                 {
-                    break;
+                    pickup.Collect();
                 }
+                break;
 
-                if (_playerHealth.CurrentHealth < _playerHealth.MaximumHealth)
-                {
-                    _playerHealth.Heal(pickup.Amount);
-                }
+            default:
+                Debug.LogError($"Unsupported pickup type: {pickup.Type}.", pickup);
                 break;
         }
     }
@@ -281,7 +310,7 @@ public class GameSession : MonoBehaviour
         }
 
         SuspendGameplay();
-        GameOverStarted?.Invoke(BuildStats());
+        _gameOverView.Show(BuildStats());
     }
 
     private void FinishLevel()
@@ -299,7 +328,7 @@ public class GameSession : MonoBehaviour
         }
 
         SuspendGameplay();
-        LevelFinished?.Invoke(BuildStats());
+        _finishView.Show(BuildStats());
     }
 
     private void SuspendGameplay()

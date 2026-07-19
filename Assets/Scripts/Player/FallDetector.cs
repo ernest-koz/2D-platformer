@@ -6,15 +6,9 @@ public class FallDetector : MonoBehaviour
 {
     [SerializeField] private float _deathY = -20f;
 
-    private Health _health;
     private bool _isDead;
 
     public event Action FellToDeath;
-
-    private void Awake()
-    {
-        _health = GetComponent<Health>();
-    }
 
     private void Update()
     {

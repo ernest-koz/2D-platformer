@@ -13,10 +13,13 @@ public class DamageFlicker : MonoBehaviour
     {
         _health = GetComponent<Health>();
 
-        if (_spriteRenderer == null)
+        if (_spriteRenderer != null)
         {
-            Debug.LogError($"SpriteRenderer not assigned on {gameObject.name}.", gameObject);
+            return;
         }
+
+        Debug.LogError($"SpriteRenderer not assigned on {gameObject.name}.", gameObject);
+        enabled = false;
     }
 
     private void OnEnable()
@@ -27,11 +30,6 @@ public class DamageFlicker : MonoBehaviour
     private void Update()
     {
         if (_isInvincible == false)
-        {
-            return;
-        }
-
-        if (_spriteRenderer == null)
         {
             return;
         }

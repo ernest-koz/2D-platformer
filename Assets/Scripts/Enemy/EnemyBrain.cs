@@ -53,12 +53,6 @@ public class EnemyBrain : MonoBehaviour
         _health.Died += OnDied;
     }
 
-    private void OnDisable()
-    {
-        _health.Died -= OnDied;
-        _mover.Stop();
-    }
-
     private void Update()
     {
         if (_health.IsAlive)
@@ -90,6 +84,12 @@ public class EnemyBrain : MonoBehaviour
         }
     }
 
+    private void OnDisable()
+    {
+        _health.Died -= OnDied;
+        _mover.Stop();
+    }
+
     private void TickPatrol()
     {
         ITargetable target = _targeting.FindNearestTarget(_targeting.DetectRange);
@@ -105,17 +105,9 @@ public class EnemyBrain : MonoBehaviour
 
     private void TickChase()
     {
-        bool hasTarget = _chase.Tick(_targeting.ChaseRange);
-
-        if (hasTarget == false)
-        {
-            _state = State.Patrol;
-            return;
-        }
-
         ITargetable target = _targeting.FindNearestTarget(_targeting.ChaseRange);
 
-        if (target == null)
+        if (_chase.Tick(target) == false)
         {
             _state = State.Patrol;
             return;
@@ -135,20 +127,29 @@ public class EnemyBrain : MonoBehaviour
 
         if (target == null)
         {
+            _strike.CancelWindup();
+            _state = State.Patrol;
             return;
         }
 
-        float direction = target.Position.x - transform.position.x;
-        _facing.Face(direction);
+        if (IsInAttackRange(target) == false)
+        {
+            _strike.CancelWindup();
+            _state = State.Chase;
+            return;
+        }
+
+        _facing.Face(target.Position.x - transform.position.x);
 
         if (_strike.IsOnCooldown)
         {
             return;
         }
 
-        _animator.SetTrigger(AttackHash);
-
-        _strike.BeginWindup();
+        if (_strike.BeginWindup())
+        {
+            _animator.SetTrigger(AttackHash);
+        }
 
         if (_strike.TickWindup())
         {
@@ -175,7 +176,6 @@ public class EnemyBrain : MonoBehaviour
         _animator.SetTrigger(DieHash);
 
         Died?.Invoke(this);
-        Destroy(gameObject, 2f);
     }
 
     private enum State
