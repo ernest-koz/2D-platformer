@@ -1,4 +1,5 @@
 using TMPro;
+using System;
 using UnityEngine;
 
 public class CoinView : MonoBehaviour
@@ -13,6 +14,13 @@ public class CoinView : MonoBehaviour
             return;
         }
 
-        _coinText.text = string.Format(_coinFormat, totalCoins);
+        try
+        {
+            _coinText.text = string.Format(_coinFormat, totalCoins);
+        }
+        catch (FormatException exception)
+        {
+            Debug.LogError($"Invalid coin format on {gameObject.name}: {exception.Message}", gameObject);
+        }
     }
 }

@@ -7,10 +7,10 @@ public class EnemyStrike : MonoBehaviour
     private const float InitialLastAttackTime = -999f;
 
     [Header("Attack")]
-    [SerializeField] private float _attackRange = 1f;
-    [SerializeField] private int _attackDamage = 1;
-    [SerializeField] private float _attackCooldown = 1.2f;
-    [SerializeField] private float _attackWindup = 0.25f;
+    [SerializeField, Min(0.01f)] private float _attackRange = 1f;
+    [SerializeField, Min(1)] private int _attackDamage = 1;
+    [SerializeField, Min(0f)] private float _attackCooldown = 1.2f;
+    [SerializeField, Min(0f)] private float _attackWindup = 0.25f;
     [SerializeField] private float _attackOriginHeight = 0.8f;
     [SerializeField] private LayerMask _targetLayer;
 

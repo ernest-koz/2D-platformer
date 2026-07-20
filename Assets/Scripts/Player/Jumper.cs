@@ -5,17 +5,23 @@ using UnityEngine;
 public class Jumper : MonoBehaviour
 {
     [Header("Jump")]
-    [SerializeField] private float _jumpForce = 15f;
-    [SerializeField] private float _coyoteTime = 0.10f;
-    [SerializeField] private float _jumpBufferTime = 0.12f;
-    [SerializeField] private float _fallMultiplier = 2.4f;
-    [SerializeField] private float _lowJumpMultiplier = 2f;
+    [SerializeField, Min(0f)] private float _jumpForce = 15f;
+    [SerializeField, Min(0f)] private float _coyoteTime = 0.10f;
+    [SerializeField, Min(0f)] private float _jumpBufferTime = 0.12f;
+    [SerializeField, Min(1f)] private float _fallMultiplier = 2.4f;
+    [SerializeField, Min(1f)] private float _lowJumpMultiplier = 2f;
 
     private Mover _mover;
     private Rigidbody2D _rigidbody;
     private float _jumpBufferTimer;
     private float _coyoteTimer;
     private bool _isJumpHeld;
+
+    private void Awake()
+    {
+        _mover = GetComponent<Mover>();
+        _rigidbody = GetComponent<Rigidbody2D>();
+    }
 
     public void Tick(bool isGrounded, bool isJumpPressed, bool isJumpHeld, float deltaTime)
     {
@@ -41,12 +47,6 @@ public class Jumper : MonoBehaviour
         _mover.Jump(_jumpForce);
         _jumpBufferTimer = 0f;
         _coyoteTimer = 0f;
-    }
-
-    private void Awake()
-    {
-        _mover = GetComponent<Mover>();
-        _rigidbody = GetComponent<Rigidbody2D>();
     }
 
     private void ApplyVariableGravity(float fixedDeltaTime)

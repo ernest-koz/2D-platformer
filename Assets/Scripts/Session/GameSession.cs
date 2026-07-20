@@ -61,30 +61,6 @@ public class GameSession : MonoBehaviour
 
     public GameState State => _state;
 
-    public void AddCoin(int amount)
-    {
-        if (_state != GameState.Playing)
-        {
-            return;
-        }
-
-        _totalCoinsCollected += amount;
-        _coinView.Render(_totalCoinsCollected);
-    }
-
-    public void RegisterEnemyKill()
-    {
-        if (_state == GameState.Playing)
-        {
-            _enemiesDefeated++;
-        }
-    }
-
-    public void RestartLevel()
-    {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    }
-
     private void Awake()
     {
         _coinView = GetComponent<CoinView>();
@@ -94,7 +70,9 @@ public class GameSession : MonoBehaviour
         if (_input != null &&
             _player != null &&
             _playerHealth != null &&
-            _fallDetector != null)
+            _fallDetector != null &&
+            _gameplayComponents != null &&
+            _gameplayComponents.Length > 0)
         {
             return;
         }
@@ -111,11 +89,6 @@ public class GameSession : MonoBehaviour
 
     private void Start()
     {
-        if (_gameplayComponents == null || _gameplayComponents.Length == 0)
-        {
-            Debug.LogWarning($"GameSession: gameplayComponents array is empty on {gameObject.name}.", gameObject);
-        }
-
         CountLevelPickups();
         CountEnemies();
         _coinView.Render(_totalCoinsCollected);
@@ -143,6 +116,30 @@ public class GameSession : MonoBehaviour
     {
         TogglePlayerEvents(false);
         ToggleEnemyEvents(false);
+    }
+
+    public void AddCoin(int amount)
+    {
+        if (_state != GameState.Playing)
+        {
+            return;
+        }
+
+        _totalCoinsCollected += amount;
+        _coinView.Render(_totalCoinsCollected);
+    }
+
+    public void RegisterEnemyKill()
+    {
+        if (_state == GameState.Playing)
+        {
+            _enemiesDefeated++;
+        }
+    }
+
+    public void RestartLevel()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     private void CountLevelPickups()
@@ -237,20 +234,12 @@ public class GameSession : MonoBehaviour
             if (subscribe)
             {
                 enemyHealth.Died += OnEnemyDied;
-                enemy.Died += OnEnemyBrainDied;
             }
             else
             {
                 enemyHealth.Died -= OnEnemyDied;
-                enemy.Died -= OnEnemyBrainDied;
             }
         }
-    }
-
-    private void OnEnemyBrainDied(EnemyBrain enemy)
-    {
-        enemy.Died -= OnEnemyBrainDied;
-        Destroy(enemy.gameObject, 2f);
     }
 
     private void OnPickupContacted(Pickup pickup)

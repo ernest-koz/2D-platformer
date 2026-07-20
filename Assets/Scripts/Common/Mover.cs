@@ -46,6 +46,6 @@ public class Mover : MonoBehaviour
 
     public void Stop()
     {
-        _rigidbody.velocity = Vector2.zero;
+        _rigidbody.velocity = new Vector2(0f, _rigidbody.velocity.y);
     }
 }

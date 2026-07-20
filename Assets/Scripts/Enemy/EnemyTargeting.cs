@@ -2,12 +2,14 @@ using UnityEngine;
 
 public class EnemyTargeting : MonoBehaviour
 {
+    private const int MaximumTargetBufferSize = 64;
+
     [Header("Detection")]
     [SerializeField] private float _detectRange = 5f;
     [SerializeField] private float _chaseRange = 7f;
     [SerializeField] private LayerMask _targetLayer;
 
-    private readonly Collider2D[] _targetBuffer = new Collider2D[8];
+    private Collider2D[] _targetBuffer = new Collider2D[8];
 
     public float DetectRange => _detectRange;
     public float ChaseRange => _chaseRange;
@@ -15,7 +17,7 @@ public class EnemyTargeting : MonoBehaviour
 
     public ITargetable FindNearestTarget(float range)
     {
-        int count = Physics2D.OverlapCircleNonAlloc(transform.position, range, _targetBuffer, _targetLayer);
+        int count = FindTargets(range);
 
         ITargetable nearest = null;
         float nearestSqrDistance = float.MaxValue;
@@ -42,5 +44,19 @@ public class EnemyTargeting : MonoBehaviour
         }
 
         return nearest;
+    }
+
+    private int FindTargets(float range)
+    {
+        int count = Physics2D.OverlapCircleNonAlloc(transform.position, range, _targetBuffer, _targetLayer);
+
+        while (count == _targetBuffer.Length && _targetBuffer.Length < MaximumTargetBufferSize)
+        {
+            int newSize = Mathf.Min(_targetBuffer.Length * 2, MaximumTargetBufferSize);
+            _targetBuffer = new Collider2D[newSize];
+            count = Physics2D.OverlapCircleNonAlloc(transform.position, range, _targetBuffer, _targetLayer);
+        }
+
+        return count;
     }
 }

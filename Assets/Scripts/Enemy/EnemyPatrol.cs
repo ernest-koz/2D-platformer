@@ -21,6 +21,12 @@ public class EnemyPatrol : MonoBehaviour
 
     public void Tick()
     {
+        if (_ground.IsGrounded == false)
+        {
+            _mover.Stop();
+            return;
+        }
+
         if (_ground.HasGroundAhead(_facing.FacingDirection) == false)
         {
             _facing.Flip();
@@ -37,11 +43,6 @@ public class EnemyPatrol : MonoBehaviour
             _facing.Flip();
         }
         else if (patrolDirection > 0f && _facing.FacingDirection < 0)
-        {
-            _facing.Flip();
-        }
-
-        if (_ground.IsGrounded == false)
         {
             _facing.Flip();
         }

@@ -4,8 +4,8 @@ using UnityEngine;
 public class Health : MonoBehaviour, ITargetable
 {
     [Header("Health")]
-    [SerializeField] private int _maximumHealth = 3;
-    [SerializeField] private float _invincibilityTime = 1f;
+    [SerializeField, Min(1)] private int _maximumHealth = 3;
+    [SerializeField, Min(0f)] private float _invincibilityTime = 1f;
 
     private int _currentHealth;
     private float _invincibilityTimer;
@@ -23,6 +23,34 @@ public class Health : MonoBehaviour, ITargetable
     public bool IsInvincible => _invincibilityTimer > 0f;
     public Vector3 Position => transform.position;
     public bool IsTargetable => IsAlive;
+
+    private void Awake()
+    {
+        _currentHealth = _maximumHealth;
+    }
+
+    private void Start()
+    {
+        HealthChanged?.Invoke(_currentHealth, _maximumHealth);
+    }
+
+    private void Update()
+    {
+        bool wasInvincible = _wasInvincible;
+
+        if (_invincibilityTimer > 0f)
+        {
+            _invincibilityTimer -= Time.deltaTime;
+        }
+
+        bool isInvincible = _invincibilityTimer > 0f;
+
+        if (wasInvincible != isInvincible)
+        {
+            _wasInvincible = isInvincible;
+            InvincibilityChanged?.Invoke(isInvincible);
+        }
+    }
 
     public void TakeDamage(int amount, Vector2 damageSourcePosition)
     {
@@ -62,34 +90,6 @@ public class Health : MonoBehaviour, ITargetable
         _currentHealth = healedHealth;
         HealthChanged?.Invoke(_currentHealth, _maximumHealth);
         return true;
-    }
-
-    private void Awake()
-    {
-        _currentHealth = _maximumHealth;
-    }
-
-    private void Start()
-    {
-        HealthChanged?.Invoke(_currentHealth, _maximumHealth);
-    }
-
-    private void Update()
-    {
-        bool wasInvincible = _wasInvincible;
-
-        if (_invincibilityTimer > 0f)
-        {
-            _invincibilityTimer -= Time.deltaTime;
-        }
-
-        bool isInvincible = _invincibilityTimer > 0f;
-
-        if (wasInvincible != isInvincible)
-        {
-            _wasInvincible = isInvincible;
-            InvincibilityChanged?.Invoke(isInvincible);
-        }
     }
 
     private void Die()

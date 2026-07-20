@@ -1,4 +1,5 @@
 using TMPro;
+using System;
 using UnityEngine;
 
 public class GameOverView : MonoBehaviour
@@ -30,6 +31,13 @@ public class GameOverView : MonoBehaviour
             return;
         }
 
-        text.text = string.Format(format, args);
+        try
+        {
+            text.text = string.Format(format, args);
+        }
+        catch (FormatException exception)
+        {
+            Debug.LogError($"Invalid game-over format on {gameObject.name}: {exception.Message}", gameObject);
+        }
     }
 }

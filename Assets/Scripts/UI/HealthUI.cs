@@ -1,4 +1,5 @@
 using TMPro;
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(Health))]
@@ -32,6 +33,13 @@ public class HealthUI : MonoBehaviour
             return;
         }
 
-        _healthText.text = string.Format(_healthFormat, current, maximum);
+        try
+        {
+            _healthText.text = string.Format(_healthFormat, current, maximum);
+        }
+        catch (FormatException exception)
+        {
+            Debug.LogError($"Invalid health format on {gameObject.name}: {exception.Message}", gameObject);
+        }
     }
 }

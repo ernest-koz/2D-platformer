@@ -25,6 +25,7 @@ public class Player : MonoBehaviour
     private Jumper _jumper;
     private GroundDetector _ground;
     private PlayerCollision _collision;
+    private FallDetector _fallDetector;
     private Health _health;
     private SpriteFacing _facing;
     private Rigidbody2D _rigidbody;
@@ -42,6 +43,7 @@ public class Player : MonoBehaviour
         _jumper = GetComponent<Jumper>();
         _ground = GetComponent<GroundDetector>();
         _collision = GetComponent<PlayerCollision>();
+        _fallDetector = GetComponent<FallDetector>();
         _health = GetComponent<Health>();
         _facing = GetComponent<SpriteFacing>();
         _rigidbody = GetComponent<Rigidbody2D>();
@@ -53,6 +55,7 @@ public class Player : MonoBehaviour
         _collision.TriggerEntered += OnTriggerEntered;
         _collision.CollisionEntered += OnCollisionEntered;
         _health.Died += OnDied;
+        _fallDetector.FellToDeath += OnDied;
     }
 
     private void Start()
@@ -98,6 +101,7 @@ public class Player : MonoBehaviour
         _collision.TriggerEntered -= OnTriggerEntered;
         _collision.CollisionEntered -= OnCollisionEntered;
         _health.Died -= OnDied;
+        _fallDetector.FellToDeath -= OnDied;
     }
 
     private void OnTriggerEntered(Collider2D other)

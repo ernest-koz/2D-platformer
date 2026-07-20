@@ -45,6 +45,9 @@
 # VS Code settings (per-user)
 .vscode/
 
+# Codex settings (per-user)
+.codex/
+
 # Gradle cache directory
 .gradle/
 
