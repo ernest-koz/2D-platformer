@@ -18,7 +18,7 @@ public class GameOverView : MonoBehaviour
         SetText(_timeText, _timeFormat, stats.PlayTime);
         SetText(_enemyText, _enemyFormat, stats.EnemiesDefeated, stats.TotalEnemiesInLevel);
 
-        if (_panel != null)
+        if (_panel == true)
         {
             _panel.SetActive(true);
         }

@@ -34,6 +34,7 @@ public readonly struct SessionStats
 [RequireComponent(typeof(CoinView))]
 [RequireComponent(typeof(GameOverView))]
 [RequireComponent(typeof(FinishView))]
+
 public class GameSession : MonoBehaviour
 {
     [Header("References")]
@@ -67,18 +68,17 @@ public class GameSession : MonoBehaviour
         _gameOverView = GetComponent<GameOverView>();
         _finishView = GetComponent<FinishView>();
 
-        if (_input != null &&
-            _player != null &&
-            _playerHealth != null &&
-            _fallDetector != null &&
-            _gameplayComponents != null &&
-            _gameplayComponents.Length > 0)
+        if (_input == null ||
+            _player == null ||
+            _playerHealth == null ||
+            _fallDetector == null ||
+            _gameplayComponents == null ||
+            _gameplayComponents.Length == 0)
         {
+            Debug.LogError($"GameSession has missing required references on {gameObject.name}.", gameObject);
+            enabled = false;
             return;
         }
-
-        Debug.LogError($"GameSession has missing required references on {gameObject.name}.", gameObject);
-        enabled = false;
     }
 
     private void OnEnable()
@@ -96,39 +96,36 @@ public class GameSession : MonoBehaviour
 
     private void Update()
     {
-        if (_input.IsRestartPressed)
-        {
-            if (_state != GameState.Playing)
-            {
-                RestartLevel();
-            }
-
-            return;
-        }
-
+      if (_input.IsRestartPressed)
+      {
         if (_state == GameState.Playing)
-        {
-            _playTime += Time.deltaTime;
-        }
-    }
-
-    private void OnDisable()
-    {
-        TogglePlayerEvents(false);
-        ToggleEnemyEvents(false);
-    }
-
-    public void AddCoin(int amount)
-    {
-        if (_state != GameState.Playing)
-        {
             return;
-        }
 
+        RestartLevel();
+        return;
+    }
+
+    if (_state == GameState.Playing)
+    {
+        _playTime += Time.deltaTime;
+    }
+}
+
+private void OnDisable()
+{
+    TogglePlayerEvents(false);
+    ToggleEnemyEvents(false);
+}
+
+public void AddCoin(int amount)
+{
+    
+    if (_state == GameState.Playing)
+    {
         _totalCoinsCollected += amount;
         _coinView.Render(_totalCoinsCollected);
     }
-
+}
     public void RegisterEnemyKill()
     {
         if (_state == GameState.Playing)
@@ -286,38 +283,34 @@ public class GameSession : MonoBehaviour
 
     private void GameOver()
     {
-        if (_state != GameState.Playing)
+        if (_state == GameState.Playing)
         {
-            return;
+            _state = GameState.GameOver;
+
+            if (_input == false)
+            {
+                _input.IsBlocked = true;
+            }
+
+            SuspendGameplay();
+            _gameOverView.Show(BuildStats());
         }
-
-        _state = GameState.GameOver;
-
-        if (_input != null)
-        {
-            _input.IsBlocked = true;
-        }
-
-        SuspendGameplay();
-        _gameOverView.Show(BuildStats());
     }
 
     private void FinishLevel()
     {
-        if (_state != GameState.Playing)
+        if (_state == GameState.Playing)
         {
-            return;
+            _state = GameState.Finish;
+
+            if (_input == false)
+            {
+                _input.IsBlocked = true;
+            }
+
+            SuspendGameplay();
+            _finishView.Show(BuildStats());
         }
-
-        _state = GameState.Finish;
-
-        if (_input != null)
-        {
-            _input.IsBlocked = true;
-        }
-
-        SuspendGameplay();
-        _finishView.Show(BuildStats());
     }
 
     private void SuspendGameplay()
