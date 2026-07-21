@@ -12,7 +12,7 @@ public class GroundDetector : MonoBehaviour
 
     private void Awake()
     {
-        if (_groundCheck == false)
+        if (_groundCheck == true)
         {
             return;
         }

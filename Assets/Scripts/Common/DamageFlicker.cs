@@ -13,7 +13,7 @@ public class DamageFlicker : MonoBehaviour
     {
         _health = GetComponent<Health>();
 
-        if (_spriteRenderer == false)
+        if (_spriteRenderer == true)
         {
             return;
         }
