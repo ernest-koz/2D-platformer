@@ -10,31 +10,39 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerStomp))]
 [RequireComponent(typeof(PlayerCollision))]
 [RequireComponent(typeof(FallDetector))]
+[RequireComponent(typeof(DamageKnockback))]
+[RequireComponent(typeof(DamageFlicker))]
+[RequireComponent(typeof(PlayerAnimator))]
+[RequireComponent(typeof(HealthUI))]
 [RequireComponent(typeof(Rigidbody2D))]
-[RequireComponent(typeof(Animator))]
 public class Player : MonoBehaviour
 {
+    private const int ContactDamage = 1;
+    private const float MovementInputThreshold = 0.01f;
     private const float StompHeightThreshold = 0.4f;
     private const float FallSpeedThreshold = 0.5f;
-
-    private static readonly int SpeedHash = Animator.StringToHash("Speed");
-    private static readonly int IsGroundedHash = Animator.StringToHash("IsGrounded");
 
     private InputReader _input;
     private Mover _mover;
     private Jumper _jumper;
     private GroundDetector _ground;
     private PlayerCollision _collision;
+    private PlayerStomp _stomp;
     private FallDetector _fallDetector;
     private Health _health;
     private SpriteFacing _facing;
+    private DamageKnockback _knockback;
+    private DamageFlicker _flicker;
+    private PlayerAnimator _animator;
+    private HealthUI _healthUI;
     private Rigidbody2D _rigidbody;
-    private Animator _animator;
     private bool _isDead;
+    private bool _isSuspended;
 
     public event Action<Pickup> PickupContacted;
     public event Action LevelFinished;
-    public event Action<Collision2D> EnemyContacted;
+    public event Action Died;
+    public event Action RestartRequested;
 
     private void Awake()
     {
@@ -43,43 +51,55 @@ public class Player : MonoBehaviour
         _jumper = GetComponent<Jumper>();
         _ground = GetComponent<GroundDetector>();
         _collision = GetComponent<PlayerCollision>();
+        _stomp = GetComponent<PlayerStomp>();
         _fallDetector = GetComponent<FallDetector>();
         _health = GetComponent<Health>();
         _facing = GetComponent<SpriteFacing>();
+        _knockback = GetComponent<DamageKnockback>();
+        _flicker = GetComponent<DamageFlicker>();
+        _animator = GetComponent<PlayerAnimator>();
+        _healthUI = GetComponent<HealthUI>();
         _rigidbody = GetComponent<Rigidbody2D>();
-        _animator = GetComponent<Animator>();
     }
 
     private void OnEnable()
     {
         _collision.TriggerEntered += OnTriggerEntered;
         _collision.CollisionEntered += OnCollisionEntered;
-        _health.Died += OnDied;
-        _fallDetector.FellToDeath += OnDied;
+        _fallDetector.FellToDeath += OnFellToDeath;
+        _health.Changed += OnHealthChanged;
+        _health.Damaged += OnDamaged;
+        _health.Died += OnHealthDepleted;
+        _health.InvincibilityChanged += OnInvincibilityChanged;
     }
 
     private void Start()
     {
-        if (_input == null)
-        {
-            Debug.LogError($"InputReader not found on {gameObject.name}.", gameObject);
-        }
-    }
-
-    private void FixedUpdate()
-    {
-        if (_isDead)
-        {
-            _mover.Stop();
-            return;
-        }
-
-        _mover.Move(_input.Direction);
-        _jumper.ApplyPhysics(Time.fixedDeltaTime);
+        _healthUI.Render(_health.Current, _health.Maximum);
     }
 
     private void Update()
     {
+        _input.Read();
+
+        if (_input.IsRestartPressed)
+        {
+            RestartRequested?.Invoke();
+        }
+
+        if (_isSuspended)
+        {
+            return;
+        }
+
+        if (_isDead)
+        {
+            return;
+        }
+
+        _health.Tick(Time.deltaTime);
+        _fallDetector.Check();
+
         if (_isDead)
         {
             return;
@@ -88,24 +108,74 @@ public class Player : MonoBehaviour
         float direction = _input.Direction;
 
         _jumper.Tick(_ground.IsGrounded, _input.IsJumpPressed, _input.IsJumpHeld, Time.deltaTime);
-        UpdateAnimator(direction);
+        _animator.SetMovement(Mathf.Abs(direction), _ground.IsGrounded);
+        _flicker.Tick(Time.time);
 
-        if (Mathf.Abs(direction) > 0.01f)
+        if (Mathf.Abs(direction) <= MovementInputThreshold)
         {
-            _facing.Face(direction);
+            return;
         }
+
+        _facing.Face(direction);
+    }
+
+    private void FixedUpdate()
+    {
+        if (_isSuspended)
+        {
+            _mover.Stop();
+            return;
+        }
+
+        if (_isDead)
+        {
+            _mover.Stop();
+            return;
+        }
+
+        _ground.Refresh();
+        _stomp.TryStomp();
+        _mover.Move(_input.Direction);
+        _jumper.ApplyPhysics(Time.fixedDeltaTime);
     }
 
     private void OnDisable()
     {
         _collision.TriggerEntered -= OnTriggerEntered;
         _collision.CollisionEntered -= OnCollisionEntered;
-        _health.Died -= OnDied;
-        _fallDetector.FellToDeath -= OnDied;
+        _fallDetector.FellToDeath -= OnFellToDeath;
+        _health.Changed -= OnHealthChanged;
+        _health.Damaged -= OnDamaged;
+        _health.Died -= OnHealthDepleted;
+        _health.InvincibilityChanged -= OnInvincibilityChanged;
+    }
+
+    public bool Heal(int amount)
+    {
+        return _health.Heal(amount);
+    }
+
+    public void Suspend()
+    {
+        if (_isSuspended)
+        {
+            return;
+        }
+
+        _isSuspended = true;
+        _input.Block();
+        _mover.Stop();
+        _flicker.SetFlickering(false);
+        _animator.SetMovement(0f, _ground.IsGrounded);
     }
 
     private void OnTriggerEntered(Collider2D other)
     {
+        if (IsInactive())
+        {
+            return;
+        }
+
         if (other.TryGetComponent(out Pickup pickup))
         {
             PickupContacted?.Invoke(pickup);
@@ -120,35 +190,99 @@ public class Player : MonoBehaviour
 
     private void OnCollisionEntered(Collision2D collision)
     {
-        if (collision.collider.TryGetComponent(out Health enemyHealth) == false)
+        if (IsInactive())
         {
             return;
         }
 
-        if (enemyHealth.IsAlive == false)
+        if (collision.collider.TryGetComponent(out IStompable enemy) == false)
         {
             return;
         }
 
-        bool isStomp =
-            transform.position.y > collision.transform.position.y + StompHeightThreshold &&
-            _rigidbody.velocity.y < -FallSpeedThreshold;
-
-        if (isStomp == false)
+        if (enemy.IsAvailable == false)
         {
-            EnemyContacted?.Invoke(collision);
+            return;
         }
+
+        if (IsStomp(collision))
+        {
+            return;
+        }
+
+        _health.TakeDamage(ContactDamage, collision.transform.position);
     }
 
-    private void UpdateAnimator(float direction)
+    private bool IsInactive()
     {
-        _animator.SetFloat(SpeedHash, Mathf.Abs(direction));
-        _animator.SetBool(IsGroundedHash, _ground.IsGrounded);
+        if (_isSuspended)
+        {
+            return true;
+        }
+
+        if (_isDead)
+        {
+            return true;
+        }
+
+        return false;
     }
 
-    private void OnDied()
+    private bool IsStomp(Collision2D collision)
     {
+        float requiredHeight = collision.transform.position.y + StompHeightThreshold;
+
+        if (transform.position.y <= requiredHeight)
+        {
+            return false;
+        }
+
+        if (_rigidbody.velocity.y >= -FallSpeedThreshold)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private void OnHealthChanged(int current, int maximum)
+    {
+        _healthUI.Render(current, maximum);
+    }
+
+    private void OnDamaged(Vector2 source)
+    {
+        _animator.PlayHurt();
+        _knockback.Apply(source);
+    }
+
+    private void OnInvincibilityChanged(bool isInvincible)
+    {
+        _flicker.SetFlickering(isInvincible);
+    }
+
+    private void OnHealthDepleted()
+    {
+        Die();
+    }
+
+    private void OnFellToDeath()
+    {
+        Die();
+    }
+
+    private void Die()
+    {
+        if (_isDead)
+        {
+            return;
+        }
+
         _isDead = true;
+        _input.Block();
         _mover.Stop();
+        _flicker.SetFlickering(false);
+        _animator.PlayDeath();
+        Died?.Invoke();
     }
 }

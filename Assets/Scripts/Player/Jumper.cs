@@ -39,7 +39,12 @@ public class Jumper : MonoBehaviour
     {
         ApplyVariableGravity(fixedDeltaTime);
 
-        if (_jumpBufferTimer <= 0f || _coyoteTimer <= 0f)
+        if (_jumpBufferTimer <= 0f)
+        {
+            return;
+        }
+
+        if (_coyoteTimer <= 0f)
         {
             return;
         }
@@ -57,8 +62,13 @@ public class Jumper : MonoBehaviour
         {
             verticalVelocity += Physics2D.gravity.y * (_fallMultiplier - 1f) * fixedDeltaTime;
         }
-        else if (verticalVelocity > 0f && _isJumpHeld == false)
+        else if (verticalVelocity > 0f)
         {
+            if (_isJumpHeld)
+            {
+                return;
+            }
+
             verticalVelocity += Physics2D.gravity.y * (_lowJumpMultiplier - 1f) * fixedDeltaTime;
         }
 

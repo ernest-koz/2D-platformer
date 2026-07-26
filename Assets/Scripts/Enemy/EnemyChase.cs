@@ -18,7 +18,12 @@ public class EnemyChase : MonoBehaviour
 
     public bool Tick(ITargetable target)
     {
-        if (target == null || _ground.IsGrounded == false)
+        if (target == null)
+        {
+            return false;
+        }
+
+        if (_ground.IsGrounded == false)
         {
             return false;
         }

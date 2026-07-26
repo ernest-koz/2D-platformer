@@ -1,59 +1,53 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Health))]
 public class DamageFlicker : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer _spriteRenderer;
     [SerializeField] private float _flickerFrequency = 18f;
 
-    private Health _health;
-    private bool _isInvincible;
+    private bool _isFlickering;
 
     private void Awake()
     {
-        _health = GetComponent<Health>();
-
-        if (_spriteRenderer == true)
+        if (_spriteRenderer == null)
         {
-            return;
+            Debug.LogError($"SpriteRenderer not assigned on {gameObject.name}.", gameObject);
+            enabled = false;
         }
-
-        Debug.LogError($"SpriteRenderer not assigned on {gameObject.name}.", gameObject);
-        enabled = false;
-    }
-
-    private void OnEnable()
-    {
-        _health.InvincibilityChanged += OnInvincibilityChanged;
-    }
-
-    private void Update()
-    {
-        if (_isInvincible == false)
-        {
-            return;
-        }
-
-        _spriteRenderer.enabled = Mathf.FloorToInt(Time.time * _flickerFrequency) % 2 == 0;
     }
 
     private void OnDisable()
     {
-        _health.InvincibilityChanged -= OnInvincibilityChanged;
+        SetFlickering(false);
     }
 
-    private void OnInvincibilityChanged(bool isInvincible)
+    public void SetFlickering(bool isFlickering)
     {
-        _isInvincible = isInvincible;
+        _isFlickering = isFlickering;
 
         if (_spriteRenderer == null)
         {
             return;
         }
 
-        if (isInvincible == false)
+        if (isFlickering == false)
         {
             _spriteRenderer.enabled = true;
         }
+    }
+
+    public void Tick(float elapsedTime)
+    {
+        if (_isFlickering == false)
+        {
+            return;
+        }
+
+        if (_spriteRenderer == null)
+        {
+            return;
+        }
+
+        _spriteRenderer.enabled = Mathf.FloorToInt(elapsedTime * _flickerFrequency) % 2 == 0;
     }
 }

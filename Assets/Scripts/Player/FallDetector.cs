@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 
-[RequireComponent(typeof(Health))]
 public class FallDetector : MonoBehaviour
 {
     [SerializeField] private float _deathY = -20f;
@@ -10,17 +9,19 @@ public class FallDetector : MonoBehaviour
 
     public event Action FellToDeath;
 
-    private void Update()
+    public void Check()
     {
         if (_isDead)
         {
             return;
         }
 
-        if (transform.position.y < _deathY)
+        if (transform.position.y >= _deathY)
         {
-            _isDead = true;
-            FellToDeath?.Invoke();
+            return;
         }
+
+        _isDead = true;
+        FellToDeath?.Invoke();
     }
 }

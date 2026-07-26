@@ -34,15 +34,12 @@ public readonly struct SessionStats
 [RequireComponent(typeof(CoinView))]
 [RequireComponent(typeof(GameOverView))]
 [RequireComponent(typeof(FinishView))]
-
 public class GameSession : MonoBehaviour
 {
+    private const float EnemyDestructionDelay = 2f;
+
     [Header("References")]
-    [SerializeField] private InputReader _input;
-    [SerializeField] private MonoBehaviour[] _gameplayComponents;
     [SerializeField] private Player _player;
-    [SerializeField] private Health _playerHealth;
-    [SerializeField] private FallDetector _fallDetector;
 
     [Header("Enemies")]
     [SerializeField] private EnemyBrain[] _enemies;
@@ -68,16 +65,10 @@ public class GameSession : MonoBehaviour
         _gameOverView = GetComponent<GameOverView>();
         _finishView = GetComponent<FinishView>();
 
-        if (_input == null ||
-            _player == null ||
-            _playerHealth == null ||
-            _fallDetector == null ||
-            _gameplayComponents == null ||
-            _gameplayComponents.Length == 0)
+        if (_player == null)
         {
-            Debug.LogError($"GameSession has missing required references on {gameObject.name}.", gameObject);
+            Debug.LogError($"Player not assigned on {gameObject.name}.", gameObject);
             enabled = false;
-            return;
         }
     }
 
@@ -96,47 +87,49 @@ public class GameSession : MonoBehaviour
 
     private void Update()
     {
-      if (_input.IsRestartPressed)
-      {
-        if (_state == GameState.Playing)
+        if (IsPlaying() == false)
+        {
             return;
+        }
 
-        RestartLevel();
-        return;
-    }
-
-    if (_state == GameState.Playing)
-    {
         _playTime += Time.deltaTime;
     }
-}
 
-private void OnDisable()
-{
-    TogglePlayerEvents(false);
-    ToggleEnemyEvents(false);
-}
-
-public void AddCoin(int amount)
-{
-    
-    if (_state == GameState.Playing)
+    private void OnDisable()
     {
+        TogglePlayerEvents(false);
+        ToggleEnemyEvents(false);
+    }
+
+    public void AddCoin(int amount)
+    {
+        if (IsPlaying() == false)
+        {
+            return;
+        }
+
         _totalCoinsCollected += amount;
         _coinView.Render(_totalCoinsCollected);
     }
-}
+
     public void RegisterEnemyKill()
     {
-        if (_state == GameState.Playing)
+        if (IsPlaying() == false)
         {
-            _enemiesDefeated++;
+            return;
         }
+
+        _enemiesDefeated++;
     }
 
     public void RestartLevel()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    private bool IsPlaying()
+    {
+        return _state == GameState.Playing;
     }
 
     private void CountLevelPickups()
@@ -159,43 +152,10 @@ public void AddCoin(int amount)
         }
     }
 
-    private void TogglePlayerEvents(bool subscribe)
-    {
-        if (_player == null)
-        {
-            return;
-        }
-
-        if (_playerHealth == null)
-        {
-            return;
-        }
-
-        if (_fallDetector == null)
-        {
-            return;
-        }
-
-        if (subscribe)
-        {
-            _player.PickupContacted += OnPickupContacted;
-            _player.EnemyContacted += OnEnemyContacted;
-            _player.LevelFinished += OnLevelFinished;
-            _playerHealth.Died += OnPlayerDied;
-            _fallDetector.FellToDeath += OnPlayerDied;
-        }
-        else
-        {
-            _player.PickupContacted -= OnPickupContacted;
-            _player.EnemyContacted -= OnEnemyContacted;
-            _player.LevelFinished -= OnLevelFinished;
-            _playerHealth.Died -= OnPlayerDied;
-            _fallDetector.FellToDeath -= OnPlayerDied;
-        }
-    }
-
     private void CountEnemies()
     {
+        _totalEnemiesInLevel = 0;
+
         if (_enemies == null)
         {
             return;
@@ -212,6 +172,28 @@ public void AddCoin(int amount)
         }
     }
 
+    private void TogglePlayerEvents(bool subscribe)
+    {
+        if (_player == null)
+        {
+            return;
+        }
+
+        if (subscribe)
+        {
+            _player.PickupContacted += OnPickupContacted;
+            _player.LevelFinished += OnLevelFinished;
+            _player.Died += OnPlayerDied;
+            _player.RestartRequested += OnRestartRequested;
+            return;
+        }
+
+        _player.PickupContacted -= OnPickupContacted;
+        _player.LevelFinished -= OnLevelFinished;
+        _player.Died -= OnPlayerDied;
+        _player.RestartRequested -= OnRestartRequested;
+    }
+
     private void ToggleEnemyEvents(bool subscribe)
     {
         if (_enemies == null)
@@ -226,21 +208,28 @@ public void AddCoin(int amount)
                 continue;
             }
 
-            Health enemyHealth = enemy.GetComponent<Health>();
-
             if (subscribe)
             {
-                enemyHealth.Died += OnEnemyDied;
+                enemy.Died += OnEnemyDied;
+                continue;
             }
-            else
-            {
-                enemyHealth.Died -= OnEnemyDied;
-            }
+
+            enemy.Died -= OnEnemyDied;
         }
     }
 
     private void OnPickupContacted(Pickup pickup)
     {
+        if (IsPlaying() == false)
+        {
+            return;
+        }
+
+        if (pickup.IsCollected)
+        {
+            return;
+        }
+
         switch (pickup.Type)
         {
             case PickupType.Coin:
@@ -249,21 +238,17 @@ public void AddCoin(int amount)
                 break;
 
             case PickupType.Health:
-                if (_playerHealth.Heal(pickup.Amount))
+                if (_player.Heal(pickup.Amount))
                 {
                     pickup.Collect();
                 }
+
                 break;
 
             default:
                 Debug.LogError($"Unsupported pickup type: {pickup.Type}.", pickup);
                 break;
         }
-    }
-
-    private void OnEnemyContacted(Collision2D collision)
-    {
-        _playerHealth.TakeDamage(1, collision.transform.position);
     }
 
     private void OnLevelFinished()
@@ -276,58 +261,64 @@ public void AddCoin(int amount)
         GameOver();
     }
 
-    private void OnEnemyDied()
+    private void OnEnemyDied(EnemyBrain enemy)
     {
+        enemy.Died -= OnEnemyDied;
         RegisterEnemyKill();
+        Destroy(enemy.gameObject, EnemyDestructionDelay);
     }
 
-    private void GameOver()
+    private void OnRestartRequested()
     {
-        if (_state == GameState.Playing)
-        {
-            _state = GameState.GameOver;
-
-            if (_input == false)
-            {
-                _input.IsBlocked = true;
-            }
-
-            SuspendGameplay();
-            _gameOverView.Show(BuildStats());
-        }
-    }
-
-    private void FinishLevel()
-    {
-        if (_state == GameState.Playing)
-        {
-            _state = GameState.Finish;
-
-            if (_input == false)
-            {
-                _input.IsBlocked = true;
-            }
-
-            SuspendGameplay();
-            _finishView.Show(BuildStats());
-        }
-    }
-
-    private void SuspendGameplay()
-    {
-        if (_gameplayComponents == null)
+        if (IsPlaying())
         {
             return;
         }
 
-        foreach (MonoBehaviour component in _gameplayComponents)
+        RestartLevel();
+    }
+
+    private void GameOver()
+    {
+        if (IsPlaying() == false)
         {
-            if (component == null)
+            return;
+        }
+
+        _state = GameState.GameOver;
+        SuspendGameplay();
+        _gameOverView.Show(BuildStats());
+    }
+
+    private void FinishLevel()
+    {
+        if (IsPlaying() == false)
+        {
+            return;
+        }
+
+        _state = GameState.Finish;
+        SuspendGameplay();
+        _finishView.Show(BuildStats());
+    }
+
+    private void SuspendGameplay()
+    {
+        _player.Suspend();
+
+        if (_enemies == null)
+        {
+            return;
+        }
+
+        foreach (EnemyBrain enemy in _enemies)
+        {
+            if (enemy == null)
             {
                 continue;
             }
 
-            component.enabled = false;
+            enemy.Suspend();
         }
     }
 

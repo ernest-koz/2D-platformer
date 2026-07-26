@@ -15,7 +15,7 @@ public class PlayerStomp : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody2D>();
     }
 
-    private void FixedUpdate()
+    public void TryStomp()
     {
         if (_rigidbody.velocity.y >= 0f)
         {
@@ -34,17 +34,17 @@ public class PlayerStomp : MonoBehaviour
             return;
         }
 
-        if (hit.TryGetComponent(out Health enemyHealth) == false)
+        if (hit.TryGetComponent(out IStompable enemy) == false)
         {
             return;
         }
 
-        if (enemyHealth.IsAlive == false)
+        if (enemy.IsAvailable == false)
         {
             return;
         }
 
-        enemyHealth.TakeDamage(enemyHealth.MaximumHealth, transform.position);
+        enemy.Defeat(transform.position);
 
         Bounce();
     }

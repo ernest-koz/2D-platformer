@@ -14,23 +14,51 @@ public class GameOverView : MonoBehaviour
 
     public void Show(SessionStats stats)
     {
-        SetText(_coinText, _coinFormat, stats.TotalCoinsCollected, stats.TotalCoinsInLevel);
-        SetText(_timeText, _timeFormat, stats.PlayTime);
-        SetText(_enemyText, _enemyFormat, stats.EnemiesDefeated, stats.TotalEnemiesInLevel);
-
-        if (_panel == true)
-        {
-            _panel.SetActive(true);
-        }
-    }
-
-    private void SetText(TMP_Text text, string format, params object[] args)
-    {
-        if (text == null)
+        if (HasRequiredReferences() == false)
         {
             return;
         }
 
+        SetText(_coinText, _coinFormat, stats.TotalCoinsCollected, stats.TotalCoinsInLevel);
+        SetText(_timeText, _timeFormat, stats.PlayTime);
+        SetText(_enemyText, _enemyFormat, stats.EnemiesDefeated, stats.TotalEnemiesInLevel);
+
+        _panel.SetActive(true);
+    }
+
+    private bool HasRequiredReferences()
+    {
+        if (_panel == null)
+        {
+            return ReportMissingReferences();
+        }
+
+        if (_coinText == null)
+        {
+            return ReportMissingReferences();
+        }
+
+        if (_timeText == null)
+        {
+            return ReportMissingReferences();
+        }
+
+        if (_enemyText == null)
+        {
+            return ReportMissingReferences();
+        }
+
+        return true;
+    }
+
+    private bool ReportMissingReferences()
+    {
+        Debug.LogError($"{nameof(GameOverView)} references not assigned on {gameObject.name}.", gameObject);
+        return false;
+    }
+
+    private void SetText(TMP_Text text, string format, params object[] args)
+    {
         try
         {
             text.text = string.Format(format, args);

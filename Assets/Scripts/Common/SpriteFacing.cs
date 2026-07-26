@@ -29,13 +29,22 @@ public class SpriteFacing : MonoBehaviour
 
     public void Face(float directionX)
     {
-        if (directionX > 0f && _direction < 0)
+        if (directionX > 0f)
         {
-            Flip();
+            if (_direction < 0)
+            {
+                Flip();
+            }
+
+            return;
         }
-        else if (directionX < 0f && _direction > 0)
+
+        if (directionX < 0f)
         {
-            Flip();
+            if (_direction > 0)
+            {
+                Flip();
+            }
         }
     }
 

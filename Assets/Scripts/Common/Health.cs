@@ -4,21 +4,20 @@ using UnityEngine;
 public class Health : MonoBehaviour, ITargetable
 {
     [Header("Health")]
-    [SerializeField, Min(1)] private int _maximumHealth = 3;
+    [SerializeField, Min(1)] private int _maximum = 3;
     [SerializeField, Min(0f)] private float _invincibilityTime = 1f;
 
-    private int _currentHealth;
+    private int _current;
     private float _invincibilityTimer;
     private bool _isDead;
-    private bool _wasInvincible;
 
-    public event Action<int, int> HealthChanged;
+    public event Action<int, int> Changed;
     public event Action<Vector2> Damaged;
     public event Action Died;
     public event Action<bool> InvincibilityChanged;
 
-    public int CurrentHealth => _currentHealth;
-    public int MaximumHealth => _maximumHealth;
+    public int Current => _current;
+    public int Maximum => _maximum;
     public bool IsAlive => _isDead == false;
     public bool IsInvincible => _invincibilityTimer > 0f;
     public Vector3 Position => transform.position;
@@ -26,48 +25,62 @@ public class Health : MonoBehaviour, ITargetable
 
     private void Awake()
     {
-        _currentHealth = _maximumHealth;
+        _current = _maximum;
     }
 
-    private void Start()
+    public void Tick(float deltaTime)
     {
-        HealthChanged?.Invoke(_currentHealth, _maximumHealth);
-    }
+        if (deltaTime <= 0f)
+        {
+            return;
+        }
 
-    private void Update()
-    {
-        bool wasInvincible = _wasInvincible;
+        if (_invincibilityTimer <= 0f)
+        {
+            return;
+        }
+
+        _invincibilityTimer = Mathf.Max(_invincibilityTimer - deltaTime, 0f);
 
         if (_invincibilityTimer > 0f)
         {
-            _invincibilityTimer -= Time.deltaTime;
+            return;
         }
 
-        bool isInvincible = _invincibilityTimer > 0f;
-
-        if (wasInvincible != isInvincible)
-        {
-            _wasInvincible = isInvincible;
-            InvincibilityChanged?.Invoke(isInvincible);
-        }
+        InvincibilityChanged?.Invoke(false);
     }
 
     public void TakeDamage(int amount, Vector2 damageSourcePosition)
     {
-        if (amount <= 0 || IsInvincible || IsAlive == false)
+        if (amount <= 0)
         {
             return;
         }
 
-        _currentHealth = Mathf.Max(_currentHealth - amount, 0);
-        _invincibilityTimer = _invincibilityTime;
+        if (IsInvincible)
+        {
+            return;
+        }
 
-        HealthChanged?.Invoke(_currentHealth, _maximumHealth);
+        if (IsAlive == false)
+        {
+            return;
+        }
 
-        if (_currentHealth == 0)
+        _current = Mathf.Max(_current - amount, 0);
+        Changed?.Invoke(_current, _maximum);
+
+        if (_current == 0)
         {
             Die();
             return;
+        }
+
+        _invincibilityTimer = _invincibilityTime;
+
+        if (IsInvincible)
+        {
+            InvincibilityChanged?.Invoke(true);
         }
 
         Damaged?.Invoke(damageSourcePosition);
@@ -75,20 +88,25 @@ public class Health : MonoBehaviour, ITargetable
 
     public bool Heal(int amount)
     {
-        if (amount <= 0 || IsAlive == false)
+        if (amount <= 0)
         {
             return false;
         }
 
-        int healedHealth = Mathf.Min(_currentHealth + amount, _maximumHealth);
-
-        if (healedHealth == _currentHealth)
+        if (IsAlive == false)
         {
             return false;
         }
 
-        _currentHealth = healedHealth;
-        HealthChanged?.Invoke(_currentHealth, _maximumHealth);
+        if (_current >= _maximum)
+        {
+            return false;
+        }
+
+        int missing = _maximum - _current;
+        int restored = Mathf.Min(amount, missing);
+        _current += restored;
+        Changed?.Invoke(_current, _maximum);
         return true;
     }
 

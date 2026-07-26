@@ -4,7 +4,6 @@ using UnityEngine;
 public class EnemyStrike : MonoBehaviour
 {
     private const float AttackCircleRadiusFraction = 0.6f;
-    private const float InitialLastAttackTime = -999f;
 
     [Header("Attack")]
     [SerializeField, Min(0.01f)] private float _attackRange = 1f;
@@ -15,12 +14,12 @@ public class EnemyStrike : MonoBehaviour
     [SerializeField] private LayerMask _targetLayer;
 
     private SpriteFacing _facing;
-    private float _lastAttackTime = InitialLastAttackTime;
+    private float _cooldownTimer;
     private float _windupTimer;
     private bool _isWindingUp;
 
     public float AttackRange => _attackRange;
-    public bool IsOnCooldown => Time.time - _lastAttackTime < _attackCooldown;
+    public bool IsOnCooldown => _cooldownTimer > 0f;
 
     private void Awake()
     {
@@ -30,6 +29,21 @@ public class EnemyStrike : MonoBehaviour
     private void OnDisable()
     {
         CancelWindup();
+    }
+
+    public void TickCooldown(float deltaTime)
+    {
+        if (deltaTime <= 0f)
+        {
+            return;
+        }
+
+        if (_cooldownTimer <= 0f)
+        {
+            return;
+        }
+
+        _cooldownTimer = Mathf.Max(_cooldownTimer - deltaTime, 0f);
     }
 
     public bool BeginWindup()
@@ -44,14 +58,14 @@ public class EnemyStrike : MonoBehaviour
         return true;
     }
 
-    public bool TickWindup()
+    public bool TickWindup(float deltaTime)
     {
         if (_isWindingUp == false)
         {
             return false;
         }
 
-        _windupTimer -= Time.fixedDeltaTime;
+        _windupTimer -= Mathf.Max(deltaTime, 0f);
 
         if (_windupTimer > 0f)
         {
@@ -59,7 +73,7 @@ public class EnemyStrike : MonoBehaviour
         }
 
         _isWindingUp = false;
-        _lastAttackTime = Time.time;
+        _cooldownTimer = _attackCooldown;
 
         Vector2 attackOrigin = (Vector2)transform.position + Vector2.up * _attackOriginHeight;
         Vector2 direction = _facing.FacingVector;

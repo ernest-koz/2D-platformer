@@ -12,26 +12,12 @@ public class GroundDetector : MonoBehaviour
 
     private void Awake()
     {
-        if (_groundCheck == true)
+        if (_groundCheck == null)
         {
+            Debug.LogError($"GroundCheck Transform not assigned on {gameObject.name}.", gameObject);
+            enabled = false;
             return;
         }
-
-        Debug.LogError($"GroundCheck Transform not assigned on {gameObject.name}.", gameObject);
-        enabled = false;
-    }
-
-    private void FixedUpdate()
-    {
-        Collider2D hit = Physics2D.OverlapCircle(_groundCheck.position, _groundCheckRadius, _groundLayer);
-
-        if (hit == null)
-        {
-            IsGrounded = false;
-            return;
-        }
-
-        IsGrounded = true;
     }
 
     private void OnDrawGizmosSelected()
@@ -43,6 +29,18 @@ public class GroundDetector : MonoBehaviour
 
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(_groundCheck.position, _groundCheckRadius);
+    }
+
+    public void Refresh()
+    {
+        if (_groundCheck == null)
+        {
+            IsGrounded = false;
+            return;
+        }
+
+        Collider2D hit = Physics2D.OverlapCircle(_groundCheck.position, _groundCheckRadius, _groundLayer);
+        IsGrounded = HasHit(hit);
     }
 
     public bool HasGroundAhead(float directionX)
@@ -58,6 +56,16 @@ public class GroundDetector : MonoBehaviour
 
         Collider2D hit = Physics2D.OverlapCircle(checkOrigin, _groundCheckRadius, _groundLayer);
 
-        return hit == null == false;
+        return HasHit(hit);
+    }
+
+    private static bool HasHit(Collider2D hit)
+    {
+        if (hit == null)
+        {
+            return false;
+        }
+
+        return true;
     }
 }

@@ -1005,7 +1005,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a30dde062a3a9074c801336d61d4ad18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _maximumHealth: 3
+  _maximum: 3
   _invincibilityTime: 1
 --- !u!114 &165335437
 MonoBehaviour:
@@ -2810,17 +2810,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7931a2dd932c3ea4bb0d64cb924df19d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _input: {fileID: 1729192370}
-  _gameplayComponents:
-  - {fileID: 1816948634}
-  - {fileID: 758827296}
-  - {fileID: 1568716872}
-  - {fileID: 165335427}
-  - {fileID: 1397902533}
-  - {fileID: 734748740}
   _player: {fileID: 1729192374}
-  _playerHealth: {fileID: 1729192367}
-  _fallDetector: {fileID: 1729192364}
   _enemies:
   - {fileID: 1816948634}
   - {fileID: 758827296}
@@ -3276,7 +3266,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a30dde062a3a9074c801336d61d4ad18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _maximumHealth: 3
+  _maximum: 3
   _invincibilityTime: 1
 --- !u!114 &734748750
 MonoBehaviour:
@@ -3766,7 +3756,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a30dde062a3a9074c801336d61d4ad18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _maximumHealth: 3
+  _maximum: 3
   _invincibilityTime: 1
 --- !u!114 &758827306
 MonoBehaviour:
@@ -5599,7 +5589,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a30dde062a3a9074c801336d61d4ad18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _maximumHealth: 3
+  _maximum: 3
   _invincibilityTime: 1
 --- !u!114 &1397902543
 MonoBehaviour:
@@ -6140,7 +6130,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a30dde062a3a9074c801336d61d4ad18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _maximumHealth: 3
+  _maximum: 3
   _invincibilityTime: 1
 --- !u!114 &1568716882
 MonoBehaviour:
@@ -6986,7 +6976,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a30dde062a3a9074c801336d61d4ad18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _maximumHealth: 3
+  _maximum: 3
   _invincibilityTime: 1
 --- !u!114 &1729192368
 MonoBehaviour:
@@ -7763,7 +7753,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a30dde062a3a9074c801336d61d4ad18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _maximumHealth: 3
+  _maximum: 3
   _invincibilityTime: 1
 --- !u!114 &1816948644
 MonoBehaviour:

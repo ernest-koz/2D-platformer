@@ -18,6 +18,7 @@ public class Pickup : MonoBehaviour
 
     public PickupType Type => _type;
     public int Amount => _amount;
+    public bool IsCollected => _isCollected;
 
     public void Collect()
     {

@@ -11,6 +11,7 @@ public class CoinView : MonoBehaviour
     {
         if (_coinText == null)
         {
+            Debug.LogError($"{nameof(CoinView)} text not assigned on {gameObject.name}.", gameObject);
             return;
         }
 

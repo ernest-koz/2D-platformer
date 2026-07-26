@@ -38,13 +38,22 @@ public class EnemyPatrol : MonoBehaviour
 
         _mover.Move(patrolDirection);
 
-        if (patrolDirection < 0f && _facing.FacingDirection > 0)
+        if (patrolDirection < 0f)
         {
-            _facing.Flip();
+            if (_facing.FacingDirection > 0)
+            {
+                _facing.Flip();
+            }
+
+            return;
         }
-        else if (patrolDirection > 0f && _facing.FacingDirection < 0)
+
+        if (patrolDirection > 0f)
         {
-            _facing.Flip();
+            if (_facing.FacingDirection < 0)
+            {
+                _facing.Flip();
+            }
         }
     }
 }

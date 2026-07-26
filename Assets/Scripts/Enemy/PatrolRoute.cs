@@ -18,14 +18,20 @@ public class PatrolRoute : MonoBehaviour
 
     public float GetDirectionToward(float currentX, int facingDirection)
     {
-        if (facingDirection > 0 && currentX >= _rightBoundary)
+        if (facingDirection > 0)
         {
-            return -1f;
+            if (currentX >= _rightBoundary)
+            {
+                return -1f;
+            }
         }
 
-        if (facingDirection < 0 && currentX <= _leftBoundary)
+        if (facingDirection < 0)
         {
-            return 1f;
+            if (currentX <= _leftBoundary)
+            {
+                return 1f;
+            }
         }
 
         return facingDirection;

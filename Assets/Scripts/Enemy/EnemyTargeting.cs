@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class EnemyTargeting : MonoBehaviour
 {
+    private const int InitialTargetBufferSize = 8;
     private const int MaximumTargetBufferSize = 64;
 
     [Header("Detection")]
@@ -9,7 +10,7 @@ public class EnemyTargeting : MonoBehaviour
     [SerializeField] private float _chaseRange = 7f;
     [SerializeField] private LayerMask _targetLayer;
 
-    private Collider2D[] _targetBuffer = new Collider2D[8];
+    private Collider2D[] _targetBuffer = new Collider2D[InitialTargetBufferSize];
 
     public float DetectRange => _detectRange;
     public float ChaseRange => _chaseRange;
@@ -50,8 +51,13 @@ public class EnemyTargeting : MonoBehaviour
     {
         int count = Physics2D.OverlapCircleNonAlloc(transform.position, range, _targetBuffer, _targetLayer);
 
-        while (count == _targetBuffer.Length && _targetBuffer.Length < MaximumTargetBufferSize)
+        while (count == _targetBuffer.Length)
         {
+            if (_targetBuffer.Length >= MaximumTargetBufferSize)
+            {
+                break;
+            }
+
             int newSize = Mathf.Min(_targetBuffer.Length * 2, MaximumTargetBufferSize);
             _targetBuffer = new Collider2D[newSize];
             count = Physics2D.OverlapCircleNonAlloc(transform.position, range, _targetBuffer, _targetLayer);

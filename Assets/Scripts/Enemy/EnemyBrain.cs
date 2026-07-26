@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(Mover))]
@@ -12,11 +13,9 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Collider2D))]
-public class EnemyBrain : MonoBehaviour
+public class EnemyBrain : MonoBehaviour, IStompable
 {
-    private static readonly int SpeedHash = Animator.StringToHash("Speed");
-    private static readonly int AttackHash = Animator.StringToHash("Attack");
-    private static readonly int DieHash = Animator.StringToHash("Die");
+    private const float DeathVelocityY = -9f;
 
     private Health _health;
     private EnemyStrike _strike;
@@ -25,11 +24,16 @@ public class EnemyBrain : MonoBehaviour
     private EnemyChase _chase;
     private SpriteFacing _facing;
     private Mover _mover;
-    private Animator _animator;
+    private GroundDetector _ground;
+    private EnemyAnimator _animator;
     private Rigidbody2D _rigidbody;
     private Collider2D _collider;
-
     private State _state = State.Patrol;
+    private bool _isSuspended;
+
+    public event Action<EnemyBrain> Died;
+
+    public bool IsAvailable => _isSuspended == false && _health.IsAlive;
 
     private void Awake()
     {
@@ -40,30 +44,47 @@ public class EnemyBrain : MonoBehaviour
         _chase = GetComponent<EnemyChase>();
         _facing = GetComponent<SpriteFacing>();
         _mover = GetComponent<Mover>();
-        _animator = GetComponent<Animator>();
+        _ground = GetComponent<GroundDetector>();
+        _animator = new EnemyAnimator(GetComponent<Animator>());
         _rigidbody = GetComponent<Rigidbody2D>();
         _collider = GetComponent<Collider2D>();
     }
 
     private void OnEnable()
     {
-        _health.Died += OnDied;
+        _health.Died += OnHealthDepleted;
     }
 
     private void Update()
     {
-        if (_health.IsAlive)
+        if (_isSuspended)
         {
-            _animator.SetFloat(SpeedHash, Mathf.Abs(_rigidbody.velocity.x));
+            return;
         }
-    }
 
-    private void FixedUpdate()
-    {
         if (_health.IsAlive == false)
         {
             return;
         }
+
+        _health.Tick(Time.deltaTime);
+        _animator.SetSpeed(Mathf.Abs(_rigidbody.velocity.x));
+    }
+
+    private void FixedUpdate()
+    {
+        if (_isSuspended)
+        {
+            return;
+        }
+
+        if (_health.IsAlive == false)
+        {
+            return;
+        }
+
+        _ground.Refresh();
+        _strike.TickCooldown(Time.fixedDeltaTime);
 
         switch (_state)
         {
@@ -83,8 +104,31 @@ public class EnemyBrain : MonoBehaviour
 
     private void OnDisable()
     {
-        _health.Died -= OnDied;
+        _health.Died -= OnHealthDepleted;
         _mover.Stop();
+    }
+
+    public void Suspend()
+    {
+        if (_isSuspended)
+        {
+            return;
+        }
+
+        _isSuspended = true;
+        _strike.CancelWindup();
+        _mover.Stop();
+        _animator.SetSpeed(0f);
+    }
+
+    public void Defeat(Vector2 sourcePosition)
+    {
+        if (IsAvailable == false)
+        {
+            return;
+        }
+
+        _health.TakeDamage(_health.Current, sourcePosition);
     }
 
     private void TickPatrol()
@@ -145,10 +189,10 @@ public class EnemyBrain : MonoBehaviour
 
         if (_strike.BeginWindup())
         {
-            _animator.SetTrigger(AttackHash);
+            _animator.PlayAttack();
         }
 
-        if (_strike.TickWindup())
+        if (_strike.TickWindup(Time.fixedDeltaTime))
         {
             _state = State.Chase;
         }
@@ -157,22 +201,22 @@ public class EnemyBrain : MonoBehaviour
     private bool IsInAttackRange(ITargetable target)
     {
         float absoluteDistance = Mathf.Abs(target.Position.x - transform.position.x);
-
         return absoluteDistance <= _strike.AttackRange;
     }
 
-    private void OnDied()
+    private void OnHealthDepleted()
     {
+        if (_state == State.Dead)
+        {
+            return;
+        }
+
         _state = State.Dead;
         _mover.Stop();
-
         _collider.enabled = false;
-
-        _rigidbody.velocity = new Vector2(0f, -9f);
-
-        _animator.SetTrigger(DieHash);
-
-        Destroy(gameObject, 2f);
+        _rigidbody.velocity = new Vector2(0f, DeathVelocityY);
+        _animator.PlayDeath();
+        Died?.Invoke(this);
     }
 
     private enum State

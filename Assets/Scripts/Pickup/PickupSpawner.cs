@@ -18,7 +18,14 @@ public class PickupSpawner : MonoBehaviour
             return;
         }
 
-        if (_spawnPoints == null || _spawnPoints.Length == 0)
+        if (_spawnPoints == null)
+        {
+            Debug.LogError($"PickupSpawner: spawnPoints empty on {gameObject.name}.", gameObject);
+            enabled = false;
+            return;
+        }
+
+        if (_spawnPoints.Length == 0)
         {
             Debug.LogError($"PickupSpawner: spawnPoints empty on {gameObject.name}.", gameObject);
             enabled = false;
