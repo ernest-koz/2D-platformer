@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteFacing))]
+
 public class EnemyStrike : MonoBehaviour
 {
     private const float AttackCircleRadiusFraction = 0.6f;

@@ -2,6 +2,7 @@ using UnityEngine;
 
 [RequireComponent(typeof(Mover))]
 [RequireComponent(typeof(Rigidbody2D))]
+
 public class Jumper : MonoBehaviour
 {
     [Header("Jump")]

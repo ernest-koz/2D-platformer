@@ -34,6 +34,7 @@ public readonly struct SessionStats
 [RequireComponent(typeof(CoinView))]
 [RequireComponent(typeof(GameOverView))]
 [RequireComponent(typeof(FinishView))]
+
 public class GameSession : MonoBehaviour
 {
     private const float EnemyDestructionDelay = 2f;

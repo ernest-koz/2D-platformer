@@ -13,6 +13,7 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Collider2D))]
+
 public class EnemyBrain : MonoBehaviour, IStompable
 {
     private const float DeathVelocityY = -9f;

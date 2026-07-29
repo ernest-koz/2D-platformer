@@ -3,6 +3,7 @@ using UnityEngine;
 [RequireComponent(typeof(Mover))]
 [RequireComponent(typeof(SpriteFacing))]
 [RequireComponent(typeof(GroundDetector))]
+
 public class EnemyChase : MonoBehaviour
 {
     private Mover _mover;

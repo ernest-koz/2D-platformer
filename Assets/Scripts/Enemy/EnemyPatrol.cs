@@ -4,6 +4,7 @@ using UnityEngine;
 [RequireComponent(typeof(PatrolRoute))]
 [RequireComponent(typeof(SpriteFacing))]
 [RequireComponent(typeof(GroundDetector))]
+
 public class EnemyPatrol : MonoBehaviour
 {
     private Mover _mover;

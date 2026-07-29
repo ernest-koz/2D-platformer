@@ -15,6 +15,7 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerAnimator))]
 [RequireComponent(typeof(HealthUI))]
 [RequireComponent(typeof(Rigidbody2D))]
+
 public class Player : MonoBehaviour
 {
     private const int ContactDamage = 1;

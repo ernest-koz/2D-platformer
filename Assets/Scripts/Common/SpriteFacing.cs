@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteRenderer))]
+
 public class SpriteFacing : MonoBehaviour
 {
     [SerializeField] private bool _startsFacingRight = true;

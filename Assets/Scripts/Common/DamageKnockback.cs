@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
+
 public class DamageKnockback : MonoBehaviour
 {
     [SerializeField] private float _knockbackX = 4.5f;
