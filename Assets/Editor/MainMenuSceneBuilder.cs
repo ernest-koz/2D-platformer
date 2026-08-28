@@ -30,6 +30,8 @@ public static class MainMenuSceneBuilder
     {
         Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
+        CreateCamera();
+
         GameObject root = new GameObject("MainMenu");
         MainMenu menu = root.AddComponent<MainMenu>();
 
@@ -42,20 +44,22 @@ public static class MainMenuSceneBuilder
         CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
+        scaler.matchWidthOrHeight = 0.5f;
 
         new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
 
         DefaultControls.Resources resources = HealthDisplayDemoBuilder.CreateResources();
+
         CreateBackground(canvas.transform);
+        CreateTitle(canvas.transform, TitleText, 110f, new Vector2(0f, 330f));
         CreateMenuPanel(canvas.transform);
 
-        CreateTitle(canvas.transform, TitleText, 96f, new Vector2(0f, -150f));
-
-        CreateMenuButton(canvas.transform, MenuLabels[0], new Vector2(0f, -320f), resources, menu.PlayGame);
-        CreateMenuButton(canvas.transform, MenuLabels[1], new Vector2(0f, -460f), resources, menu.ShowAuthors);
-        CreateMenuButton(canvas.transform, MenuLabels[2], new Vector2(0f, -600f), resources, menu.QuitGame);
+        CreateMenuButton(canvas.transform, MenuLabels[0], new Vector2(0f, -60f), resources, menu.PlayGame);
+        CreateMenuButton(canvas.transform, MenuLabels[1], new Vector2(0f, -200f), resources, menu.ShowAuthors);
+        CreateMenuButton(canvas.transform, MenuLabels[2], new Vector2(0f, -340f), resources, menu.QuitGame);
 
         GameObject authorsPanel = CreateAuthorsPanel(canvas.transform, menu);
+        authorsPanel.SetActive(false);
 
         SetReference(menu, "_authorsPanel", authorsPanel);
 
@@ -65,6 +69,17 @@ public static class MainMenuSceneBuilder
         UpdateBuildSettings();
 
         Debug.Log($"[MainMenuSceneBuilder] Scene saved to {ScenePath} and placed first in Build Settings.");
+    }
+
+    private static void CreateCamera()
+    {
+        GameObject cameraObject = new GameObject("Main Camera", typeof(Camera), typeof(AudioListener));
+        cameraObject.transform.position = new Vector3(0f, 0f, -10f);
+
+        Camera camera = cameraObject.GetComponent<Camera>();
+        camera.clearFlags = CameraClearFlags.SolidColor;
+        camera.backgroundColor = new Color(0.08f, 0.10f, 0.16f);
+        camera.cullingMask = ~0;
     }
 
     private static void UpdateBuildSettings()
@@ -98,7 +113,7 @@ public static class MainMenuSceneBuilder
     private static void CreateMenuPanel(Transform parent)
     {
         RectTransform rect = CreateElement("MenuPanel", parent);
-        AnchorCenter(rect, new Vector2(0f, -180f), new Vector2(640f, 900f));
+        AnchorCenter(rect, new Vector2(0f, -130f), new Vector2(640f, 740f));
 
         Image image = rect.gameObject.AddComponent<Image>();
         image.color = new Color(0f, 0f, 0f, 0.45f);
@@ -107,25 +122,25 @@ public static class MainMenuSceneBuilder
     private static GameObject CreateAuthorsPanel(Transform parent, MainMenu menu)
     {
         GameObject panel = CreateElement("AuthorsPanel", parent).gameObject;
-        AnchorCenter((RectTransform)panel.transform, new Vector2(0f, -180f), new Vector2(760f, 640f));
+        Stretch((RectTransform)panel.transform);
 
         Image image = panel.AddComponent<Image>();
-        image.color = new Color(0f, 0f, 0f, 0.85f);
+        image.color = new Color(0.06f, 0.07f, 0.12f, 1f);
 
-        CreateTitle(panel.transform, AuthorsTitleText, 52f, new Vector2(0f, -90f));
+        CreateTitle(panel.transform, AuthorsTitleText, 72f, new Vector2(0f, 260f));
 
         RectTransform body = CreateElement("Body", panel.transform);
-        AnchorCenter(body, new Vector2(0f, -40f), new Vector2(640f, 320f));
+        AnchorCenter(body, Vector2.zero, new Vector2(900f, 400f));
 
         TextMeshProUGUI bodyLabel = body.gameObject.AddComponent<TextMeshProUGUI>();
         bodyLabel.font = TMP_Settings.defaultFontAsset;
         bodyLabel.text = AuthorsBodyText;
-        bodyLabel.fontSize = 32f;
-        bodyLabel.color = new Color(0.82f, 0.82f, 0.82f);
+        bodyLabel.fontSize = 36f;
+        bodyLabel.color = new Color(0.85f, 0.85f, 0.85f);
         bodyLabel.alignment = TextAlignmentOptions.Center;
 
         DefaultControls.Resources resources = HealthDisplayDemoBuilder.CreateResources();
-        CreateMenuButton(panel.transform, BackButtonText, new Vector2(0f, -230f), resources, menu.HideAuthors);
+        CreateMenuButton(panel.transform, BackButtonText, new Vector2(0f, -320f), resources, menu.HideAuthors);
 
         return panel;
     }
