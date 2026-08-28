@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 [RequireComponent(typeof(Health))]
@@ -20,9 +19,6 @@ public class Vampirism : MonoBehaviour
     private float _cooldownTimer;
     private float _pendingDamage;
 
-    public event Action Activated;
-    public event Action Deactivated;
-
     public bool IsActive => _remainingTime > 0f;
     public bool IsReady => IsActive == false && _cooldownTimer <= 0f;
     public float Radius => _radius;
@@ -41,7 +37,6 @@ public class Vampirism : MonoBehaviour
         }
 
         _remainingTime = _duration;
-        Activated?.Invoke();
     }
 
     public void Tick(float deltaTime)
@@ -64,7 +59,6 @@ public class Vampirism : MonoBehaviour
 
         _remainingTime = 0f;
         _pendingDamage = 0f;
-        Deactivated?.Invoke();
     }
 
     private void TickActive(float deltaTime)
@@ -95,7 +89,6 @@ public class Vampirism : MonoBehaviour
         _remainingTime = 0f;
         _pendingDamage = 0f;
         _cooldownTimer = _cooldownTime;
-        Deactivated?.Invoke();
     }
 
     private void DrainNearestTarget(float deltaTime)
