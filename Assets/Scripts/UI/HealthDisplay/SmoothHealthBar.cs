@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class SmoothHealthBar : HealthBar
 {
-    [SerializeField, Min(0.1f)] private float _fillSpeed = 50f;
+    [SerializeField, Min(0.01f)] private float _fillSpeed = 0.5f;
 
     private float _target;
 
@@ -10,17 +10,17 @@ public class SmoothHealthBar : HealthBar
     {
         base.Start();
 
-        Slider.value = _target;
+        Slider.normalizedValue = _target;
     }
 
     private void Update()
     {
-        Slider.value = Mathf.MoveTowards(Slider.value, _target, _fillSpeed * Time.deltaTime);
+        Slider.normalizedValue = Mathf.MoveTowards(Slider.normalizedValue, _target, _fillSpeed * Time.deltaTime);
     }
 
     protected override void Render(int current, int maximum)
     {
         Slider.maxValue = maximum;
-        _target = current;
+        _target = maximum > 0 ? (float)current / maximum : 0f;
     }
 }

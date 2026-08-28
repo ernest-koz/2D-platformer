@@ -72,7 +72,7 @@ public static class HealthDemoSceneValidator
         if (smooth)
         {
             ThrowIfNull(host.GetComponent<SmoothHealthBar>(), $"{name} must use SmoothHealthBar");
-            AssertEqual(GetPrivateFloat(view, "_fillSpeed"), 50f, $"{name}._fillSpeed");
+            AssertEqual(GetPrivateFloat(view, "_fillSpeed"), 0.5f, $"{name}._fillSpeed");
         }
         else
         {

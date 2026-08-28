@@ -16,11 +16,11 @@ public static class HealthDisplayDemoBuilder
     private const int MaximumHealth = 100;
     private const int SimulatedDamage = 10;
     private const int SimulatedHeal = 10;
-    private const float SmoothBarFillSpeed = 50f;
 
     private static readonly string[] PackageAssetPaths =
     {
         "Assets/Scripts/UI/HealthDisplay",
+        "Assets/Prefabs/HealthBarWorld.prefab",
         ScenePath
     };
 
@@ -181,7 +181,6 @@ public static class HealthDisplayDemoBuilder
         if (smooth)
         {
             view = sliderObject.AddComponent<SmoothHealthBar>();
-            SetFloat(view, "_fillSpeed", SmoothBarFillSpeed);
         }
         else
         {
@@ -240,7 +239,7 @@ public static class HealthDisplayDemoBuilder
         rect.sizeDelta = size;
     }
 
-    private static DefaultControls.Resources CreateResources()
+    internal static DefaultControls.Resources CreateResources()
     {
         return new DefaultControls.Resources
         {
