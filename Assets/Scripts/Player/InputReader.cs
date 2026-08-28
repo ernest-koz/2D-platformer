@@ -7,6 +7,7 @@ public class InputReader : MonoBehaviour
     [SerializeField] private KeyCode _rightKey = KeyCode.D;
     [SerializeField] private KeyCode _jumpKey = KeyCode.Space;
     [SerializeField] private KeyCode _restartKey = KeyCode.R;
+    [SerializeField] private KeyCode _vampirismKey = KeyCode.E;
 
     private bool _isBlocked;
 
@@ -14,12 +15,14 @@ public class InputReader : MonoBehaviour
     public bool IsJumpPressed { get; private set; }
     public bool IsJumpHeld { get; private set; }
     public bool IsRestartPressed { get; private set; }
+    public bool IsVampirismPressed { get; private set; }
 
     public bool IsBlocked => _isBlocked;
 
     public void Read()
     {
         IsRestartPressed = Input.GetKeyDown(_restartKey);
+        IsVampirismPressed = Input.GetKeyDown(_vampirismKey);
 
         if (_isBlocked)
         {

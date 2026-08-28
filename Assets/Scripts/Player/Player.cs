@@ -14,6 +14,7 @@ using UnityEngine;
 [RequireComponent(typeof(DamageFlicker))]
 [RequireComponent(typeof(PlayerAnimator))]
 [RequireComponent(typeof(HealthUI))]
+[RequireComponent(typeof(Vampirism))]
 [RequireComponent(typeof(Rigidbody2D))]
 
 public class Player : MonoBehaviour
@@ -36,6 +37,7 @@ public class Player : MonoBehaviour
     private DamageFlicker _flicker;
     private PlayerAnimator _animator;
     private HealthUI _healthUI;
+    private Vampirism _vampirism;
     private Rigidbody2D _rigidbody;
     private bool _isDead;
     private bool _isSuspended;
@@ -60,6 +62,7 @@ public class Player : MonoBehaviour
         _flicker = GetComponent<DamageFlicker>();
         _animator = GetComponent<PlayerAnimator>();
         _healthUI = GetComponent<HealthUI>();
+        _vampirism = GetComponent<Vampirism>();
         _rigidbody = GetComponent<Rigidbody2D>();
     }
 
@@ -105,6 +108,13 @@ public class Player : MonoBehaviour
         {
             return;
         }
+
+        if (_input.IsVampirismPressed)
+        {
+            _vampirism.Activate();
+        }
+
+        _vampirism.Tick(Time.deltaTime);
 
         float direction = _input.Direction;
 
@@ -168,6 +178,7 @@ public class Player : MonoBehaviour
         _mover.Stop();
         _flicker.SetFlickering(false);
         _animator.SetMovement(0f, _ground.IsGrounded);
+        _vampirism.Interrupt();
     }
 
     private void OnTriggerEntered(Collider2D other)
@@ -284,6 +295,7 @@ public class Player : MonoBehaviour
         _mover.Stop();
         _flicker.SetFlickering(false);
         _animator.PlayDeath();
+        _vampirism.Interrupt();
         Died?.Invoke();
     }
 }
