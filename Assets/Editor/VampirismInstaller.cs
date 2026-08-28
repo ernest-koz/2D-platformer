@@ -79,15 +79,15 @@ public static class VampirismInstaller
 
     private static void CreateHudBar(Vampirism vampirism)
     {
-        Canvas canvas = Object.FindFirstObjectByType<Canvas>();
+        Canvas hud = FindHudCanvas();
 
-        if (canvas == null)
+        if (hud == null)
         {
-            Debug.LogError($"[VampirismInstaller] Canvas not found in {ScenePath}.");
+            Debug.LogError($"[VampirismInstaller] HUD canvas not found in {ScenePath}.");
             return;
         }
 
-        if (canvas.transform.Find(BarName) != null)
+        if (hud.transform.Find(BarName) != null)
         {
             return;
         }
@@ -96,7 +96,7 @@ public static class VampirismInstaller
 
         GameObject sliderObject = DefaultControls.CreateSlider(resources);
         sliderObject.name = BarName;
-        sliderObject.transform.SetParent(canvas.transform, false);
+        sliderObject.transform.SetParent(hud.transform, false);
 
         RectTransform rect = (RectTransform)sliderObject.transform;
         rect.anchorMin = Vector2.zero;
@@ -130,11 +130,27 @@ public static class VampirismInstaller
         Image fill = sliderObject.transform.Find("Fill Area/Fill").GetComponent<Image>();
         fill.color = new Color(0.78f, 0.16f, 0.30f);
 
-        CreateCaption(canvas.transform, new Vector2(50f, 100f));
+        CreateCaption(hud.transform, new Vector2(50f, 100f));
 
         VampirismView view = sliderObject.AddComponent<VampirismView>();
         SetReference(view, "_vampirism", vampirism);
         SetReference(view, "_slider", slider);
+    }
+
+    private static Canvas FindHudCanvas()
+    {
+        Canvas[] canvases = Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+
+        foreach (Canvas canvas in canvases)
+        {
+            if (canvas.renderMode == RenderMode.ScreenSpaceOverlay &&
+                canvas.transform.Find("CoinText") != null)
+            {
+                return canvas;
+            }
+        }
+
+        return null;
     }
 
     private static void CreateCaption(Transform parent, Vector2 position)
