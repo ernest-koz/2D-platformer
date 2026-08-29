@@ -1,12 +1,6 @@
 using System;
 using UnityEngine;
 
-public enum PickupType
-{
-    Coin,
-    Health
-}
-
 public class Pickup : MonoBehaviour
 {
     [SerializeField] private PickupType _type;
@@ -30,4 +24,10 @@ public class Pickup : MonoBehaviour
         _isCollected = true;
         Collected?.Invoke(this);
     }
+}
+
+public enum PickupType
+{
+    Coin,
+    Health
 }

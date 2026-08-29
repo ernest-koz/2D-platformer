@@ -1,6 +1,6 @@
+using System;
 using UnityEngine;
 
-[RequireComponent(typeof(Health))]
 public class Vampirism : MonoBehaviour
 {
     private const int InitialTargetBufferSize = 8;
@@ -12,22 +12,19 @@ public class Vampirism : MonoBehaviour
     [SerializeField, Min(0.1f)] private float _cooldownTime = 4f;
     [SerializeField, Min(0.1f)] private float _radius = 3f;
     [SerializeField, Min(0.1f)] private float _drainPerSecond = 5f;
+    [SerializeField] private LayerMask _targetLayer;
 
-    private Health _health;
     private Collider2D[] _targetBuffer = new Collider2D[InitialTargetBufferSize];
     private float _remainingTime;
     private float _cooldownTimer;
     private float _pendingDamage;
 
+    public event Action<int> Drained;
+
     public bool IsActive => _remainingTime > 0f;
     public bool IsReady => IsActive == false && _cooldownTimer <= 0f;
     public float Radius => _radius;
     public float Fill => GetFill();
-
-    private void Awake()
-    {
-        _health = GetComponent<Health>();
-    }
 
     public void Activate()
     {
@@ -93,7 +90,7 @@ public class Vampirism : MonoBehaviour
 
     private void DrainNearestTarget(float deltaTime)
     {
-        Health target = FindNearestTarget();
+        ITargetable target = FindNearestTarget();
 
         if (target == null)
         {
@@ -102,12 +99,7 @@ public class Vampirism : MonoBehaviour
 
         _pendingDamage = Mathf.Min(_pendingDamage + _drainPerSecond * deltaTime, MaximumPendingDamage);
 
-        if (target.IsInvincible)
-        {
-            return;
-        }
-
-        int damage = Mathf.Min((int)_pendingDamage, target.Current);
+        int damage = target.TakeDrain((int)_pendingDamage, transform.position);
 
         if (damage < 1)
         {
@@ -115,34 +107,33 @@ public class Vampirism : MonoBehaviour
         }
 
         _pendingDamage -= damage;
-        target.TakeDamage(damage, transform.position);
-        _health.Heal(damage);
+        Drained?.Invoke(damage);
     }
 
-    private Health FindNearestTarget()
+    private ITargetable FindNearestTarget()
     {
         int count = FindTargets();
-        Health nearest = null;
+        ITargetable nearest = null;
         float nearestSqrDistance = float.MaxValue;
 
         for (int i = 0; i < count; i++)
         {
-            if (_targetBuffer[i].TryGetComponent(out Health candidate) == false)
+            if (_targetBuffer[i].gameObject == gameObject)
             {
                 continue;
             }
 
-            if (candidate == _health)
+            if (_targetBuffer[i].TryGetComponent(out ITargetable candidate) == false)
             {
                 continue;
             }
 
-            if (candidate.IsAlive == false)
+            if (candidate.IsTargetable == false)
             {
                 continue;
             }
 
-            float sqrDistance = ((Vector2)(candidate.transform.position - transform.position)).sqrMagnitude;
+            float sqrDistance = ((Vector2)(candidate.Position - transform.position)).sqrMagnitude;
 
             if (sqrDistance < nearestSqrDistance)
             {
@@ -156,7 +147,7 @@ public class Vampirism : MonoBehaviour
 
     private int FindTargets()
     {
-        int count = Physics2D.OverlapCircleNonAlloc(transform.position, _radius, _targetBuffer);
+        int count = Physics2D.OverlapCircleNonAlloc(transform.position, _radius, _targetBuffer, _targetLayer);
 
         while (count == _targetBuffer.Length)
         {
@@ -167,7 +158,7 @@ public class Vampirism : MonoBehaviour
 
             int newSize = Mathf.Min(_targetBuffer.Length * 2, MaximumTargetBufferSize);
             _targetBuffer = new Collider2D[newSize];
-            count = Physics2D.OverlapCircleNonAlloc(transform.position, _radius, _targetBuffer);
+            count = Physics2D.OverlapCircleNonAlloc(transform.position, _radius, _targetBuffer, _targetLayer);
         }
 
         return count;

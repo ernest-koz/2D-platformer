@@ -16,9 +16,19 @@ public class PlayerStomp : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody2D>();
     }
 
+    public bool CanStomp(Collider2D enemyCollider)
+    {
+        if (IsStompHeight(enemyCollider) == false)
+        {
+            return false;
+        }
+
+        return IsFallingDown();
+    }
+
     public void TryStomp()
     {
-        if (_rigidbody.velocity.y >= 0f)
+        if (IsFallingDown() == false)
         {
             return;
         }
@@ -30,7 +40,7 @@ public class PlayerStomp : MonoBehaviour
             return;
         }
 
-        if (transform.position.y <= hit.bounds.max.y)
+        if (IsStompHeight(hit) == false)
         {
             return;
         }
@@ -48,6 +58,16 @@ public class PlayerStomp : MonoBehaviour
         enemy.Defeat(transform.position);
 
         Bounce();
+    }
+
+    private bool IsStompHeight(Collider2D enemyCollider)
+    {
+        return transform.position.y > enemyCollider.bounds.max.y;
+    }
+
+    private bool IsFallingDown()
+    {
+        return _rigidbody.velocity.y < 0f;
     }
 
     private void Bounce()

@@ -14,7 +14,6 @@ public class EnemyTargeting : MonoBehaviour
 
     public float DetectRange => _detectRange;
     public float ChaseRange => _chaseRange;
-    public LayerMask TargetLayer => _targetLayer;
 
     public ITargetable FindNearestTarget(float range)
     {
@@ -25,6 +24,11 @@ public class EnemyTargeting : MonoBehaviour
 
         for (int i = 0; i < count; i++)
         {
+            if (_targetBuffer[i].gameObject == gameObject)
+            {
+                continue;
+            }
+
             if (_targetBuffer[i].TryGetComponent(out ITargetable target) == false)
             {
                 continue;

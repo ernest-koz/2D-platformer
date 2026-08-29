@@ -35,16 +35,6 @@ public class Mover : MonoBehaviour
         }
     }
 
-    public void SetVelocityX(float velocityX)
-    {
-        _rigidbody.velocity = new Vector2(velocityX, _rigidbody.velocity.y);
-    }
-
-    public void Jump(float force)
-    {
-        _rigidbody.velocity = new Vector2(_rigidbody.velocity.x, force);
-    }
-
     public void Stop()
     {
         _rigidbody.velocity = new Vector2(0f, _rigidbody.velocity.y);

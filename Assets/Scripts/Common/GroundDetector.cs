@@ -33,23 +33,12 @@ public class GroundDetector : MonoBehaviour
 
     public void Refresh()
     {
-        if (_groundCheck == null)
-        {
-            IsGrounded = false;
-            return;
-        }
-
         Collider2D hit = Physics2D.OverlapCircle(_groundCheck.position, _groundCheckRadius, _groundLayer);
         IsGrounded = HasHit(hit);
     }
 
     public bool HasGroundAhead(float directionX)
     {
-        if (_groundCheck == null)
-        {
-            return false;
-        }
-
         Vector2 checkOrigin = new Vector2(
             _groundCheck.position.x + directionX * _aheadCheckDistance,
             _groundCheck.position.y);

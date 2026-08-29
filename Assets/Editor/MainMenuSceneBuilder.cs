@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEditor;
 using UnityEditor.Events;
@@ -18,6 +19,9 @@ public static class MainMenuSceneBuilder
     private const string AuthorsBodyText = "Разработчик:\nErnest Kozyrev\n\nУчебная 2D-платформера\nна Unity";
     private const string BackButtonText = "Назад";
 
+    private const float WidthHeightMatchBalance = 0.5f;
+    private const float MenuButtonFontSize = 40f;
+
     private static readonly string[] MenuLabels = { "Играть", "Об авторах", "Выход" };
 
     [MenuItem("Tools/Main Menu/Build Scene")]
@@ -28,6 +32,7 @@ public static class MainMenuSceneBuilder
 
     public static void Build()
     {
+        EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
         Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
         CreateCamera();
@@ -44,7 +49,7 @@ public static class MainMenuSceneBuilder
         CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
-        scaler.matchWidthOrHeight = 0.5f;
+        scaler.matchWidthOrHeight = WidthHeightMatchBalance;
 
         new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
 
@@ -61,7 +66,7 @@ public static class MainMenuSceneBuilder
         GameObject authorsPanel = CreateAuthorsPanel(canvas.transform, menu);
         authorsPanel.SetActive(false);
 
-        SetReference(menu, "_authorsPanel", authorsPanel);
+        SerializedPropertyUtility.SetObjectReference(menu, "_authorsPanel", authorsPanel);
 
         EditorSceneManager.SaveScene(scene, ScenePath);
         AssetDatabase.SaveAssets();
@@ -84,7 +89,7 @@ public static class MainMenuSceneBuilder
 
     private static void UpdateBuildSettings()
     {
-        var scenes = new System.Collections.Generic.List<EditorBuildSettingsScene>();
+        List<EditorBuildSettingsScene> scenes = new List<EditorBuildSettingsScene>();
 
         foreach (EditorBuildSettingsScene existing in EditorBuildSettings.scenes)
         {
@@ -163,11 +168,11 @@ public static class MainMenuSceneBuilder
 
         Text buttonText = buttonObject.GetComponentInChildren<Text>();
         buttonText.text = label;
-        buttonText.fontSize = 40;
+        buttonText.fontSize = (int)MenuButtonFontSize;
         buttonText.color = Color.white;
 
         MenuButton menuButton = buttonObject.AddComponent<MenuButton>();
-        SetReference(menuButton, "_targetImage", image);
+        SerializedPropertyUtility.SetObjectReference(menuButton, "_targetImage", image);
 
         UnityEventTools.AddPersistentListener(button.onClick, onClick);
 
@@ -211,12 +216,5 @@ public static class MainMenuSceneBuilder
         rect.pivot = new Vector2(0.5f, 0.5f);
         rect.anchoredPosition = position;
         rect.sizeDelta = size;
-    }
-
-    private static void SetReference(Object target, string propertyName, Object value)
-    {
-        SerializedObject serialized = new SerializedObject(target);
-        serialized.FindProperty(propertyName).objectReferenceValue = value;
-        serialized.ApplyModifiedPropertiesWithoutUndo();
     }
 }

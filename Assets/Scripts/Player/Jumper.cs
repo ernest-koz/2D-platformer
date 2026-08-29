@@ -1,6 +1,5 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Mover))]
 [RequireComponent(typeof(Rigidbody2D))]
 
 public class Jumper : MonoBehaviour
@@ -12,7 +11,6 @@ public class Jumper : MonoBehaviour
     [SerializeField, Min(1f)] private float _fallMultiplier = 2.4f;
     [SerializeField, Min(1f)] private float _lowJumpMultiplier = 2f;
 
-    private Mover _mover;
     private Rigidbody2D _rigidbody;
     private float _jumpBufferTimer;
     private float _coyoteTimer;
@@ -20,7 +18,6 @@ public class Jumper : MonoBehaviour
 
     private void Awake()
     {
-        _mover = GetComponent<Mover>();
         _rigidbody = GetComponent<Rigidbody2D>();
     }
 
@@ -50,7 +47,7 @@ public class Jumper : MonoBehaviour
             return;
         }
 
-        _mover.Jump(_jumpForce);
+        _rigidbody.velocity = new Vector2(_rigidbody.velocity.x, _jumpForce);
         _jumpBufferTimer = 0f;
         _coyoteTimer = 0f;
     }

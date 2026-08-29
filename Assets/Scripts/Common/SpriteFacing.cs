@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class SpriteFacing : MonoBehaviour
 {
+    private const float FlipAngleDegrees = 180f;
+
     [SerializeField] private bool _startsFacingRight = true;
 
     private Quaternion _rightRotation;
@@ -16,7 +18,7 @@ public class SpriteFacing : MonoBehaviour
     private void Awake()
     {
         _rightRotation = transform.localRotation;
-        _leftRotation = _rightRotation * Quaternion.Euler(0f, 180f, 0f);
+        _leftRotation = _rightRotation * Quaternion.Euler(0f, FlipAngleDegrees, 0f);
         _direction = _startsFacingRight ? 1 : -1;
 
         ApplyRotation();

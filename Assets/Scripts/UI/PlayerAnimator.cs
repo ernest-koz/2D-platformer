@@ -9,59 +9,28 @@ public class PlayerAnimator : MonoBehaviour
 
     [SerializeField] private Animator _animator;
 
-    private bool _isMissingReferenceReported;
-
     private void Awake()
     {
-        HasTarget();
+        if (_animator == null)
+        {
+            Debug.LogError($"{nameof(PlayerAnimator)} Animator not assigned on {gameObject.name}.", gameObject);
+            enabled = false;
+        }
     }
 
     public void SetMovement(float speed, bool isGrounded)
     {
-        if (HasTarget() == false)
-        {
-            return;
-        }
-
         _animator.SetFloat(SpeedHash, speed);
         _animator.SetBool(IsGroundedHash, isGrounded);
     }
 
     public void PlayHurt()
     {
-        if (HasTarget() == false)
-        {
-            return;
-        }
-
         _animator.SetTrigger(HurtTriggerHash);
     }
 
     public void PlayDeath()
     {
-        if (HasTarget() == false)
-        {
-            return;
-        }
-
         _animator.SetTrigger(DieTriggerHash);
-    }
-
-    private bool HasTarget()
-    {
-        if (_animator == null)
-        {
-            if (_isMissingReferenceReported == false)
-            {
-                Debug.LogError(
-                    $"{nameof(PlayerAnimator)} Animator not assigned on {gameObject.name}.",
-                    gameObject);
-                _isMissingReferenceReported = true;
-            }
-
-            return false;
-        }
-
-        return true;
     }
 }

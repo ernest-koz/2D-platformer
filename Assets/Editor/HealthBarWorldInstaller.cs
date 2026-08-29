@@ -17,6 +17,11 @@ public static class HealthBarWorldInstaller
     private const float CanvasScale = 0.01f;
     private const float BarWorldWidth = 0.9f;
     private const float MinimalCharacterScale = 0.0001f;
+    private const string SliderName = "Slider";
+    private const string BackgroundName = "Background";
+    private const string FillAreaFillName = "Fill Area/Fill";
+    private const string HandleAreaName = "Handle Slide Area";
+    private const float Half = 0.5f;
 
     [MenuItem("Tools/Health Display/Install World Bars Into SampleScene")]
     public static void InstallFromMenu()
@@ -39,44 +44,51 @@ public static class HealthBarWorldInstaller
 
         foreach (Transform character in CollectCharacters())
         {
-            if (character.Find(BarName) != null)
+            Transform existingBar = character.Find(BarName);
+
+            if (existingBar == null)
             {
-                continue;
+                InstallBar(character, prefab);
+                installed++;
             }
-
-            GameObject bar = (GameObject)PrefabUtility.InstantiatePrefab(prefab, character);
-            bar.name = BarName;
-
-            Vector3 characterScale = GetSafeScale(character);
-            float widthFactor = BarWorldWidth / (CanvasWidth * CanvasScale);
-            bar.transform.localScale = new Vector3(
-                widthFactor / characterScale.x,
-                widthFactor / characterScale.y,
-                widthFactor / characterScale.z);
-            bar.transform.localPosition = new Vector3(
-                0f,
-                GetHeadOffset(character.gameObject) / characterScale.y,
-                0f);
-            installed++;
         }
 
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
         Debug.Log($"[HealthBarWorldInstaller] Installed {installed} health bars into {ScenePath}.");
     }
 
+    private static void InstallBar(Transform character, GameObject prefab)
+    {
+        GameObject bar = (GameObject)PrefabUtility.InstantiatePrefab(prefab, character);
+        bar.name = BarName;
+
+        Vector3 characterScale = GetSafeScale(character);
+        float widthFactor = BarWorldWidth / (CanvasWidth * CanvasScale);
+        bar.transform.localScale = new Vector3(
+            widthFactor / characterScale.x,
+            widthFactor / characterScale.y,
+            widthFactor / characterScale.z);
+        bar.transform.localPosition = new Vector3(
+            0f,
+            GetHeadOffset(character.gameObject) / characterScale.y,
+            0f);
+    }
+
     private static IEnumerable<Transform> CollectCharacters()
     {
-        Player player = Object.FindFirstObjectByType<Player>();
-
-        if (player != null)
-        {
-            yield return player.transform;
-        }
-
         foreach (EnemyBrain enemy in Object.FindObjectsByType<EnemyBrain>(FindObjectsSortMode.None))
         {
             yield return enemy.transform;
         }
+
+        Player player = Object.FindFirstObjectByType<Player>();
+
+        if (player == null)
+        {
+            yield break;
+        }
+
+        yield return player.transform;
     }
 
     private static Vector3 GetSafeScale(Transform character)
@@ -110,7 +122,7 @@ public static class HealthBarWorldInstaller
             return FallbackHeadOffset;
         }
 
-        float colliderTop = (collider.offset.y + collider.size.y * 0.5f) * Mathf.Abs(character.transform.lossyScale.y);
+        float colliderTop = (collider.offset.y + collider.size.y * Half) * Mathf.Abs(character.transform.lossyScale.y);
 
         return colliderTop + HeadMargin;
     }
@@ -134,7 +146,7 @@ public static class HealthBarWorldInstaller
         DefaultControls.Resources resources = HealthDisplayDemoBuilder.CreateResources();
 
         GameObject sliderObject = DefaultControls.CreateSlider(resources);
-        sliderObject.name = "Slider";
+        sliderObject.name = SliderName;
         sliderObject.transform.SetParent(canvasRect, false);
 
         RectTransform sliderRect = (RectTransform)sliderObject.transform;
@@ -149,32 +161,20 @@ public static class HealthBarWorldInstaller
         slider.maxValue = 1f;
         slider.value = 1f;
 
-        Transform handleArea = sliderObject.transform.Find("Handle Slide Area");
+        SerializedPropertyUtility.DestroyChildIfExists(sliderObject.transform, HandleAreaName);
 
-        if (handleArea != null)
-        {
-            Object.DestroyImmediate(handleArea.gameObject);
-        }
-
-        Image background = sliderObject.transform.Find("Background").GetComponent<Image>();
+        Image background = sliderObject.transform.Find(BackgroundName).GetComponent<Image>();
         background.color = new Color(0.12f, 0.12f, 0.12f, 0.9f);
 
-        Image fill = sliderObject.transform.Find("Fill Area/Fill").GetComponent<Image>();
+        Image fill = sliderObject.transform.Find(FillAreaFillName).GetComponent<Image>();
         fill.color = new Color(0.85f, 0.25f, 0.25f);
 
         SmoothHealthBar view = sliderObject.AddComponent<SmoothHealthBar>();
-        SetReference(view, "_slider", slider);
+        SerializedPropertyUtility.SetObjectReference(view, "_slider", slider);
 
         GameObject prefabAsset = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
         Object.DestroyImmediate(root);
 
         return prefabAsset;
-    }
-
-    private static void SetReference(Object target, string propertyName, Object value)
-    {
-        SerializedObject serialized = new SerializedObject(target);
-        serialized.FindProperty(propertyName).objectReferenceValue = value;
-        serialized.ApplyModifiedPropertiesWithoutUndo();
     }
 }

@@ -38,23 +38,6 @@ public class EnemyPatrol : MonoBehaviour
         float patrolDirection = _route.GetDirectionToward(transform.position.x, _facing.FacingDirection);
 
         _mover.Move(patrolDirection);
-
-        if (patrolDirection < 0f)
-        {
-            if (_facing.FacingDirection > 0)
-            {
-                _facing.Flip();
-            }
-
-            return;
-        }
-
-        if (patrolDirection > 0f)
-        {
-            if (_facing.FacingDirection < 0)
-            {
-                _facing.Flip();
-            }
-        }
+        _facing.Face(patrolDirection);
     }
 }

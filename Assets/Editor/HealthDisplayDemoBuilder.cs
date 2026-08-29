@@ -16,6 +16,7 @@ public static class HealthDisplayDemoBuilder
     private const int MaximumHealth = 100;
     private const int SimulatedDamage = 10;
     private const int SimulatedHeal = 10;
+    private const float DemoButtonFontSize = 34f;
 
     private static readonly string[] PackageAssetPaths =
     {
@@ -45,19 +46,20 @@ public static class HealthDisplayDemoBuilder
 
     public static void Build()
     {
+        EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo();
         Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
         GameObject root = new GameObject("HealthDemo");
         root.SetActive(false);
 
         Health health = root.AddComponent<Health>();
-        SetInt(health, "_maximum", MaximumHealth);
-        SetFloat(health, "_invincibilityTime", 0f);
+        SerializedPropertyUtility.SetInteger(health, "_maximum", MaximumHealth);
+        SerializedPropertyUtility.SetFloat(health, "_invincibilityTime", 0f);
 
         HealthSimulator simulator = root.AddComponent<HealthSimulator>();
-        SetReference(simulator, "_health", health);
-        SetInt(simulator, "_damageAmount", SimulatedDamage);
-        SetInt(simulator, "_healAmount", SimulatedHeal);
+        SerializedPropertyUtility.SetObjectReference(simulator, "_health", health);
+        SerializedPropertyUtility.SetInteger(simulator, "_damageAmount", SimulatedDamage);
+        SerializedPropertyUtility.SetInteger(simulator, "_healAmount", SimulatedHeal);
 
         Canvas canvas = CreateCanvas(root.transform);
         DefaultControls.Resources resources = CreateResources();
@@ -149,8 +151,8 @@ public static class HealthDisplayDemoBuilder
         label.alignment = TextAlignmentOptions.Center;
 
         HealthText view = rect.gameObject.AddComponent<HealthText>();
-        SetReference(view, "_health", health);
-        SetReference(view, "_text", label);
+        SerializedPropertyUtility.SetObjectReference(view, "_health", health);
+        SerializedPropertyUtility.SetObjectReference(view, "_text", label);
     }
 
     private static void CreateBar(Transform parent, string name, string caption, Vector2 position,
@@ -187,8 +189,8 @@ public static class HealthDisplayDemoBuilder
             view = sliderObject.AddComponent<HealthBar>();
         }
 
-        SetReference(view, "_health", health);
-        SetReference(view, "_slider", slider);
+        SerializedPropertyUtility.SetObjectReference(view, "_health", health);
+        SerializedPropertyUtility.SetObjectReference(view, "_slider", slider);
     }
 
     private static void CreateCaption(Transform parent, string text, Vector2 position)
@@ -216,7 +218,7 @@ public static class HealthDisplayDemoBuilder
 
         Text buttonText = buttonObject.GetComponentInChildren<Text>();
         buttonText.text = label;
-        buttonText.fontSize = 34;
+        buttonText.fontSize = (int)DemoButtonFontSize;
 
         Button button = buttonObject.GetComponent<Button>();
         UnityEventTools.AddPersistentListener(button.onClick, onClick);
@@ -251,26 +253,5 @@ public static class HealthDisplayDemoBuilder
             dropdown = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/DropdownArrow.psd"),
             mask = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UIMask.psd")
         };
-    }
-
-    private static void SetReference(Object target, string propertyName, Object value)
-    {
-        SerializedObject serialized = new SerializedObject(target);
-        serialized.FindProperty(propertyName).objectReferenceValue = value;
-        serialized.ApplyModifiedPropertiesWithoutUndo();
-    }
-
-    private static void SetInt(Object target, string propertyName, int value)
-    {
-        SerializedObject serialized = new SerializedObject(target);
-        serialized.FindProperty(propertyName).intValue = value;
-        serialized.ApplyModifiedPropertiesWithoutUndo();
-    }
-
-    private static void SetFloat(Object target, string propertyName, float value)
-    {
-        SerializedObject serialized = new SerializedObject(target);
-        serialized.FindProperty(propertyName).floatValue = value;
-        serialized.ApplyModifiedPropertiesWithoutUndo();
     }
 }

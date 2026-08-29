@@ -11,8 +11,11 @@ public static class VampirismInstaller
     private const string BarName = "VampirismBar";
     private const string CaptionName = "VampirismCaption";
     private const string CaptionText = "Вампиризм (E)";
+    private const string HandleAreaName = "Handle Slide Area";
+    private const string CoinTextName = "CoinText";
     private const float ZoneHeightOffset = 0.6f;
     private const float KnobWorldSize = 0.26f;
+    private const float DiameterScale = 2f;
     private const int ZoneSortingOrder = -1;
 
     [MenuItem("Tools/Health Display/Install Vampirism Into SampleScene")]
@@ -40,36 +43,72 @@ public static class VampirismInstaller
             vampirism = player.gameObject.AddComponent<Vampirism>();
         }
 
-        CreateZone(player.transform, vampirism);
-        CreateHudBar(vampirism);
+        SerializedPropertyUtility.SetLayerMask(vampirism, "_targetLayer", LayerMask.NameToLayer("Enemy"));
+
+        VampirismZone zone = CreateZone(player, vampirism);
+        VampirismView view = CreateHudBar();
+
+        if (zone == null)
+        {
+            Debug.LogError($"[VampirismInstaller] Zone was not created in {ScenePath}.");
+            return;
+        }
+
+        SerializedPropertyUtility.SetObjectReference(player, "_vampirismZone", zone);
+
+        if (view == null)
+        {
+            Debug.LogError($"[VampirismInstaller] View was not created in {ScenePath}.");
+            return;
+        }
+
+        GameSession session = Object.FindFirstObjectByType<GameSession>();
+
+        if (session == null)
+        {
+            Debug.LogError($"[VampirismInstaller] GameSession not found in {ScenePath}.");
+            return;
+        }
+
+        SerializedPropertyUtility.SetObjectReference(session, "_vampirismView", view);
 
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
         Debug.Log($"[VampirismInstaller] Vampirism installed into {ScenePath}.");
     }
 
-    private static void CreateZone(Transform character, Vampirism vampirism)
+    private static VampirismZone CreateZone(Player player, Vampirism vampirism)
     {
-        if (character.Find(ZoneName) != null)
+        Transform character = player.transform;
+        Transform zoneTransform = character.Find(ZoneName);
+
+        if (zoneTransform == null)
         {
-            return;
+            GameObject zone = new GameObject(ZoneName, typeof(SpriteRenderer), typeof(VampirismZone));
+            zone.transform.SetParent(character, false);
+            zone.transform.localPosition = new Vector3(0f, ZoneHeightOffset, 0f);
+
+            SpriteRenderer renderer = zone.GetComponent<SpriteRenderer>();
+            renderer.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
+            renderer.color = new Color(0.65f, 0.20f, 0.85f, 0.25f);
+            renderer.sortingOrder = ZoneSortingOrder;
+
+            float spriteSize = GetSpriteWorldSize(renderer.sprite);
+            zone.transform.localScale = Vector3.one * (vampirism.Radius * DiameterScale / spriteSize);
+
+            zoneTransform = zone.transform;
         }
 
-        GameObject zone = new GameObject(ZoneName, typeof(SpriteRenderer), typeof(VampirismZone));
-        zone.transform.SetParent(character, false);
-        zone.transform.localPosition = new Vector3(0f, ZoneHeightOffset, 0f);
-
-        SpriteRenderer renderer = zone.GetComponent<SpriteRenderer>();
-        renderer.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
-        renderer.color = new Color(0.65f, 0.20f, 0.85f, 0.25f);
-        renderer.sortingOrder = ZoneSortingOrder;
-
-        float spriteSize = GetSpriteWorldSize(renderer.sprite);
-        zone.transform.localScale = Vector3.one * (vampirism.Radius * 2f / spriteSize);
+        return zoneTransform.GetComponent<VampirismZone>();
     }
 
     private static float GetSpriteWorldSize(Sprite sprite)
     {
-        if (sprite == null || sprite.bounds.size.x <= 0f)
+        if (sprite == null)
+        {
+            return KnobWorldSize;
+        }
+
+        if (sprite.bounds.size.x <= 0f)
         {
             return KnobWorldSize;
         }
@@ -77,26 +116,33 @@ public static class VampirismInstaller
         return sprite.bounds.size.x;
     }
 
-    private static void CreateHudBar(Vampirism vampirism)
+    private static VampirismView CreateHudBar()
     {
         Canvas hud = FindHudCanvas();
 
         if (hud == null)
         {
             Debug.LogError($"[VampirismInstaller] HUD canvas not found in {ScenePath}.");
-            return;
+            return null;
         }
 
-        if (hud.transform.Find(BarName) != null)
+        Transform existingBar = hud.transform.Find(BarName);
+
+        if (existingBar == null)
         {
-            return;
+            return CreateSliderView(hud.transform);
         }
 
+        return existingBar.GetComponent<VampirismView>();
+    }
+
+    private static VampirismView CreateSliderView(Transform hud)
+    {
         DefaultControls.Resources resources = HealthDisplayDemoBuilder.CreateResources();
 
         GameObject sliderObject = DefaultControls.CreateSlider(resources);
         sliderObject.name = BarName;
-        sliderObject.transform.SetParent(hud.transform, false);
+        sliderObject.transform.SetParent(hud, false);
 
         RectTransform rect = (RectTransform)sliderObject.transform;
         rect.anchorMin = Vector2.zero;
@@ -111,12 +157,7 @@ public static class VampirismInstaller
         slider.maxValue = 1f;
         slider.value = 1f;
 
-        Transform handleArea = sliderObject.transform.Find("Handle Slide Area");
-
-        if (handleArea != null)
-        {
-            Object.DestroyImmediate(handleArea.gameObject);
-        }
+        SerializedPropertyUtility.DestroyChildIfExists(sliderObject.transform, HandleAreaName);
 
         RectTransform fillArea = (RectTransform)sliderObject.transform.Find("Fill Area");
         fillArea.anchorMin = Vector2.zero;
@@ -130,11 +171,12 @@ public static class VampirismInstaller
         Image fill = sliderObject.transform.Find("Fill Area/Fill").GetComponent<Image>();
         fill.color = new Color(0.78f, 0.16f, 0.30f);
 
-        CreateCaption(hud.transform, new Vector2(50f, 100f));
+        CreateCaption(hud, new Vector2(50f, 100f));
 
         VampirismView view = sliderObject.AddComponent<VampirismView>();
-        SetReference(view, "_vampirism", vampirism);
-        SetReference(view, "_slider", slider);
+        SerializedPropertyUtility.SetObjectReference(view, "_slider", slider);
+
+        return view;
     }
 
     private static Canvas FindHudCanvas()
@@ -143,8 +185,14 @@ public static class VampirismInstaller
 
         foreach (Canvas canvas in canvases)
         {
-            if (canvas.renderMode == RenderMode.ScreenSpaceOverlay &&
-                canvas.transform.Find("CoinText") != null)
+            Transform coinText = canvas.transform.Find(CoinTextName);
+
+            if (coinText == null)
+            {
+                continue;
+            }
+
+            if (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
             {
                 return canvas;
             }
@@ -169,12 +217,5 @@ public static class VampirismInstaller
         label.fontSize = 26f;
         label.color = new Color(0.9f, 0.85f, 0.9f);
         label.alignment = TextAlignmentOptions.Left;
-    }
-
-    private static void SetReference(Object target, string propertyName, Object value)
-    {
-        SerializedObject serialized = new SerializedObject(target);
-        serialized.FindProperty(propertyName).objectReferenceValue = value;
-        serialized.ApplyModifiedPropertiesWithoutUndo();
     }
 }

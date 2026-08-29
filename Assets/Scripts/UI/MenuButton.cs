@@ -10,13 +10,13 @@ public class MenuButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     [SerializeField] private Color _pressedColor = new Color(0.78f, 0.16f, 0.30f);
     [SerializeField] private Image _targetImage;
 
-    private RectTransform _rect;
+    private RectTransform _rectTransform;
     private Color _baseColor;
     private float _targetScale;
 
     private void Awake()
     {
-        _rect = GetComponent<RectTransform>();
+        _rectTransform = GetComponent<RectTransform>();
 
         if (_targetImage == null)
         {
@@ -31,9 +31,9 @@ public class MenuButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
 
     private void Update()
     {
-        float current = _rect.localScale.x;
+        float current = _rectTransform.localScale.x;
         float next = Mathf.MoveTowards(current, _targetScale, _scaleSpeed * Time.deltaTime);
-        _rect.localScale = new Vector3(next, next, next);
+        _rectTransform.localScale = new Vector3(next, next, next);
     }
 
     public void OnPointerEnter(PointerEventData eventData)

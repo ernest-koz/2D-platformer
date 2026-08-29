@@ -3394,6 +3394,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _player: {fileID: 1729192374}
+  _vampirismView: {fileID: 1385567479}
   _enemies:
   - {fileID: 1816948634}
   - {fileID: 758827296}
@@ -5617,9 +5618,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d36393e084e7cd34894bcec1e35818f1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _vampirism: {fileID: 0}
+  m_Name:
+  m_EditorClassIdentifier:
 --- !u!212 &1297204341
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -5882,9 +5882,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f2280aa7eeb6b4744a870c77360a452a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _vampirism: {fileID: 1729192380}
+  m_Name:
+  m_EditorClassIdentifier:
   _slider: {fileID: 1385567480}
 --- !u!114 &1385567480
 MonoBehaviour:
@@ -8038,8 +8037,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9274845fbd7dc7d41b6918b6e598d31b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
+  _vampirismZone: {fileID: 1297204340}
 --- !u!114 &1729192375
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8128,6 +8128,9 @@ MonoBehaviour:
   _cooldownTime: 4
   _radius: 3
   _drainPerSecond: 5
+  _targetLayer:
+    serializedVersion: 2
+    m_Bits: 512
 --- !u!1 &1787708930
 GameObject:
   m_ObjectHideFlags: 0

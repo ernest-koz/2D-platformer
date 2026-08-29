@@ -86,6 +86,15 @@ public class Health : MonoBehaviour, ITargetable
         Damaged?.Invoke(damageSourcePosition);
     }
 
+    public int TakeDrain(int amount, Vector2 damageSourcePosition)
+    {
+        int healthBefore = _current;
+
+        TakeDamage(amount, damageSourcePosition);
+
+        return healthBefore - _current;
+    }
+
     public bool Heal(int amount)
     {
         if (amount <= 0)

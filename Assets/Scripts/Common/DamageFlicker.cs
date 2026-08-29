@@ -25,11 +25,6 @@ public class DamageFlicker : MonoBehaviour
     {
         _isFlickering = isFlickering;
 
-        if (_spriteRenderer == null)
-        {
-            return;
-        }
-
         if (isFlickering == false)
         {
             _spriteRenderer.enabled = true;
@@ -39,11 +34,6 @@ public class DamageFlicker : MonoBehaviour
     public void Tick(float elapsedTime)
     {
         if (_isFlickering == false)
-        {
-            return;
-        }
-
-        if (_spriteRenderer == null)
         {
             return;
         }

@@ -1,36 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public enum GameState
-{
-    Playing,
-    GameOver,
-    Finish
-}
-
-public readonly struct SessionStats
-{
-    public SessionStats(
-        int totalCoinsCollected,
-        int enemiesDefeated,
-        float playTime,
-        int totalCoinsInLevel,
-        int totalEnemiesInLevel)
-    {
-        TotalCoinsCollected = totalCoinsCollected;
-        EnemiesDefeated = enemiesDefeated;
-        PlayTime = playTime;
-        TotalCoinsInLevel = totalCoinsInLevel;
-        TotalEnemiesInLevel = totalEnemiesInLevel;
-    }
-
-    public int TotalCoinsCollected { get; }
-    public int EnemiesDefeated { get; }
-    public int TotalCoinsInLevel { get; }
-    public int TotalEnemiesInLevel { get; }
-    public float PlayTime { get; }
-}
-
 [RequireComponent(typeof(CoinView))]
 [RequireComponent(typeof(GameOverView))]
 [RequireComponent(typeof(FinishView))]
@@ -41,6 +11,7 @@ public class GameSession : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private Player _player;
+    [SerializeField] private VampirismView _vampirismView;
 
     [Header("Enemies")]
     [SerializeField] private EnemyBrain[] _enemies;
@@ -71,6 +42,12 @@ public class GameSession : MonoBehaviour
             Debug.LogError($"Player not assigned on {gameObject.name}.", gameObject);
             enabled = false;
         }
+
+        if (_vampirismView == null)
+        {
+            Debug.LogError($"VampirismView not assigned on {gameObject.name}.", gameObject);
+            enabled = false;
+        }
     }
 
     private void OnEnable()
@@ -88,6 +65,8 @@ public class GameSession : MonoBehaviour
 
     private void Update()
     {
+        _vampirismView.Render(_player.VampirismFill);
+
         if (IsPlaying() == false)
         {
             return;
@@ -113,16 +92,6 @@ public class GameSession : MonoBehaviour
         _coinView.Render(_totalCoinsCollected);
     }
 
-    public void RegisterEnemyKill()
-    {
-        if (IsPlaying() == false)
-        {
-            return;
-        }
-
-        _enemiesDefeated++;
-    }
-
     public void RestartLevel()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
@@ -131,6 +100,16 @@ public class GameSession : MonoBehaviour
     private bool IsPlaying()
     {
         return _state == GameState.Playing;
+    }
+
+    private void RegisterEnemyKill()
+    {
+        if (IsPlaying() == false)
+        {
+            return;
+        }
+
+        _enemiesDefeated++;
     }
 
     private void CountLevelPickups()
@@ -332,4 +311,34 @@ public class GameSession : MonoBehaviour
             _totalCoinsInLevel,
             _totalEnemiesInLevel);
     }
+}
+
+public enum GameState
+{
+    Playing,
+    GameOver,
+    Finish
+}
+
+public readonly struct SessionStats
+{
+    public SessionStats(
+        int totalCoinsCollected,
+        int enemiesDefeated,
+        float playTime,
+        int totalCoinsInLevel,
+        int totalEnemiesInLevel)
+    {
+        TotalCoinsCollected = totalCoinsCollected;
+        EnemiesDefeated = enemiesDefeated;
+        PlayTime = playTime;
+        TotalCoinsInLevel = totalCoinsInLevel;
+        TotalEnemiesInLevel = totalEnemiesInLevel;
+    }
+
+    public int TotalCoinsCollected { get; }
+    public int EnemiesDefeated { get; }
+    public int TotalCoinsInLevel { get; }
+    public int TotalEnemiesInLevel { get; }
+    public float PlayTime { get; }
 }
