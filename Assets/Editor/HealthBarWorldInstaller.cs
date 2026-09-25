@@ -31,6 +31,11 @@ public static class HealthBarWorldInstaller
 
     public static void Install()
     {
+        if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo() == false)
+        {
+            return;
+        }
+
         EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
 
         GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath);
@@ -41,22 +46,34 @@ public static class HealthBarWorldInstaller
         }
 
         int installed = 0;
+        DestroyExistingBars();
 
         foreach (Transform character in CollectCharacters())
         {
-            Transform existingBar = character.Find(BarName);
-
-            if (existingBar != null)
-            {
-                Object.DestroyImmediate(existingBar.gameObject);
-            }
-
             InstallBar(character, prefab);
             installed++;
         }
 
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
         Debug.Log($"[HealthBarWorldInstaller] Installed {installed} health bars into {ScenePath}.");
+    }
+
+    private static void DestroyExistingBars()
+    {
+        foreach (Transform bar in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (bar == null)
+            {
+                continue;
+            }
+
+            if (bar.name != BarName)
+            {
+                continue;
+            }
+
+            Object.DestroyImmediate(bar.gameObject);
+        }
     }
 
     private static void InstallBar(Transform character, GameObject prefab)
