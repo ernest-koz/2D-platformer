@@ -53,7 +53,7 @@ public static class MainMenuSceneBuilder
 
         new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
 
-        DefaultControls.Resources resources = HealthDisplayDemoBuilder.CreateResources();
+        DefaultControls.Resources resources = HealthDemoSceneBuilder.CreateResources();
 
         CreateBackground(canvas.transform);
         CreateTitle(canvas.transform, TitleText, 110f, new Vector2(0f, 330f));
@@ -144,7 +144,7 @@ public static class MainMenuSceneBuilder
         bodyLabel.color = new Color(0.85f, 0.85f, 0.85f);
         bodyLabel.alignment = TextAlignmentOptions.Center;
 
-        DefaultControls.Resources resources = HealthDisplayDemoBuilder.CreateResources();
+        DefaultControls.Resources resources = HealthDemoSceneBuilder.CreateResources();
         CreateMenuButton(panel.transform, BackButtonText, new Vector2(0f, -320f), resources, menu.HideAuthors);
 
         return panel;

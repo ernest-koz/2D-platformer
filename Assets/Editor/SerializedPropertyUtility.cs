@@ -1,5 +1,7 @@
+using System;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 public static class SerializedPropertyUtility
 {
@@ -67,6 +69,34 @@ public static class SerializedPropertyUtility
 
         property.intValue = 1 << layerIndex;
         serialized.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    public static int GetInteger(Object target, string propertyName)
+    {
+        return FindPropertyOrThrow(target, propertyName).intValue;
+    }
+
+    public static float GetFloat(Object target, string propertyName)
+    {
+        return FindPropertyOrThrow(target, propertyName).floatValue;
+    }
+
+    public static Object GetReference(Object target, string propertyName)
+    {
+        return FindPropertyOrThrow(target, propertyName).objectReferenceValue;
+    }
+
+    private static SerializedProperty FindPropertyOrThrow(Object target, string propertyName)
+    {
+        SerializedObject serialized = new SerializedObject(target);
+        SerializedProperty property = serialized.FindProperty(propertyName);
+
+        if (property == null)
+        {
+            throw new InvalidOperationException($"Serialized property '{propertyName}' not found on {target.GetType().Name}.");
+        }
+
+        return property;
     }
 
     public static void DestroyChildIfExists(Transform parent, string childName)

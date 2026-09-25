@@ -5,14 +5,13 @@ public class HealthText : HealthView
 {
     [SerializeField] private TMP_Text _text;
 
-    protected override void Awake()
+    protected override void OnValidate()
     {
-        base.Awake();
+        base.OnValidate();
 
         if (_text == null)
         {
             Debug.LogError($"{nameof(HealthText)} text not assigned on {gameObject.name}.", gameObject);
-            enabled = false;
         }
     }
 

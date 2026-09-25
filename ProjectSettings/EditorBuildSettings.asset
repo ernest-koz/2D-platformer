@@ -12,6 +12,6 @@ EditorBuildSettings:
     path: Assets/SampleScene.unity
     guid: 0abd1c1c4f5ef6047b521d327dee16af
   - enabled: 1
-    path: Assets/HealthDisplayDemo.unity
-    guid: 61023fb113cc774419b65bfab4e2cdde
+    path: Assets/Scenes/HealthDemo.unity
+    guid: 00000000000000000000000000000000
   m_configObjects: {}

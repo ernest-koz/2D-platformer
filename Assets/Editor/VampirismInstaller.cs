@@ -138,7 +138,7 @@ public static class VampirismInstaller
 
     private static VampirismView CreateSliderView(Transform hud)
     {
-        DefaultControls.Resources resources = HealthDisplayDemoBuilder.CreateResources();
+        DefaultControls.Resources resources = HealthDemoSceneBuilder.CreateResources();
 
         GameObject sliderObject = DefaultControls.CreateSlider(resources);
         sliderObject.name = BarName;

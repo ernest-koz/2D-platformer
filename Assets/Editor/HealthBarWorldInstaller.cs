@@ -46,11 +46,13 @@ public static class HealthBarWorldInstaller
         {
             Transform existingBar = character.Find(BarName);
 
-            if (existingBar == null)
+            if (existingBar != null)
             {
-                InstallBar(character, prefab);
-                installed++;
+                Object.DestroyImmediate(existingBar.gameObject);
             }
+
+            InstallBar(character, prefab);
+            installed++;
         }
 
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
@@ -61,6 +63,11 @@ public static class HealthBarWorldInstaller
     {
         GameObject bar = (GameObject)PrefabUtility.InstantiatePrefab(prefab, character);
         bar.name = BarName;
+
+        Slider slider = bar.GetComponentInChildren<Slider>();
+        SmoothHealthBar view = slider.gameObject.AddComponent<SmoothHealthBar>();
+        SerializedPropertyUtility.SetObjectReference(view, "_slider", slider);
+        SerializedPropertyUtility.SetObjectReference(view, "_health", character.GetComponent<Health>());
 
         Vector3 characterScale = GetSafeScale(character);
         float widthFactor = BarWorldWidth / (CanvasWidth * CanvasScale);
@@ -143,7 +150,7 @@ public static class HealthBarWorldInstaller
         canvasRect.sizeDelta = new Vector2(CanvasWidth, CanvasHeight);
         canvasRect.localScale = Vector3.one * CanvasScale;
 
-        DefaultControls.Resources resources = HealthDisplayDemoBuilder.CreateResources();
+        DefaultControls.Resources resources = HealthDemoSceneBuilder.CreateResources();
 
         GameObject sliderObject = DefaultControls.CreateSlider(resources);
         sliderObject.name = SliderName;
@@ -158,6 +165,7 @@ public static class HealthBarWorldInstaller
         Slider slider = sliderObject.GetComponent<Slider>();
         slider.transition = Selectable.Transition.None;
         slider.interactable = false;
+        slider.minValue = 0f;
         slider.maxValue = 1f;
         slider.value = 1f;
 
@@ -168,9 +176,6 @@ public static class HealthBarWorldInstaller
 
         Image fill = sliderObject.transform.Find(FillAreaFillName).GetComponent<Image>();
         fill.color = new Color(0.85f, 0.25f, 0.25f);
-
-        SmoothHealthBar view = sliderObject.AddComponent<SmoothHealthBar>();
-        SerializedPropertyUtility.SetObjectReference(view, "_slider", slider);
 
         GameObject prefabAsset = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
         Object.DestroyImmediate(root);
