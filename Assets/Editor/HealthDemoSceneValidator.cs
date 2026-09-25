@@ -9,8 +9,8 @@ public static class HealthDemoSceneValidator
 {
     public static void Validate(string scenePath)
     {
-        GameObject root = GameObject.Find("HealthDemo");
-        ThrowIfNull(root, "HealthDemo root not found");
+        GameObject root = GameObject.Find(HealthDemoConstants.DemoRootName);
+        ThrowIfNull(root, $"{HealthDemoConstants.DemoRootName} root not found");
 
         Health health = root.GetComponent<Health>();
         ThrowIfNull(health, "Health component not found");
@@ -22,17 +22,17 @@ public static class HealthDemoSceneValidator
         ThrowIfNull(UnityEngine.Object.FindObjectOfType<Camera>(), "Main Camera not found");
 
         ValidateHealthText(canvas, health);
-        ValidateBar(canvas, "InstantHealthBar", health, false);
-        ValidateBar(canvas, "SmoothHealthBar", health, true);
-        ValidateButton(canvas, "DamageButton", typeof(DamageButton), health, HealthDemoConstants.SimulatedDamage);
-        ValidateButton(canvas, "HealButton", typeof(HealButton), health, HealthDemoConstants.SimulatedHeal);
+        ValidateBar(canvas, HealthDemoConstants.InstantBarName, health, false);
+        ValidateBar(canvas, HealthDemoConstants.SmoothBarName, health, true);
+        ValidateButton(canvas, HealthDemoConstants.DamageButtonName, typeof(DamageButton), health, HealthDemoConstants.SimulatedDamage);
+        ValidateButton(canvas, HealthDemoConstants.HealButtonName, typeof(HealButton), health, HealthDemoConstants.SimulatedHeal);
 
         Debug.Log($"[HealthDemoSceneValidator] {scenePath} is valid: health, three indicators and two buttons are wired.");
     }
 
     private static void ValidateHealthText(Canvas canvas, Health health)
     {
-        Transform host = canvas.transform.Find("Panel/HealthText");
+        Transform host = canvas.transform.Find($"{HealthDemoConstants.PanelName}/{HealthDemoConstants.HealthTextName}");
         ThrowIfNull(host, "HealthText label not found");
 
         TextMeshProUGUI label = host.GetComponent<TextMeshProUGUI>();
@@ -46,7 +46,7 @@ public static class HealthDemoSceneValidator
 
     private static void ValidateBar(Canvas canvas, string name, Health health, bool isSmooth)
     {
-        Transform host = canvas.transform.Find($"Panel/{name}");
+        Transform host = canvas.transform.Find($"{HealthDemoConstants.PanelName}/{name}");
         ThrowIfNull(host, $"{name} slider not found");
 
         Slider slider = host.GetComponent<Slider>();
@@ -76,7 +76,7 @@ public static class HealthDemoSceneValidator
 
     private static void ValidateButton(Canvas canvas, string name, Type actionType, Health health, int amount)
     {
-        Transform host = canvas.transform.Find($"Panel/{name}");
+        Transform host = canvas.transform.Find($"{HealthDemoConstants.PanelName}/{name}");
         ThrowIfNull(host, $"{name} not found");
 
         Button button = host.GetComponent<Button>();

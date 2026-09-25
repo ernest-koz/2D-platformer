@@ -18,10 +18,9 @@ public static class HealthBarWorldInstaller
     private const float BarWorldWidth = 0.9f;
     private const float MinimalCharacterScale = 0.0001f;
     private const string SliderName = "Slider";
-    private const string BackgroundName = "Background";
-    private const string FillAreaFillName = "Fill Area/Fill";
-    private const string HandleAreaName = "Handle Slide Area";
     private const float Half = 0.5f;
+
+    private static readonly Color BarFillColor = new Color(0.85f, 0.25f, 0.25f);
 
     [MenuItem("Tools/Health Display/Install World Bars Into SampleScene")]
     public static void InstallFromMenu()
@@ -167,7 +166,7 @@ public static class HealthBarWorldInstaller
         canvasRect.sizeDelta = new Vector2(CanvasWidth, CanvasHeight);
         canvasRect.localScale = Vector3.one * CanvasScale;
 
-        DefaultControls.Resources resources = HealthDemoSceneBuilder.CreateResources();
+        DefaultControls.Resources resources = EditorUiSceneUtility.CreateResources();
 
         GameObject sliderObject = DefaultControls.CreateSlider(resources);
         sliderObject.name = SliderName;
@@ -186,12 +185,12 @@ public static class HealthBarWorldInstaller
         slider.maxValue = 1f;
         slider.value = 1f;
 
-        SerializedPropertyUtility.DestroyChildIfExists(sliderObject.transform, HandleAreaName);
+        SerializedPropertyUtility.DestroyChildIfExists(sliderObject.transform, HealthDemoConstants.SliderHandleAreaName);
 
-        Image background = sliderObject.transform.Find(BackgroundName).GetComponent<Image>();
-        background.color = new Color(0.12f, 0.12f, 0.12f, 0.9f);
+        Image background = sliderObject.transform.Find(HealthDemoConstants.SliderBackgroundName).GetComponent<Image>();
+        background.color = HealthDemoConstants.SliderBackgroundColor;
 
-        Image fill = sliderObject.transform.Find(FillAreaFillName).GetComponent<Image>();
+        Image fill = sliderObject.transform.Find(HealthDemoConstants.SliderFillAreaFillName).GetComponent<Image>();
         fill.color = new Color(0.85f, 0.25f, 0.25f);
 
         GameObject prefabAsset = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);

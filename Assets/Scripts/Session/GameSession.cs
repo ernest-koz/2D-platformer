@@ -14,10 +14,10 @@ public class GameSession : MonoBehaviour
     [SerializeField] private VampirismView _vampirismView;
 
     [Header("Enemies")]
-    [SerializeField] private EnemyBrain[] _enemies;
+    [SerializeField] private EnemyBrain[] _enemies = new EnemyBrain[0];
 
     [Header("Coin Spawners")]
-    [SerializeField] private PickupSpawner[] _coinSpawners;
+    [SerializeField] private PickupSpawner[] _coinSpawners = new PickupSpawner[0];
 
     private GameState _state = GameState.Playing;
     private int _totalCoinsCollected;
@@ -36,24 +36,12 @@ public class GameSession : MonoBehaviour
         _coinView = GetComponent<CoinView>();
         _gameOverView = GetComponent<GameOverView>();
         _finishView = GetComponent<FinishView>();
-
-        if (_player == null)
-        {
-            Debug.LogError($"Player not assigned on {gameObject.name}.", gameObject);
-            enabled = false;
-        }
-
-        if (_vampirismView == null)
-        {
-            Debug.LogError($"VampirismView not assigned on {gameObject.name}.", gameObject);
-            enabled = false;
-        }
     }
 
     private void OnEnable()
     {
-        TogglePlayerEvents(true);
-        ToggleEnemyEvents(true);
+        SubscribePlayerEvents();
+        SubscribeEnemyEvents();
     }
 
     private void Start()
@@ -61,12 +49,11 @@ public class GameSession : MonoBehaviour
         CountLevelPickups();
         CountEnemies();
         _coinView.Render(_totalCoinsCollected);
+        _vampirismView.Render(_player.VampirismFill);
     }
 
     private void Update()
     {
-        _vampirismView.Render(_player.VampirismFill);
-
         if (IsPlaying() == false)
         {
             return;
@@ -77,8 +64,37 @@ public class GameSession : MonoBehaviour
 
     private void OnDisable()
     {
-        TogglePlayerEvents(false);
-        ToggleEnemyEvents(false);
+        UnsubscribePlayerEvents();
+        UnsubscribeEnemyEvents();
+    }
+
+    private void OnValidate()
+    {
+        if (_player == null)
+        {
+            Debug.LogError($"Player not assigned on {gameObject.name}.", gameObject);
+        }
+
+        if (_vampirismView == null)
+        {
+            Debug.LogError($"VampirismView not assigned on {gameObject.name}.", gameObject);
+        }
+
+        for (int i = 0; i < _enemies.Length; i++)
+        {
+            if (_enemies[i] == null)
+            {
+                Debug.LogError($"Enemy at index {i} not assigned on {gameObject.name}.", gameObject);
+            }
+        }
+
+        for (int i = 0; i < _coinSpawners.Length; i++)
+        {
+            if (_coinSpawners[i] == null)
+            {
+                Debug.LogError($"Coin spawner at index {i} not assigned on {gameObject.name}.", gameObject);
+            }
+        }
     }
 
     public void AddCoin(int amount)
@@ -116,11 +132,6 @@ public class GameSession : MonoBehaviour
     {
         _totalCoinsInLevel = 0;
 
-        if (_coinSpawners == null)
-        {
-            return;
-        }
-
         foreach (PickupSpawner spawner in _coinSpawners)
         {
             if (spawner == null)
@@ -136,11 +147,6 @@ public class GameSession : MonoBehaviour
     {
         _totalEnemiesInLevel = 0;
 
-        if (_enemies == null)
-        {
-            return;
-        }
-
         foreach (EnemyBrain enemy in _enemies)
         {
             if (enemy == null)
@@ -152,35 +158,26 @@ public class GameSession : MonoBehaviour
         }
     }
 
-    private void TogglePlayerEvents(bool subscribe)
+    private void SubscribePlayerEvents()
     {
-        if (_player == null)
-        {
-            return;
-        }
+        _player.PickupContacted += OnPickupContacted;
+        _player.LevelFinished += OnLevelFinished;
+        _player.Died += OnPlayerDied;
+        _player.RestartRequested += OnRestartRequested;
+        _player.VampirismFillChanged += OnVampirismFillChanged;
+    }
 
-        if (subscribe)
-        {
-            _player.PickupContacted += OnPickupContacted;
-            _player.LevelFinished += OnLevelFinished;
-            _player.Died += OnPlayerDied;
-            _player.RestartRequested += OnRestartRequested;
-            return;
-        }
-
+    private void UnsubscribePlayerEvents()
+    {
         _player.PickupContacted -= OnPickupContacted;
         _player.LevelFinished -= OnLevelFinished;
         _player.Died -= OnPlayerDied;
         _player.RestartRequested -= OnRestartRequested;
+        _player.VampirismFillChanged -= OnVampirismFillChanged;
     }
 
-    private void ToggleEnemyEvents(bool subscribe)
+    private void SubscribeEnemyEvents()
     {
-        if (_enemies == null)
-        {
-            return;
-        }
-
         foreach (EnemyBrain enemy in _enemies)
         {
             if (enemy == null)
@@ -188,14 +185,31 @@ public class GameSession : MonoBehaviour
                 continue;
             }
 
-            if (subscribe)
+            enemy.Died += OnEnemyDied;
+        }
+    }
+
+    private void UnsubscribeEnemyEvents()
+    {
+        foreach (EnemyBrain enemy in _enemies)
+        {
+            if (enemy == null)
             {
-                enemy.Died += OnEnemyDied;
                 continue;
             }
 
             enemy.Died -= OnEnemyDied;
         }
+    }
+
+    private void OnVampirismFillChanged()
+    {
+        if (IsPlaying() == false)
+        {
+            return;
+        }
+
+        _vampirismView.Render(_player.VampirismFill);
     }
 
     private void OnPickupContacted(Pickup pickup)
@@ -213,21 +227,30 @@ public class GameSession : MonoBehaviour
         switch (pickup.Type)
         {
             case PickupType.Coin:
-                AddCoin(pickup.Amount);
-                pickup.Collect();
+                CollectCoin(pickup);
                 break;
 
             case PickupType.Health:
-                if (_player.Heal(pickup.Amount))
-                {
-                    pickup.Collect();
-                }
-
+                CollectHealthPickup(pickup);
                 break;
 
             default:
                 Debug.LogError($"Unsupported pickup type: {pickup.Type}.", pickup);
                 break;
+        }
+    }
+
+    private void CollectCoin(Pickup pickup)
+    {
+        AddCoin(pickup.Amount);
+        pickup.Collect();
+    }
+
+    private void CollectHealthPickup(Pickup pickup)
+    {
+        if (_player.Heal(pickup.Amount))
+        {
+            pickup.Collect();
         }
     }
 
@@ -286,11 +309,6 @@ public class GameSession : MonoBehaviour
     {
         _player.Suspend();
 
-        if (_enemies == null)
-        {
-            return;
-        }
-
         foreach (EnemyBrain enemy in _enemies)
         {
             if (enemy == null)
@@ -338,7 +356,7 @@ public readonly struct SessionStats
 
     public int TotalCoinsCollected { get; }
     public int EnemiesDefeated { get; }
+    public float PlayTime { get; }
     public int TotalCoinsInLevel { get; }
     public int TotalEnemiesInLevel { get; }
-    public float PlayTime { get; }
 }

@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -5,54 +6,86 @@ using UnityEngine.UI;
 [RequireComponent(typeof(RectTransform))]
 public class MenuButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
 {
+    private const float IdleScale = 1f;
+    private const float ScaleDuration = 0.2f;
+
     [SerializeField, Min(1f)] private float _hoverScale = 1.08f;
-    [SerializeField, Min(0.1f)] private float _scaleSpeed = 4f;
     [SerializeField] private Color _pressedColor = new Color(0.78f, 0.16f, 0.30f);
-    [SerializeField] private Image _targetImage;
+    [SerializeField] private Image _image;
 
     private RectTransform _rectTransform;
     private Color _baseColor;
-    private float _targetScale;
+    private Coroutine _scaleRoutine;
 
     private void Awake()
     {
         _rectTransform = GetComponent<RectTransform>();
-
-        if (_targetImage == null)
-        {
-            Debug.LogError($"{nameof(MenuButton)} target image not assigned on {gameObject.name}.", gameObject);
-            enabled = false;
-            return;
-        }
-
-        _baseColor = _targetImage.color;
-        _targetScale = 1f;
+        _baseColor = _image.color;
     }
 
-    private void Update()
+    private void OnDisable()
     {
-        float current = _rectTransform.localScale.x;
-        float next = Mathf.MoveTowards(current, _targetScale, _scaleSpeed * Time.deltaTime);
-        _rectTransform.localScale = new Vector3(next, next, next);
+        StopScaleRoutine();
+    }
+
+    private void OnValidate()
+    {
+        if (_image == null)
+        {
+            Debug.LogError($"{nameof(MenuButton)} image not assigned on {gameObject.name}.", gameObject);
+        }
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        _targetScale = _hoverScale;
+        RestartScaleRoutine(_hoverScale);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        _targetScale = 1f;
+        RestartScaleRoutine(IdleScale);
     }
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        _targetImage.color = _pressedColor;
+        _image.color = _pressedColor;
     }
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        _targetImage.color = _baseColor;
+        _image.color = _baseColor;
+    }
+
+    private void RestartScaleRoutine(float target)
+    {
+        StopScaleRoutine();
+        _scaleRoutine = StartCoroutine(ScaleRoutine(target));
+    }
+
+    private void StopScaleRoutine()
+    {
+        if (_scaleRoutine == null)
+        {
+            return;
+        }
+
+        StopCoroutine(_scaleRoutine);
+        _scaleRoutine = null;
+    }
+
+    private IEnumerator ScaleRoutine(float target)
+    {
+        float from = _rectTransform.localScale.x;
+
+        for (float time = 0f; time < ScaleDuration; time += Time.deltaTime)
+        {
+            float next = Mathf.Lerp(from, target, time / ScaleDuration);
+            _rectTransform.localScale = new Vector3(next, next, next);
+
+            yield return null;
+        }
+
+        _rectTransform.localScale = new Vector3(target, target, target);
+        _scaleRoutine = null;
     }
 }

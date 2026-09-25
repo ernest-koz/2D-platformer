@@ -3,26 +3,38 @@ using UnityEngine;
 
 public class Vampirism : MonoBehaviour
 {
-    private const int InitialTargetBufferSize = 8;
-    private const int MaximumTargetBufferSize = 64;
     private const float MaximumPendingDamage = 3f;
 
     [Header("Vampirism")]
     [SerializeField, Min(0.1f)] private float _duration = 6f;
-    [SerializeField, Min(0.1f)] private float _cooldownTime = 4f;
+    [SerializeField, Min(0.1f)] private float _cooldownDuration = 4f;
     [SerializeField, Min(0.1f)] private float _radius = 3f;
     [SerializeField, Min(0.1f)] private float _drainPerSecond = 5f;
     [SerializeField] private LayerMask _targetLayer;
 
-    private Collider2D[] _targetBuffer = new Collider2D[InitialTargetBufferSize];
+    private Collider2D[] _targetBuffer = TargetSearch.CreateBuffer();
     private float _remainingTime;
-    private float _cooldownTimer;
+    private float _remainingCooldownTime;
     private float _pendingDamage;
 
     public event Action<int> Drained;
+    public event Action FillChanged;
 
     public bool IsActive => _remainingTime > 0f;
-    public bool IsReady => IsActive == false && _cooldownTimer <= 0f;
+
+    public bool IsReady
+    {
+        get
+        {
+            if (IsActive)
+            {
+                return false;
+            }
+
+            return _remainingCooldownTime <= 0f;
+        }
+    }
+
     public float Radius => _radius;
     public float Fill => GetFill();
 
@@ -38,13 +50,23 @@ public class Vampirism : MonoBehaviour
 
     public void Tick(float deltaTime)
     {
+        float fillBefore = GetFill();
+
         if (IsActive)
         {
             TickActive(deltaTime);
+        }
+        else
+        {
+            TickCooldown(deltaTime);
+        }
+
+        if (GetFill() == fillBefore)
+        {
             return;
         }
 
-        TickCooldown(deltaTime);
+        FillChanged?.Invoke();
     }
 
     public void Interrupt()
@@ -54,8 +76,16 @@ public class Vampirism : MonoBehaviour
             return;
         }
 
+        float fillBefore = GetFill();
         _remainingTime = 0f;
         _pendingDamage = 0f;
+
+        if (GetFill() == fillBefore)
+        {
+            return;
+        }
+
+        FillChanged?.Invoke();
     }
 
     private void TickActive(float deltaTime)
@@ -73,19 +103,19 @@ public class Vampirism : MonoBehaviour
 
     private void TickCooldown(float deltaTime)
     {
-        if (_cooldownTimer <= 0f)
+        if (_remainingCooldownTime <= 0f)
         {
             return;
         }
 
-        _cooldownTimer = Mathf.Max(_cooldownTimer - deltaTime, 0f);
+        _remainingCooldownTime = Mathf.Max(_remainingCooldownTime - deltaTime, 0f);
     }
 
     private void Stop()
     {
         _remainingTime = 0f;
         _pendingDamage = 0f;
-        _cooldownTimer = _cooldownTime;
+        _remainingCooldownTime = _cooldownDuration;
     }
 
     private void DrainNearestTarget(float deltaTime)
@@ -99,7 +129,7 @@ public class Vampirism : MonoBehaviour
 
         _pendingDamage = Mathf.Min(_pendingDamage + _drainPerSecond * deltaTime, MaximumPendingDamage);
 
-        int damage = target.TakeDrain((int)_pendingDamage, transform.position);
+        int damage = target.TakeDamage((int)_pendingDamage, transform.position);
 
         if (damage < 1)
         {
@@ -112,56 +142,9 @@ public class Vampirism : MonoBehaviour
 
     private ITargetable FindNearestTarget()
     {
-        int count = FindTargets();
-        ITargetable nearest = null;
-        float nearestSqrDistance = float.MaxValue;
+        int count = TargetSearch.Collect(transform.position, _radius, _targetLayer, ref _targetBuffer);
 
-        for (int i = 0; i < count; i++)
-        {
-            if (_targetBuffer[i].gameObject == gameObject)
-            {
-                continue;
-            }
-
-            if (_targetBuffer[i].TryGetComponent(out ITargetable candidate) == false)
-            {
-                continue;
-            }
-
-            if (candidate.IsTargetable == false)
-            {
-                continue;
-            }
-
-            float sqrDistance = ((Vector2)(candidate.Position - transform.position)).sqrMagnitude;
-
-            if (sqrDistance < nearestSqrDistance)
-            {
-                nearestSqrDistance = sqrDistance;
-                nearest = candidate;
-            }
-        }
-
-        return nearest;
-    }
-
-    private int FindTargets()
-    {
-        int count = Physics2D.OverlapCircleNonAlloc(transform.position, _radius, _targetBuffer, _targetLayer);
-
-        while (count == _targetBuffer.Length)
-        {
-            if (_targetBuffer.Length >= MaximumTargetBufferSize)
-            {
-                break;
-            }
-
-            int newSize = Mathf.Min(_targetBuffer.Length * 2, MaximumTargetBufferSize);
-            _targetBuffer = new Collider2D[newSize];
-            count = Physics2D.OverlapCircleNonAlloc(transform.position, _radius, _targetBuffer, _targetLayer);
-        }
-
-        return count;
+        return TargetSearch.FindNearest(_targetBuffer, count, transform.position, gameObject);
     }
 
     private float GetFill()
@@ -171,9 +154,9 @@ public class Vampirism : MonoBehaviour
             return _remainingTime / _duration;
         }
 
-        if (_cooldownTimer > 0f)
+        if (_remainingCooldownTime > 0f)
         {
-            return 1f - _cooldownTimer / _cooldownTime;
+            return 1f - _remainingCooldownTime / _cooldownDuration;
         }
 
         return 1f;

@@ -7,6 +7,12 @@ public class SmoothHealthBar : HealthBar
 
     private Coroutine _fillRoutine;
 
+    protected override void OnDisable()
+    {
+        StopRunningFill();
+        base.OnDisable();
+    }
+
     protected override void Render(int current, int maximum)
     {
         RestartFill(CalculateRatio(current, maximum));
@@ -14,12 +20,19 @@ public class SmoothHealthBar : HealthBar
 
     private void RestartFill(float target)
     {
-        if (_fillRoutine != null)
+        StopRunningFill();
+        _fillRoutine = StartCoroutine(FillRoutine(target));
+    }
+
+    private void StopRunningFill()
+    {
+        if (_fillRoutine == null)
         {
-            StopCoroutine(_fillRoutine);
+            return;
         }
 
-        _fillRoutine = StartCoroutine(FillRoutine(target));
+        StopCoroutine(_fillRoutine);
+        _fillRoutine = null;
     }
 
     private IEnumerator FillRoutine(float target)

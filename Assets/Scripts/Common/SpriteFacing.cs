@@ -6,20 +6,20 @@ public class SpriteFacing : MonoBehaviour
 {
     private const float FlipAngleDegrees = 180f;
 
-    [SerializeField] private bool _startsFacingRight = true;
+    [SerializeField] private bool _isInitiallyFacingRight = true;
 
     private Quaternion _rightRotation;
     private Quaternion _leftRotation;
     private int _direction;
 
-    public int FacingDirection => _direction;
-    public Vector2 FacingVector => _direction > 0 ? Vector2.right : Vector2.left;
+    public int Direction => _direction;
+    public Vector2 Vector => _direction > 0 ? Vector2.right : Vector2.left;
 
     private void Awake()
     {
         _rightRotation = transform.localRotation;
         _leftRotation = _rightRotation * Quaternion.Euler(0f, FlipAngleDegrees, 0f);
-        _direction = _startsFacingRight ? 1 : -1;
+        _direction = _isInitiallyFacingRight ? 1 : -1;
 
         ApplyRotation();
     }

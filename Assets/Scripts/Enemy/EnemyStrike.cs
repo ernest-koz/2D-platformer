@@ -9,18 +9,18 @@ public class EnemyStrike : MonoBehaviour
     [Header("Attack")]
     [SerializeField, Min(0.01f)] private float _attackRange = 1f;
     [SerializeField, Min(1)] private int _attackDamage = 1;
-    [SerializeField, Min(0f)] private float _attackCooldown = 1.2f;
-    [SerializeField, Min(0f)] private float _attackWindup = 0.25f;
-    [SerializeField] private float _attackOriginHeight = 0.8f;
+    [SerializeField, Min(0f)] private float _attackCooldownDuration = 1.2f;
+    [SerializeField, Min(0f)] private float _attackWindupDuration = 0.25f;
+    [SerializeField, Min(0f)] private float _attackOriginHeight = 0.8f;
     [SerializeField] private LayerMask _targetLayer;
 
     private SpriteFacing _facing;
-    private float _cooldownTimer;
-    private float _windupTimer;
+    private float _remainingCooldownTime;
+    private float _remainingWindupTime;
     private bool _isWindingUp;
 
     public float AttackRange => _attackRange;
-    public bool IsOnCooldown => _cooldownTimer > 0f;
+    public bool IsOnCooldown => _remainingCooldownTime > 0f;
 
     private void Awake()
     {
@@ -39,12 +39,12 @@ public class EnemyStrike : MonoBehaviour
             return;
         }
 
-        if (_cooldownTimer <= 0f)
+        if (_remainingCooldownTime <= 0f)
         {
             return;
         }
 
-        _cooldownTimer = Mathf.Max(_cooldownTimer - deltaTime, 0f);
+        _remainingCooldownTime = Mathf.Max(_remainingCooldownTime - deltaTime, 0f);
     }
 
     public bool BeginWindup()
@@ -55,7 +55,7 @@ public class EnemyStrike : MonoBehaviour
         }
 
         _isWindingUp = true;
-        _windupTimer = _attackWindup;
+        _remainingWindupTime = _attackWindupDuration;
         return true;
     }
 
@@ -66,18 +66,18 @@ public class EnemyStrike : MonoBehaviour
             return false;
         }
 
-        _windupTimer -= Mathf.Max(deltaTime, 0f);
+        _remainingWindupTime -= Mathf.Max(deltaTime, 0f);
 
-        if (_windupTimer > 0f)
+        if (_remainingWindupTime > 0f)
         {
             return false;
         }
 
         _isWindingUp = false;
-        _cooldownTimer = _attackCooldown;
+        _remainingCooldownTime = _attackCooldownDuration;
 
         Vector2 attackOrigin = (Vector2)transform.position + Vector2.up * _attackOriginHeight;
-        Vector2 direction = _facing.FacingVector;
+        Vector2 direction = _facing.Vector;
 
         RaycastHit2D hit = Physics2D.CircleCast(
             attackOrigin,

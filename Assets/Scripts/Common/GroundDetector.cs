@@ -10,13 +10,11 @@ public class GroundDetector : MonoBehaviour
 
     public bool IsGrounded { get; private set; }
 
-    private void Awake()
+    private void OnValidate()
     {
         if (_groundCheck == null)
         {
             Debug.LogError($"GroundCheck Transform not assigned on {gameObject.name}.", gameObject);
-            enabled = false;
-            return;
         }
     }
 

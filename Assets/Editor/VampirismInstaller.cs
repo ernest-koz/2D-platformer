@@ -11,12 +11,15 @@ public static class VampirismInstaller
     private const string BarName = "VampirismBar";
     private const string CaptionName = "VampirismCaption";
     private const string CaptionText = "Вампиризм (E)";
-    private const string HandleAreaName = "Handle Slide Area";
     private const string CoinTextName = "CoinText";
     private const float ZoneHeightOffset = 0.6f;
     private const float KnobWorldSize = 0.26f;
     private const float DiameterScale = 2f;
     private const int ZoneSortingOrder = -1;
+
+    private static readonly Color ZoneColor = new Color(0.65f, 0.20f, 0.85f, 0.25f);
+    private static readonly Color BarFillColor = new Color(0.78f, 0.16f, 0.30f);
+    private static readonly Color CaptionColor = new Color(0.9f, 0.85f, 0.9f);
 
     [MenuItem("Tools/Health Display/Install Vampirism Into SampleScene")]
     public static void InstallFromMenu()
@@ -26,6 +29,11 @@ public static class VampirismInstaller
 
     public static void Install()
     {
+        if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo() == false)
+        {
+            return;
+        }
+
         EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
 
         Player player = Object.FindFirstObjectByType<Player>();
@@ -43,7 +51,7 @@ public static class VampirismInstaller
             vampirism = player.gameObject.AddComponent<Vampirism>();
         }
 
-        SerializedPropertyUtility.SetLayerMask(vampirism, "_targetLayer", LayerMask.NameToLayer("Enemy"));
+        SerializedPropertyUtility.SetLayerMask(vampirism, "_targetLayer", LayerMask.NameToLayer(HealthDemoConstants.EnemyLayerName));
 
         VampirismZone zone = CreateZone(player, vampirism);
         VampirismView view = CreateHudBar();
@@ -88,8 +96,8 @@ public static class VampirismInstaller
             zone.transform.localPosition = new Vector3(0f, ZoneHeightOffset, 0f);
 
             SpriteRenderer renderer = zone.GetComponent<SpriteRenderer>();
-            renderer.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
-            renderer.color = new Color(0.65f, 0.20f, 0.85f, 0.25f);
+            renderer.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>(HealthDemoConstants.KnobSpritePath);
+            renderer.color = ZoneColor;
             renderer.sortingOrder = ZoneSortingOrder;
 
             float spriteSize = GetSpriteWorldSize(renderer.sprite);
@@ -138,7 +146,7 @@ public static class VampirismInstaller
 
     private static VampirismView CreateSliderView(Transform hud)
     {
-        DefaultControls.Resources resources = HealthDemoSceneBuilder.CreateResources();
+        DefaultControls.Resources resources = EditorUiSceneUtility.CreateResources();
 
         GameObject sliderObject = DefaultControls.CreateSlider(resources);
         sliderObject.name = BarName;
@@ -157,19 +165,19 @@ public static class VampirismInstaller
         slider.maxValue = 1f;
         slider.value = 1f;
 
-        SerializedPropertyUtility.DestroyChildIfExists(sliderObject.transform, HandleAreaName);
+        SerializedPropertyUtility.DestroyChildIfExists(sliderObject.transform, HealthDemoConstants.SliderHandleAreaName);
 
-        RectTransform fillArea = (RectTransform)sliderObject.transform.Find("Fill Area");
+        RectTransform fillArea = (RectTransform)sliderObject.transform.Find(HealthDemoConstants.SliderFillAreaName);
         fillArea.anchorMin = Vector2.zero;
         fillArea.anchorMax = Vector2.one;
         fillArea.offsetMin = new Vector2(4f, fillArea.offsetMin.y);
         fillArea.offsetMax = new Vector2(-4f, fillArea.offsetMax.y);
 
-        Image background = sliderObject.transform.Find("Background").GetComponent<Image>();
-        background.color = new Color(0.12f, 0.12f, 0.12f, 0.9f);
+        Image background = sliderObject.transform.Find(HealthDemoConstants.SliderBackgroundName).GetComponent<Image>();
+        background.color = HealthDemoConstants.SliderBackgroundColor;
 
-        Image fill = sliderObject.transform.Find("Fill Area/Fill").GetComponent<Image>();
-        fill.color = new Color(0.78f, 0.16f, 0.30f);
+        Image fill = sliderObject.transform.Find(HealthDemoConstants.SliderFillAreaFillName).GetComponent<Image>();
+        fill.color = BarFillColor;
 
         CreateCaption(hud, new Vector2(50f, 100f));
 
@@ -215,7 +223,7 @@ public static class VampirismInstaller
         label.font = TMP_Settings.defaultFontAsset;
         label.text = CaptionText;
         label.fontSize = 26f;
-        label.color = new Color(0.9f, 0.85f, 0.9f);
+        label.color = CaptionColor;
         label.alignment = TextAlignmentOptions.Left;
     }
 }

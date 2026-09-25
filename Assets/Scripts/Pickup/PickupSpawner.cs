@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PickupSpawner : MonoBehaviour
@@ -7,30 +8,9 @@ public class PickupSpawner : MonoBehaviour
     [SerializeField] private Vector3[] _spawnPoints;
     [SerializeField] private Vector3 _spawnScale = Vector3.one;
 
-    public int TotalCount => _spawnPoints == null ? 0 : _spawnPoints.Length;
+    private readonly List<Pickup> _spawnedPickups = new List<Pickup>();
 
-    private void Awake()
-    {
-        if (_prefab == null)
-        {
-            Debug.LogError($"PickupSpawner: prefab not assigned on {gameObject.name}.", gameObject);
-            enabled = false;
-            return;
-        }
-
-        if (_spawnPoints == null)
-        {
-            Debug.LogError($"PickupSpawner: spawnPoints empty on {gameObject.name}.", gameObject);
-            enabled = false;
-            return;
-        }
-
-        if (_spawnPoints.Length == 0)
-        {
-            Debug.LogError($"PickupSpawner: spawnPoints empty on {gameObject.name}.", gameObject);
-            enabled = false;
-        }
-    }
+    public int TotalCount => _spawnPoints.Length;
 
     private void Start()
     {
@@ -40,17 +20,28 @@ public class PickupSpawner : MonoBehaviour
             pickup.transform.SetParent(transform, true);
             pickup.transform.localScale = _spawnScale;
             pickup.Collected += OnPickupCollected;
+            _spawnedPickups.Add(pickup);
         }
     }
 
     private void OnDestroy()
     {
-        for (int i = 0; i < transform.childCount; i++)
+        foreach (Pickup pickup in _spawnedPickups)
         {
-            if (transform.GetChild(i).TryGetComponent(out Pickup pickup))
-            {
-                pickup.Collected -= OnPickupCollected;
-            }
+            pickup.Collected -= OnPickupCollected;
+        }
+    }
+
+    private void OnValidate()
+    {
+        if (_prefab == null)
+        {
+            Debug.LogError($"PickupSpawner prefab not assigned on {gameObject.name}.", gameObject);
+        }
+
+        if (_spawnPoints.Length == 0)
+        {
+            Debug.LogError($"PickupSpawner spawn points empty on {gameObject.name}.", gameObject);
         }
     }
 

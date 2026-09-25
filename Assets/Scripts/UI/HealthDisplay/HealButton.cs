@@ -6,6 +6,6 @@ public class HealButton : HealthChangerButton
 
     protected override void Apply()
     {
-        Health.Heal(_amount);
+        Health.ReceiveHealing(_amount);
     }
 }

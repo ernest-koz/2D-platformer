@@ -989,8 +989,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _attackRange: 1
   _attackDamage: 1
-  _attackCooldown: 1.2
-  _attackWindup: 0.25
+  _attackCooldownDuration: 1.2
+  _attackWindupDuration: 0.25
   _attackOriginHeight: 0.8
   _targetLayer:
     serializedVersion: 2
@@ -1007,7 +1007,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d12a3b4fef545142bde92825cba3933, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _startsFacingRight: 1
+  _isInitiallyFacingRight: 1
 --- !u!212 &165335434
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -3192,8 +3192,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 299248065a2a6b145bb8edffdd17d0a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _coinText: {fileID: 1168303584}
-  _coinFormat: "\u041C\u043E\u043D\u0435\u0442\u044B: {0}"
+  _text: {fileID: 1168303584}
+  _format: "\u041C\u043E\u043D\u0435\u0442\u044B: {0}"
 --- !u!114 &693280913
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3533,8 +3533,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _attackRange: 1
   _attackDamage: 1
-  _attackCooldown: 1.2
-  _attackWindup: 0.25
+  _attackCooldownDuration: 1.2
+  _attackWindupDuration: 0.25
   _attackOriginHeight: 0.8
   _targetLayer:
     serializedVersion: 2
@@ -3551,7 +3551,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d12a3b4fef545142bde92825cba3933, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _startsFacingRight: 1
+  _isInitiallyFacingRight: 1
 --- !u!212 &734748747
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -4027,8 +4027,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _attackRange: 1
   _attackDamage: 1
-  _attackCooldown: 1.2
-  _attackWindup: 0.25
+  _attackCooldownDuration: 1.2
+  _attackWindupDuration: 0.25
   _attackOriginHeight: 0.8
   _targetLayer:
     serializedVersion: 2
@@ -4045,7 +4045,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d12a3b4fef545142bde92825cba3933, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _startsFacingRight: 1
+  _isInitiallyFacingRight: 1
 --- !u!212 &758827303
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -6355,8 +6355,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _attackRange: 1
   _attackDamage: 1
-  _attackCooldown: 1.2
-  _attackWindup: 0.25
+  _attackCooldownDuration: 1.2
+  _attackWindupDuration: 0.25
   _attackOriginHeight: 0.8
   _targetLayer:
     serializedVersion: 2
@@ -6373,7 +6373,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d12a3b4fef545142bde92825cba3933, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _startsFacingRight: 1
+  _isInitiallyFacingRight: 1
 --- !u!212 &1397902540
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -6900,8 +6900,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _attackRange: 1
   _attackDamage: 1
-  _attackCooldown: 1.2
-  _attackWindup: 0.25
+  _attackCooldownDuration: 1.2
+  _attackWindupDuration: 0.25
   _attackOriginHeight: 0.8
   _targetLayer:
     serializedVersion: 2
@@ -6918,7 +6918,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d12a3b4fef545142bde92825cba3933, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _startsFacingRight: 1
+  _isInitiallyFacingRight: 1
 --- !u!212 &1568716879
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -8003,7 +8003,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d12a3b4fef545142bde92825cba3933, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _startsFacingRight: 1
+  _isInitiallyFacingRight: 1
 --- !u!212 &1729192366
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -8206,7 +8206,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _spriteRenderer: {fileID: 1729192366}
-  _flickerFrequency: 18
+  _frequency: 18
 --- !u!114 &1729192378
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8219,8 +8219,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1547176eda510e4ebf6d7c55d86b724, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _healthText: {fileID: 520256706}
-  _healthFormat: 'HP: {0}/{1}'
+  _text: {fileID: 520256706}
+  _format: 'HP: {0}/{1}'
 --- !u!114 &1729192379
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8234,8 +8234,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _jumpForce: 15
-  _coyoteTime: 0.1
-  _jumpBufferTime: 0.12
+  _coyoteDuration: 0.1
+  _jumpBufferDuration: 0.12
   _fallMultiplier: 2.4
   _lowJumpMultiplier: 2
 --- !u!114 &1729192380
@@ -8251,7 +8251,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _duration: 6
-  _cooldownTime: 4
+  _cooldownDuration: 4
   _radius: 3
   _drainPerSecond: 5
   _targetLayer:
@@ -8882,8 +8882,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _attackRange: 1
   _attackDamage: 1
-  _attackCooldown: 1.2
-  _attackWindup: 0.25
+  _attackCooldownDuration: 1.2
+  _attackWindupDuration: 0.25
   _attackOriginHeight: 0.8
   _targetLayer:
     serializedVersion: 2
@@ -8900,7 +8900,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d12a3b4fef545142bde92825cba3933, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _startsFacingRight: 1
+  _isInitiallyFacingRight: 1
 --- !u!212 &1816948641
 SpriteRenderer:
   m_ObjectHideFlags: 0

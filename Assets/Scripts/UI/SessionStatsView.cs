@@ -1,5 +1,4 @@
 using TMPro;
-using System;
 using UnityEngine;
 
 public class SessionStatsView : MonoBehaviour
@@ -12,60 +11,50 @@ public class SessionStatsView : MonoBehaviour
     [SerializeField] private string _timeFormat = "Время: {0:F1} с";
     [SerializeField] private string _enemyFormat = "Повержено врагов: {0} из {1}";
 
-    public void Show(SessionStats stats)
-    {
-        if (HasRequiredReferences() == false)
-        {
-            return;
-        }
-
-        SetText(_coinText, _coinFormat, stats.TotalCoinsCollected, stats.TotalCoinsInLevel);
-        SetText(_timeText, _timeFormat, stats.PlayTime);
-        SetText(_enemyText, _enemyFormat, stats.EnemiesDefeated, stats.TotalEnemiesInLevel);
-
-        _panel.SetActive(true);
-    }
-
-    private bool HasRequiredReferences()
+    private void OnValidate()
     {
         if (_panel == null)
         {
-            return ReportMissingReferences();
+            Debug.LogError($"{nameof(SessionStatsView)} panel not assigned on {gameObject.name}.", gameObject);
         }
 
         if (_coinText == null)
         {
-            return ReportMissingReferences();
+            Debug.LogError($"{nameof(SessionStatsView)} coin text not assigned on {gameObject.name}.", gameObject);
         }
 
         if (_timeText == null)
         {
-            return ReportMissingReferences();
+            Debug.LogError($"{nameof(SessionStatsView)} time text not assigned on {gameObject.name}.", gameObject);
         }
 
         if (_enemyText == null)
         {
-            return ReportMissingReferences();
+            Debug.LogError($"{nameof(SessionStatsView)} enemy text not assigned on {gameObject.name}.", gameObject);
         }
 
-        return true;
+        if (TextFormatUtility.IsValid(_coinFormat, 0, 0) == false)
+        {
+            Debug.LogError($"{nameof(SessionStatsView)} coin format is invalid on {gameObject.name}.", gameObject);
+        }
+
+        if (TextFormatUtility.IsValid(_timeFormat, 0f) == false)
+        {
+            Debug.LogError($"{nameof(SessionStatsView)} time format is invalid on {gameObject.name}.", gameObject);
+        }
+
+        if (TextFormatUtility.IsValid(_enemyFormat, 0, 0) == false)
+        {
+            Debug.LogError($"{nameof(SessionStatsView)} enemy format is invalid on {gameObject.name}.", gameObject);
+        }
     }
 
-    private bool ReportMissingReferences()
+    public void Show(SessionStats stats)
     {
-        Debug.LogError($"{GetType().Name} references not assigned on {gameObject.name}.", gameObject);
-        return false;
-    }
+        _coinText.text = string.Format(_coinFormat, stats.TotalCoinsCollected, stats.TotalCoinsInLevel);
+        _timeText.text = string.Format(_timeFormat, stats.PlayTime);
+        _enemyText.text = string.Format(_enemyFormat, stats.EnemiesDefeated, stats.TotalEnemiesInLevel);
 
-    private void SetText(TMP_Text text, string format, params object[] args)
-    {
-        try
-        {
-            text.text = string.Format(format, args);
-        }
-        catch (FormatException exception)
-        {
-            Debug.LogError($"Invalid stats format on {gameObject.name}: {exception.Message}", gameObject);
-        }
+        _panel.SetActive(true);
     }
 }

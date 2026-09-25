@@ -7,47 +7,41 @@ public static class SerializedPropertyUtility
 {
     public static void SetObjectReference(Object target, string propertyName, Object value)
     {
-        SerializedObject serialized = new SerializedObject(target);
-        SerializedProperty property = serialized.FindProperty(propertyName);
+        SerializedProperty property = FindPropertyForWrite(target, propertyName);
 
         if (property == null)
         {
-            Debug.LogError($"Serialized property '{propertyName}' not found on {target.GetType().Name}.", target);
             return;
         }
 
         property.objectReferenceValue = value;
-        serialized.ApplyModifiedPropertiesWithoutUndo();
+        property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
     }
 
     public static void SetInteger(Object target, string propertyName, int value)
     {
-        SerializedObject serialized = new SerializedObject(target);
-        SerializedProperty property = serialized.FindProperty(propertyName);
+        SerializedProperty property = FindPropertyForWrite(target, propertyName);
 
         if (property == null)
         {
-            Debug.LogError($"Serialized property '{propertyName}' not found on {target.GetType().Name}.", target);
             return;
         }
 
         property.intValue = value;
-        serialized.ApplyModifiedPropertiesWithoutUndo();
+        property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
     }
 
     public static void SetFloat(Object target, string propertyName, float value)
     {
-        SerializedObject serialized = new SerializedObject(target);
-        SerializedProperty property = serialized.FindProperty(propertyName);
+        SerializedProperty property = FindPropertyForWrite(target, propertyName);
 
         if (property == null)
         {
-            Debug.LogError($"Serialized property '{propertyName}' not found on {target.GetType().Name}.", target);
             return;
         }
 
         property.floatValue = value;
-        serialized.ApplyModifiedPropertiesWithoutUndo();
+        property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
     }
 
     public static void SetLayerMask(Object target, string propertyName, int layerIndex)
@@ -58,17 +52,15 @@ public static class SerializedPropertyUtility
             return;
         }
 
-        SerializedObject serialized = new SerializedObject(target);
-        SerializedProperty property = serialized.FindProperty(propertyName);
+        SerializedProperty property = FindPropertyForWrite(target, propertyName);
 
         if (property == null)
         {
-            Debug.LogError($"Serialized property '{propertyName}' not found on {target.GetType().Name}.", target);
             return;
         }
 
         property.intValue = 1 << layerIndex;
-        serialized.ApplyModifiedPropertiesWithoutUndo();
+        property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
     }
 
     public static int GetInteger(Object target, string propertyName)
@@ -86,6 +78,32 @@ public static class SerializedPropertyUtility
         return FindPropertyOrThrow(target, propertyName).objectReferenceValue;
     }
 
+    public static void DestroyChildIfExists(Transform parent, string childName)
+    {
+        Transform child = parent.Find(childName);
+
+        if (child == null)
+        {
+            return;
+        }
+
+        Object.DestroyImmediate(child.gameObject);
+    }
+
+    private static SerializedProperty FindPropertyForWrite(Object target, string propertyName)
+    {
+        SerializedObject serialized = new SerializedObject(target);
+        SerializedProperty property = serialized.FindProperty(propertyName);
+
+        if (property == null)
+        {
+            Debug.LogError($"Serialized property '{propertyName}' not found on {target.GetType().Name}.", target);
+            return null;
+        }
+
+        return property;
+    }
+
     private static SerializedProperty FindPropertyOrThrow(Object target, string propertyName)
     {
         SerializedObject serialized = new SerializedObject(target);
@@ -97,17 +115,5 @@ public static class SerializedPropertyUtility
         }
 
         return property;
-    }
-
-    public static void DestroyChildIfExists(Transform parent, string childName)
-    {
-        Transform child = parent.Find(childName);
-
-        if (child == null)
-        {
-            return;
-        }
-
-        Object.DestroyImmediate(child.gameObject);
     }
 }

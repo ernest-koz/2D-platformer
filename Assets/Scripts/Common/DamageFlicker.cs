@@ -2,34 +2,31 @@ using UnityEngine;
 
 public class DamageFlicker : MonoBehaviour
 {
+    private const int FlickerParityDivisor = 2;
+
     [SerializeField] private SpriteRenderer _spriteRenderer;
-    [SerializeField] private float _flickerFrequency = 18f;
+    [SerializeField] private float _frequency = 18f;
 
     private bool _isFlickering;
 
-    private void Awake()
+    private void OnDisable()
+    {
+        StopFlickering();
+    }
+
+    private void OnValidate()
     {
         if (_spriteRenderer == null)
         {
             Debug.LogError($"SpriteRenderer not assigned on {gameObject.name}.", gameObject);
-            enabled = false;
         }
     }
 
-    private void OnDisable()
-    {
-        SetFlickering(false);
-    }
+    public void StartFlickering() =>
+        SetFlickeringCore(true);
 
-    public void SetFlickering(bool isFlickering)
-    {
-        _isFlickering = isFlickering;
-
-        if (isFlickering == false)
-        {
-            _spriteRenderer.enabled = true;
-        }
-    }
+    public void StopFlickering() =>
+        SetFlickeringCore(false);
 
     public void Tick(float elapsedTime)
     {
@@ -38,6 +35,16 @@ public class DamageFlicker : MonoBehaviour
             return;
         }
 
-        _spriteRenderer.enabled = Mathf.FloorToInt(elapsedTime * _flickerFrequency) % 2 == 0;
+        _spriteRenderer.enabled = Mathf.FloorToInt(elapsedTime * _frequency) % FlickerParityDivisor == 0;
+    }
+
+    private void SetFlickeringCore(bool isFlickering)
+    {
+        _isFlickering = isFlickering;
+
+        if (isFlickering == false)
+        {
+            _spriteRenderer.enabled = true;
+        }
     }
 }

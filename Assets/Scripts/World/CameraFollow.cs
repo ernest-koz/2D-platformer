@@ -10,14 +10,6 @@ public class CameraFollow : MonoBehaviour
 
     private Vector3 _velocity = Vector3.zero;
 
-    private void Start()
-    {
-        if (_target == null)
-        {
-            Debug.LogError($"CameraFollow: target not assigned on {gameObject.name}.", gameObject);
-        }
-    }
-
     private void LateUpdate()
     {
         if (_target == null)
@@ -40,5 +32,13 @@ public class CameraFollow : MonoBehaviour
 
         transform.position = Vector3.SmoothDamp(
             transform.position, desired, ref _velocity, _smoothTime);
+    }
+
+    private void OnValidate()
+    {
+        if (_target == null)
+        {
+            Debug.LogError($"{nameof(CameraFollow)} target not assigned on {gameObject.name}.", gameObject);
+        }
     }
 }

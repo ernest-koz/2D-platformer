@@ -6,14 +6,14 @@ public class Jumper : MonoBehaviour
 {
     [Header("Jump")]
     [SerializeField, Min(0f)] private float _jumpForce = 15f;
-    [SerializeField, Min(0f)] private float _coyoteTime = 0.10f;
-    [SerializeField, Min(0f)] private float _jumpBufferTime = 0.12f;
+    [SerializeField, Min(0f)] private float _coyoteDuration = 0.10f;
+    [SerializeField, Min(0f)] private float _jumpBufferDuration = 0.12f;
     [SerializeField, Min(1f)] private float _fallMultiplier = 2.4f;
     [SerializeField, Min(1f)] private float _lowJumpMultiplier = 2f;
 
     private Rigidbody2D _rigidbody;
-    private float _jumpBufferTimer;
-    private float _coyoteTimer;
+    private float _remainingJumpBufferTime;
+    private float _remainingCoyoteTime;
     private bool _isJumpHeld;
 
     private void Awake()
@@ -25,31 +25,31 @@ public class Jumper : MonoBehaviour
     {
         if (isJumpPressed)
         {
-            _jumpBufferTimer = _jumpBufferTime;
+            _remainingJumpBufferTime = _jumpBufferDuration;
         }
 
         _isJumpHeld = isJumpHeld;
-        _jumpBufferTimer -= deltaTime;
-        _coyoteTimer = isGrounded ? _coyoteTime : _coyoteTimer - deltaTime;
+        _remainingJumpBufferTime -= deltaTime;
+        _remainingCoyoteTime = isGrounded ? _coyoteDuration : _remainingCoyoteTime - deltaTime;
     }
 
     public void ApplyPhysics(float fixedDeltaTime)
     {
         ApplyVariableGravity(fixedDeltaTime);
 
-        if (_jumpBufferTimer <= 0f)
+        if (_remainingJumpBufferTime <= 0f)
         {
             return;
         }
 
-        if (_coyoteTimer <= 0f)
+        if (_remainingCoyoteTime <= 0f)
         {
             return;
         }
 
         _rigidbody.velocity = new Vector2(_rigidbody.velocity.x, _jumpForce);
-        _jumpBufferTimer = 0f;
-        _coyoteTimer = 0f;
+        _remainingJumpBufferTime = 0f;
+        _remainingCoyoteTime = 0f;
     }
 
     private void ApplyVariableGravity(float fixedDeltaTime)

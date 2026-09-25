@@ -14,9 +14,11 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Collider2D))]
 
-public class EnemyBrain : MonoBehaviour, IStompable
+public class EnemyBrain : MonoBehaviour, IStompable, ITargetable
 {
     private const float DeathVelocityY = -9f;
+
+    [SerializeField, Min(0f)] private float _invincibilityDuration = 1f;
 
     private Health _health;
     private EnemyStrike _strike;
@@ -29,12 +31,27 @@ public class EnemyBrain : MonoBehaviour, IStompable
     private EnemyAnimator _animator;
     private Rigidbody2D _rigidbody;
     private Collider2D _collider;
+    private Invincibility _invincibility;
     private State _state = State.Patrol;
     private bool _isSuspended;
 
     public event Action<EnemyBrain> Died;
 
-    public bool IsAvailable => _isSuspended == false && _health.IsAlive;
+    public bool IsAvailable
+    {
+        get
+        {
+            if (_isSuspended)
+            {
+                return false;
+            }
+
+            return _health.IsAlive;
+        }
+    }
+
+    public Vector3 Position => transform.position;
+    public bool IsTargetable => _health.IsAlive;
 
     private void Awake()
     {
@@ -49,6 +66,7 @@ public class EnemyBrain : MonoBehaviour, IStompable
         _animator = new EnemyAnimator(GetComponent<Animator>());
         _rigidbody = GetComponent<Rigidbody2D>();
         _collider = GetComponent<Collider2D>();
+        _invincibility = new Invincibility(_invincibilityDuration);
     }
 
     private void OnEnable()
@@ -68,7 +86,7 @@ public class EnemyBrain : MonoBehaviour, IStompable
             return;
         }
 
-        _health.Tick(Time.deltaTime);
+        _invincibility.Tick(Time.deltaTime);
         _animator.SetSpeed(Mathf.Abs(_rigidbody.velocity.x));
     }
 
@@ -129,7 +147,17 @@ public class EnemyBrain : MonoBehaviour, IStompable
             return;
         }
 
-        _health.TakeDamage(_health.Current, sourcePosition);
+        TakeDamage(_health.Current, sourcePosition);
+    }
+
+    public int TakeDamage(int amount, Vector2 sourcePosition)
+    {
+        if (_isSuspended)
+        {
+            return 0;
+        }
+
+        return _invincibility.ApplyDamage(_health, amount, sourcePosition);
     }
 
     private void TickPatrol()
@@ -207,6 +235,11 @@ public class EnemyBrain : MonoBehaviour, IStompable
 
     private void OnHealthDepleted()
     {
+        if (_isSuspended)
+        {
+            return;
+        }
+
         if (_state == State.Dead)
         {
             return;

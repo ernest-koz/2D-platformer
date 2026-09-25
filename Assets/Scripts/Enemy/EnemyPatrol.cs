@@ -28,14 +28,14 @@ public class EnemyPatrol : MonoBehaviour
             return;
         }
 
-        if (_ground.HasGroundAhead(_facing.FacingDirection) == false)
+        if (_ground.HasGroundAhead(_facing.Direction) == false)
         {
             _facing.Flip();
             _mover.Stop();
             return;
         }
 
-        float patrolDirection = _route.GetDirectionToward(transform.position.x, _facing.FacingDirection);
+        float patrolDirection = _route.GetDirectionToward(transform.position.x, _facing.Direction);
 
         _mover.Move(patrolDirection);
         _facing.Face(patrolDirection);

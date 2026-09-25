@@ -7,10 +7,15 @@ public class VampirismView : MonoBehaviour
 
     private void Awake()
     {
+        _slider.minValue = 0f;
+        _slider.maxValue = 1f;
+    }
+
+    private void OnValidate()
+    {
         if (_slider == null)
         {
             Debug.LogError($"{nameof(VampirismView)} slider not assigned on {gameObject.name}.", gameObject);
-            enabled = false;
         }
     }
 

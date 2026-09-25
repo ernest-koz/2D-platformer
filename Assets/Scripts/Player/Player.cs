@@ -15,14 +15,14 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerAnimator))]
 [RequireComponent(typeof(HealthUI))]
 [RequireComponent(typeof(Vampirism))]
-[RequireComponent(typeof(Rigidbody2D))]
 
-public class Player : MonoBehaviour
+public class Player : MonoBehaviour, ITargetable
 {
     private const int ContactDamage = 1;
     private const float MovementInputThreshold = 0.01f;
 
     [SerializeField] private VampirismZone _vampirismZone;
+    [SerializeField, Min(0f)] private float _invincibilityDuration = 1f;
 
     private InputReader _input;
     private Mover _mover;
@@ -38,7 +38,7 @@ public class Player : MonoBehaviour
     private PlayerAnimator _animator;
     private HealthUI _healthUI;
     private Vampirism _vampirism;
-    private Rigidbody2D _rigidbody;
+    private Invincibility _invincibility;
     private bool _isDead;
     private bool _isSuspended;
 
@@ -46,8 +46,11 @@ public class Player : MonoBehaviour
     public event Action LevelFinished;
     public event Action Died;
     public event Action RestartRequested;
+    public event Action VampirismFillChanged;
 
     public float VampirismFill => _vampirism.Fill;
+    public Vector3 Position => transform.position;
+    public bool IsTargetable => _health.IsAlive;
 
     private void Awake()
     {
@@ -65,13 +68,7 @@ public class Player : MonoBehaviour
         _animator = GetComponent<PlayerAnimator>();
         _healthUI = GetComponent<HealthUI>();
         _vampirism = GetComponent<Vampirism>();
-        _rigidbody = GetComponent<Rigidbody2D>();
-
-        if (_vampirismZone == null)
-        {
-            Debug.LogError($"VampirismZone not assigned on {gameObject.name}.", gameObject);
-            enabled = false;
-        }
+        _invincibility = new Invincibility(_invincibilityDuration);
     }
 
     private void OnEnable()
@@ -82,8 +79,9 @@ public class Player : MonoBehaviour
         _health.Changed += OnHealthChanged;
         _health.Damaged += OnDamaged;
         _health.Died += OnHealthDepleted;
-        _health.InvincibilityChanged += OnInvincibilityChanged;
+        _invincibility.Changed += OnInvincibilityChanged;
         _vampirism.Drained += OnVampirismDrained;
+        _vampirism.FillChanged += OnVampirismFillChanged;
     }
 
     private void Start()
@@ -100,17 +98,12 @@ public class Player : MonoBehaviour
             RestartRequested?.Invoke();
         }
 
-        if (_isSuspended)
+        if (IsInactive())
         {
             return;
         }
 
-        if (_isDead)
-        {
-            return;
-        }
-
-        _health.Tick(Time.deltaTime);
+        _invincibility.Tick(Time.deltaTime);
         _fallDetector.Check();
 
         if (_isDead)
@@ -124,7 +117,15 @@ public class Player : MonoBehaviour
         }
 
         _vampirism.Tick(Time.deltaTime);
-        _vampirismZone.SetVisible(_vampirism.IsActive);
+
+        if (_vampirism.IsActive)
+        {
+            _vampirismZone.Show();
+        }
+        else
+        {
+            _vampirismZone.Hide();
+        }
 
         float direction = _input.Direction;
 
@@ -168,13 +169,37 @@ public class Player : MonoBehaviour
         _health.Changed -= OnHealthChanged;
         _health.Damaged -= OnDamaged;
         _health.Died -= OnHealthDepleted;
-        _health.InvincibilityChanged -= OnInvincibilityChanged;
+        _invincibility.Changed -= OnInvincibilityChanged;
         _vampirism.Drained -= OnVampirismDrained;
+        _vampirism.FillChanged -= OnVampirismFillChanged;
+    }
+
+    private void OnValidate()
+    {
+        if (_vampirismZone == null)
+        {
+            Debug.LogError($"VampirismZone not assigned on {gameObject.name}.", gameObject);
+        }
     }
 
     public bool Heal(int amount)
     {
-        return _health.Heal(amount);
+        if (_isDead)
+        {
+            return false;
+        }
+
+        return _health.ReceiveHealing(amount);
+    }
+
+    public int TakeDamage(int amount, Vector2 sourcePosition)
+    {
+        if (_isSuspended)
+        {
+            return 0;
+        }
+
+        return _invincibility.ApplyDamage(_health, amount, sourcePosition);
     }
 
     public void Suspend()
@@ -187,10 +212,10 @@ public class Player : MonoBehaviour
         _isSuspended = true;
         _input.Block();
         _mover.Stop();
-        _flicker.SetFlickering(false);
+        _flicker.StopFlickering();
         _animator.SetMovement(0f, _ground.IsGrounded);
         _vampirism.Interrupt();
-        _vampirismZone.SetVisible(false);
+        _vampirismZone.Hide();
     }
 
     private void OnTriggerEntered(Collider2D other)
@@ -234,7 +259,7 @@ public class Player : MonoBehaviour
             return;
         }
 
-        _health.TakeDamage(ContactDamage, collision.transform.position);
+        TakeDamage(ContactDamage, collision.transform.position);
     }
 
     private bool IsInactive()
@@ -265,12 +290,23 @@ public class Player : MonoBehaviour
 
     private void OnInvincibilityChanged(bool isInvincible)
     {
-        _flicker.SetFlickering(isInvincible);
+        if (isInvincible)
+        {
+            _flicker.StartFlickering();
+            return;
+        }
+
+        _flicker.StopFlickering();
     }
 
     private void OnVampirismDrained(int amount)
     {
-        _health.Heal(amount);
+        _health.ReceiveHealing(amount);
+    }
+
+    private void OnVampirismFillChanged()
+    {
+        VampirismFillChanged?.Invoke();
     }
 
     private void OnHealthDepleted()
@@ -293,10 +329,10 @@ public class Player : MonoBehaviour
         _isDead = true;
         _input.Block();
         _mover.Stop();
-        _flicker.SetFlickering(false);
+        _flicker.StopFlickering();
         _animator.PlayDeath();
         _vampirism.Interrupt();
-        _vampirismZone.SetVisible(false);
+        _vampirismZone.Hide();
         Died?.Invoke();
     }
 }

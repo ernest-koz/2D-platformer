@@ -4,17 +4,16 @@ public class PlayerAnimator : MonoBehaviour
 {
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
     private static readonly int IsGroundedHash = Animator.StringToHash("IsGrounded");
-    private static readonly int HurtTriggerHash = Animator.StringToHash("Hurt");
-    private static readonly int DieTriggerHash = Animator.StringToHash("Die");
+    private static readonly int HurtHash = Animator.StringToHash("Hurt");
+    private static readonly int DieHash = Animator.StringToHash("Die");
 
     [SerializeField] private Animator _animator;
 
-    private void Awake()
+    private void OnValidate()
     {
         if (_animator == null)
         {
-            Debug.LogError($"{nameof(PlayerAnimator)} Animator not assigned on {gameObject.name}.", gameObject);
-            enabled = false;
+            Debug.LogError($"{nameof(PlayerAnimator)} animator not assigned on {gameObject.name}.", gameObject);
         }
     }
 
@@ -26,11 +25,11 @@ public class PlayerAnimator : MonoBehaviour
 
     public void PlayHurt()
     {
-        _animator.SetTrigger(HurtTriggerHash);
+        _animator.SetTrigger(HurtHash);
     }
 
     public void PlayDeath()
     {
-        _animator.SetTrigger(DieTriggerHash);
+        _animator.SetTrigger(DieHash);
     }
 }

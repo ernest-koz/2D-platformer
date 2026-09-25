@@ -31,13 +31,13 @@ public class EnemyChase : MonoBehaviour
 
         _facing.Face(target.Position.x - transform.position.x);
 
-        if (_ground.HasGroundAhead(_facing.FacingDirection) == false)
+        if (_ground.HasGroundAhead(_facing.Direction) == false)
         {
             _mover.Stop();
             return false;
         }
 
-        _mover.Move(_facing.FacingDirection);
+        _mover.Move(_facing.Direction);
         return true;
     }
 }

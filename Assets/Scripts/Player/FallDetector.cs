@@ -5,13 +5,13 @@ public class FallDetector : MonoBehaviour
 {
     [SerializeField] private float _deathY = -20f;
 
-    private bool _isDead;
+    private bool _hasReportedDeath;
 
     public event Action FellToDeath;
 
     public void Check()
     {
-        if (_isDead)
+        if (_hasReportedDeath)
         {
             return;
         }
@@ -21,7 +21,7 @@ public class FallDetector : MonoBehaviour
             return;
         }
 
-        _isDead = true;
+        _hasReportedDeath = true;
         FellToDeath?.Invoke();
     }
 }

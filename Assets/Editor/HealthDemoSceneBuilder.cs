@@ -4,7 +4,6 @@ using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
@@ -12,10 +11,17 @@ using Object = UnityEngine.Object;
 public static class HealthDemoSceneBuilder
 {
     private const string ScenePath = "Assets/Scenes/HealthDemo.unity";
+    private const string NormalSpritePath = "Assets/My Assets/Fantasy Wooden GUI/TextBTN_Big.png";
+    private const string PressedSpritePath = "Assets/My Assets/Fantasy Wooden GUI/TextBTN_Big_Pressed.png";
+    private const string HandCursorPath = "Assets/My Assets/UI/hand_cursor.png";
+    private const float CaptionLift = 16f;
 
     private static readonly Color WoodenTint = new Color(0.7547f, 0.6372f, 0.6372f);
     private static readonly Color SceneBackgroundColor = new Color(0.08f, 0.08f, 0.10f);
     private static readonly Color PanelColor = new Color(0f, 0f, 0f, 0.55f);
+    private static readonly Color InstantBarFillColor = new Color(0.30f, 0.80f, 0.35f);
+    private static readonly Color SmoothBarFillColor = new Color(0.95f, 0.62f, 0.20f);
+    private static readonly Color CaptionColor = new Color(0.82f, 0.82f, 0.82f);
 
     [MenuItem("Tools/Health Demo/Build Demo Scene")]
     public static void BuildFromMenu()
@@ -44,38 +50,36 @@ public static class HealthDemoSceneBuilder
 
         Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-        CreateCamera();
+        EditorUiSceneUtility.CreateCamera(SceneBackgroundColor);
 
-        GameObject root = new GameObject("HealthDemo");
+        GameObject root = new GameObject(HealthDemoConstants.DemoRootName);
         root.SetActive(false);
 
         Health health = root.AddComponent<Health>();
         SerializedPropertyUtility.SetInteger(health, "_maximum", HealthDemoConstants.MaximumHealth);
 
-        Canvas canvas = CreateCanvas(root.transform);
-        DefaultControls.Resources resources = CreateResources();
+        Canvas canvas = EditorUiSceneUtility.CreateCanvas(root.transform, 0f);
+        DefaultControls.Resources resources = EditorUiSceneUtility.CreateResources();
 
         RectTransform panel = CreatePanel(canvas.transform);
 
         CreateHealthText(panel, health);
-        CreateBar(panel, "InstantHealthBar", "Бар здоровья", new Vector2(0f, -240f),
-            new Color(0.30f, 0.80f, 0.35f), resources, health, false);
-        CreateBar(panel, "SmoothHealthBar", "Плавный бар здоровья", new Vector2(0f, -380f),
-            new Color(0.95f, 0.62f, 0.20f), resources, health, true);
+        CreateInstantBar(panel, HealthDemoConstants.InstantBarName, "Бар здоровья", new Vector2(0f, -240f), InstantBarFillColor, resources, health);
+        CreateSmoothBar(panel, HealthDemoConstants.SmoothBarName, "Плавный бар здоровья", new Vector2(0f, -380f), SmoothBarFillColor, resources, health);
 
-        Button damageButton = CreateButton(panel, "DamageButton", "Урон -10", new Vector2(-230f, -560f));
+        Button damageButton = CreateButton(panel, HealthDemoConstants.DamageButtonName, "Урон -10", new Vector2(-230f, -560f));
         DamageButton damageAction = damageButton.gameObject.AddComponent<DamageButton>();
         SerializedPropertyUtility.SetObjectReference(damageAction, "_health", health);
         SerializedPropertyUtility.SetObjectReference(damageAction, "_button", damageButton);
         SerializedPropertyUtility.SetInteger(damageAction, "_amount", HealthDemoConstants.SimulatedDamage);
 
-        Button healButton = CreateButton(panel, "HealButton", "Лечение +10", new Vector2(230f, -560f));
+        Button healButton = CreateButton(panel, HealthDemoConstants.HealButtonName, "Лечение +10", new Vector2(230f, -560f));
         HealButton healAction = healButton.gameObject.AddComponent<HealButton>();
         SerializedPropertyUtility.SetObjectReference(healAction, "_health", health);
         SerializedPropertyUtility.SetObjectReference(healAction, "_button", healButton);
         SerializedPropertyUtility.SetInteger(healAction, "_amount", HealthDemoConstants.SimulatedHeal);
 
-        new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+        EditorUiSceneUtility.CreateEventSystem();
 
         root.SetActive(true);
 
@@ -124,28 +128,13 @@ public static class HealthDemoSceneBuilder
         return asset;
     }
 
-    private static Canvas CreateCanvas(Transform parent)
-    {
-        GameObject canvasObject = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-        canvasObject.transform.SetParent(parent, false);
-
-        Canvas canvas = canvasObject.GetComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-
-        CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
-
-        return canvas;
-    }
-
     private static RectTransform CreatePanel(Transform parent)
     {
-        RectTransform rectTransform = CreateElement("Panel", parent);
+        RectTransform rectTransform = EditorUiSceneUtility.CreateElement(HealthDemoConstants.PanelName, parent);
         AnchorTop(rectTransform, new Vector2(0f, -110f), new Vector2(1240f, 860f));
 
         Image image = rectTransform.gameObject.AddComponent<Image>();
-        image.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+        image.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>(HealthDemoConstants.UiSpritePath);
         image.type = Image.Type.Sliced;
         image.color = PanelColor;
 
@@ -154,7 +143,7 @@ public static class HealthDemoSceneBuilder
 
     private static void CreateHealthText(Transform parent, Health health)
     {
-        RectTransform rectTransform = CreateElement("HealthText", parent);
+        RectTransform rectTransform = EditorUiSceneUtility.CreateElement(HealthDemoConstants.HealthTextName, parent);
         AnchorTop(rectTransform, new Vector2(0f, -80f), new Vector2(500f, 70f));
 
         TextMeshProUGUI label = rectTransform.gameObject.AddComponent<TextMeshProUGUI>();
@@ -169,8 +158,29 @@ public static class HealthDemoSceneBuilder
         SerializedPropertyUtility.SetObjectReference(view, "_text", label);
     }
 
-    private static void CreateBar(Transform parent, string name, string caption, Vector2 position,
-        Color fillColor, DefaultControls.Resources resources, Health health, bool isSmooth)
+    private static void CreateInstantBar(Transform parent, string name, string caption, Vector2 position,
+        Color fillColor, DefaultControls.Resources resources, Health health)
+    {
+        Slider slider = CreateSliderCore(parent, name, caption, position, fillColor, resources);
+
+        HealthBar view = slider.gameObject.AddComponent<HealthBar>();
+        SerializedPropertyUtility.SetObjectReference(view, "_health", health);
+        SerializedPropertyUtility.SetObjectReference(view, "_slider", slider);
+    }
+
+    private static void CreateSmoothBar(Transform parent, string name, string caption, Vector2 position,
+        Color fillColor, DefaultControls.Resources resources, Health health)
+    {
+        Slider slider = CreateSliderCore(parent, name, caption, position, fillColor, resources);
+
+        SmoothHealthBar view = slider.gameObject.AddComponent<SmoothHealthBar>();
+        SerializedPropertyUtility.SetFloat(view, "_fillDuration", HealthDemoConstants.SmoothFillDuration);
+        SerializedPropertyUtility.SetObjectReference(view, "_health", health);
+        SerializedPropertyUtility.SetObjectReference(view, "_slider", slider);
+    }
+
+    private static Slider CreateSliderCore(Transform parent, string name, string caption, Vector2 position,
+        Color fillColor, DefaultControls.Resources resources)
     {
         CreateBarCaption(parent, name, caption, new Vector2(position.x, position.y + 40f));
 
@@ -188,31 +198,19 @@ public static class HealthDemoSceneBuilder
         slider.maxValue = 1f;
         slider.value = 1f;
 
-        Image background = sliderObject.transform.Find("Background").GetComponent<Image>();
-        background.color = new Color(0.12f, 0.12f, 0.12f, 0.9f);
+        Image background = sliderObject.transform.Find(HealthDemoConstants.SliderBackgroundName).GetComponent<Image>();
+        background.color = HealthDemoConstants.SliderBackgroundColor;
 
-        Image fill = sliderObject.transform.Find("Fill Area/Fill").GetComponent<Image>();
+        Image fill = sliderObject.transform.Find(HealthDemoConstants.SliderFillAreaFillName).GetComponent<Image>();
         fill.color = fillColor;
 
-        HealthBar view;
-        if (isSmooth)
-        {
-            view = sliderObject.AddComponent<SmoothHealthBar>();
-            SerializedPropertyUtility.SetFloat(view, "_fillDuration", HealthDemoConstants.SmoothFillDuration);
-        }
-        else
-        {
-            view = sliderObject.AddComponent<HealthBar>();
-        }
-
-        SerializedPropertyUtility.SetObjectReference(view, "_health", health);
-        SerializedPropertyUtility.SetObjectReference(view, "_slider", slider);
+        return slider;
     }
 
     private static void CreateCaption(Transform parent, string name, string text, float fontSize, Color color, float bottomOffset)
     {
-        RectTransform rectTransform = CreateElement(name, parent);
-        Stretch(rectTransform);
+        RectTransform rectTransform = EditorUiSceneUtility.CreateElement(name, parent);
+        EditorUiSceneUtility.Stretch(rectTransform);
         rectTransform.offsetMin = new Vector2(0f, bottomOffset);
 
         TextMeshProUGUI label = rectTransform.gameObject.AddComponent<TextMeshProUGUI>();
@@ -225,37 +223,13 @@ public static class HealthDemoSceneBuilder
 
     private static void CreateBarCaption(Transform parent, string hostName, string text, Vector2 position)
     {
-        RectTransform rectTransform = CreateElement($"{hostName}Caption", parent);
+        RectTransform rectTransform = EditorUiSceneUtility.CreateElement($"{hostName}Caption", parent);
         AnchorTop(rectTransform, position, new Vector2(400f, 30f));
-        CreateCaption(rectTransform, "Label", text, 26f, new Color(0.82f, 0.82f, 0.82f), 0f);
-    }
-
-    private static void Stretch(RectTransform rectTransform)
-    {
-        rectTransform.anchorMin = Vector2.zero;
-        rectTransform.anchorMax = Vector2.one;
-        rectTransform.offsetMin = Vector2.zero;
-        rectTransform.offsetMax = Vector2.zero;
-    }
-
-    private static void CreateCamera()
-    {
-        GameObject cameraObject = new GameObject("Main Camera", typeof(Camera), typeof(AudioListener));
-        cameraObject.tag = "MainCamera";
-        cameraObject.transform.position = new Vector3(0f, 0f, -10f);
-
-        Camera camera = cameraObject.GetComponent<Camera>();
-        camera.clearFlags = CameraClearFlags.SolidColor;
-        camera.backgroundColor = SceneBackgroundColor;
+        CreateCaption(rectTransform, "Label", text, 26f, CaptionColor, 0f);
     }
 
     private static Button CreateButton(Transform parent, string name, string caption, Vector2 position)
     {
-        const string NormalSpritePath = "Assets/My Assets/Fantasy Wooden GUI/TextBTN_Big.png";
-        const string PressedSpritePath = "Assets/My Assets/Fantasy Wooden GUI/TextBTN_Big_Pressed.png";
-        const string HandCursorPath = "Assets/My Assets/UI/hand_cursor.png";
-        const float CaptionLift = 16f;
-
         GameObject buttonObject = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button), typeof(HoverCursor));
         RectTransform rectTransform = (RectTransform)buttonObject.transform;
         rectTransform.SetParent(parent, false);
@@ -280,14 +254,6 @@ public static class HealthDemoSceneBuilder
         return button;
     }
 
-    private static RectTransform CreateElement(string name, Transform parent)
-    {
-        GameObject element = new GameObject(name, typeof(RectTransform));
-        element.transform.SetParent(parent, false);
-
-        return (RectTransform)element.transform;
-    }
-
     private static void AnchorTop(RectTransform rectTransform, Vector2 position, Vector2 size)
     {
         rectTransform.anchorMin = new Vector2(0.5f, 1f);
@@ -295,19 +261,5 @@ public static class HealthDemoSceneBuilder
         rectTransform.pivot = new Vector2(0.5f, 1f);
         rectTransform.anchoredPosition = position;
         rectTransform.sizeDelta = size;
-    }
-
-    public static DefaultControls.Resources CreateResources()
-    {
-        return new DefaultControls.Resources
-        {
-            standard = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd"),
-            background = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Background.psd"),
-            inputField = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/InputFieldBackground.psd"),
-            knob = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd"),
-            checkmark = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Checkmark.psd"),
-            dropdown = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/DropdownArrow.psd"),
-            mask = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UIMask.psd")
-        };
     }
 }
