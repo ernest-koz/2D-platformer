@@ -16,6 +16,11 @@ public class GroundDetector : MonoBehaviour
         {
             Debug.LogError($"GroundCheck Transform not assigned on {gameObject.name}.", gameObject);
         }
+
+        if (_groundLayer.value == 0)
+        {
+            Debug.LogError($"GroundLayer is not assigned on {gameObject.name}.", gameObject);
+        }
     }
 
     private void OnDrawGizmosSelected()

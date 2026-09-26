@@ -14,20 +14,30 @@ public static class HealthDemoSceneValidator
 
         Health health = root.GetComponent<Health>();
         ThrowIfNull(health, "Health component not found");
-        AssertEqual(SerializedPropertyUtility.GetInteger(health, "_maximum"), HealthDemoConstants.MaximumHealth, "Health._maximum");
+        AssertEqual(
+            SerializedPropertyUtility.GetInteger(health, "_maximum"),
+            HealthDemoConstants.MaximumHealth,
+            "Health._maximum");
 
         Canvas canvas = root.GetComponentInChildren<Canvas>();
         ThrowIfNull(canvas, "Canvas not found");
-        ThrowIfNull(UnityEngine.Object.FindObjectOfType<EventSystem>(), "EventSystem not found");
-        ThrowIfNull(UnityEngine.Object.FindObjectOfType<Camera>(), "Main Camera not found");
+        ThrowIfNull(UnityEngine.Object.FindFirstObjectByType<EventSystem>(), "EventSystem not found");
+        ThrowIfNull(UnityEngine.Object.FindFirstObjectByType<Camera>(), "Main Camera not found");
 
         ValidateHealthText(canvas, health);
-        ValidateBar(canvas, HealthDemoConstants.InstantBarName, health, false);
-        ValidateBar(canvas, HealthDemoConstants.SmoothBarName, health, true);
-        ValidateButton(canvas, HealthDemoConstants.DamageButtonName, typeof(DamageButton), health, HealthDemoConstants.SimulatedDamage);
-        ValidateButton(canvas, HealthDemoConstants.HealButtonName, typeof(HealButton), health, HealthDemoConstants.SimulatedHeal);
+        ValidateInstantBar(canvas, health);
+        ValidateSmoothBar(canvas, health);
+        ValidateButton(
+            canvas,
+            HealthDemoConstants.DamageButtonName,
+            typeof(DamageButton),
+            health,
+            HealthDemoConstants.SimulatedDamage);
+        ValidateButton(
+            canvas, HealthDemoConstants.HealButtonName, typeof(HealButton), health, HealthDemoConstants.SimulatedHeal);
 
-        Debug.Log($"[HealthDemoSceneValidator] {scenePath} is valid: health, three indicators and two buttons are wired.");
+        Debug.Log(
+            $"[HealthDemoSceneValidator] {scenePath} is valid: health, three indicators and two buttons are wired.");
     }
 
     private static void ValidateHealthText(Canvas canvas, Health health)
@@ -44,7 +54,26 @@ public static class HealthDemoSceneValidator
         AssertReference(SerializedPropertyUtility.GetReference(view, "_text"), label, "HealthText._text");
     }
 
-    private static void ValidateBar(Canvas canvas, string name, Health health, bool isSmooth)
+    private static void ValidateInstantBar(Canvas canvas, Health health)
+    {
+        HealthBar view = ValidateBarCore(canvas, HealthDemoConstants.InstantBarName, health);
+        ThrowIfPlainBarUsesSmooth(view, HealthDemoConstants.InstantBarName);
+    }
+
+    private static void ValidateSmoothBar(Canvas canvas, Health health)
+    {
+        HealthBar view = ValidateBarCore(canvas, HealthDemoConstants.SmoothBarName, health);
+        ThrowIfNull(
+            view.GetComponent<SmoothHealthBar>(), $"{HealthDemoConstants.SmoothBarName} must use SmoothHealthBar");
+
+        string durationField = $"{HealthDemoConstants.SmoothBarName}._fillDuration";
+        AssertEqual(
+            SerializedPropertyUtility.GetFloat(view, "_fillDuration"),
+            HealthDemoConstants.SmoothFillDuration,
+            durationField);
+    }
+
+    private static HealthBar ValidateBarCore(Canvas canvas, string name, Health health)
     {
         Transform host = canvas.transform.Find($"{HealthDemoConstants.PanelName}/{name}");
         ThrowIfNull(host, $"{name} slider not found");
@@ -60,18 +89,10 @@ public static class HealthDemoSceneValidator
         HealthBar view = host.GetComponent<HealthBar>();
         ThrowIfNull(view, $"{name} view not found");
 
-        if (isSmooth)
-        {
-            ThrowIfNull(host.GetComponent<SmoothHealthBar>(), $"{name} must use SmoothHealthBar");
-            AssertEqual(SerializedPropertyUtility.GetFloat(view, "_fillDuration"), HealthDemoConstants.SmoothFillDuration, $"{name}._fillDuration");
-        }
-        else
-        {
-            ThrowIfPlainBarUsesSmooth(view, name);
-        }
-
         AssertReference(SerializedPropertyUtility.GetReference(view, "_health"), health, $"{name}._health");
         AssertReference(SerializedPropertyUtility.GetReference(view, "_slider"), slider, $"{name}._slider");
+
+        return view;
     }
 
     private static void ValidateButton(Canvas canvas, string name, Type actionType, Health health, int amount)
@@ -94,7 +115,8 @@ public static class HealthDemoSceneValidator
         ThrowIfNull(action, $"{name} has no {actionType.Name}");
 
         AssertEqual(button.onClick.GetPersistentEventCount(), 0, $"{name}.onClick persistent calls");
-        AssertReference(SerializedPropertyUtility.GetReference(action, "_health"), health, $"{actionType.Name}._health");
+        AssertReference(
+            SerializedPropertyUtility.GetReference(action, "_health"), health, $"{actionType.Name}._health");
         AssertEqual(SerializedPropertyUtility.GetInteger(action, "_amount"), amount, $"{actionType.Name}._amount");
     }
 
@@ -108,14 +130,6 @@ public static class HealthDemoSceneValidator
         }
 
         throw new InvalidOperationException($"[HealthDemoSceneValidator] {name} must use plain HealthBar.");
-    }
-
-    private static void ThrowIfNull(object value, string message)
-    {
-        if (value == null)
-        {
-            throw new InvalidOperationException($"[HealthDemoSceneValidator] {message}.");
-        }
     }
 
     private static void ThrowIfNull(UnityEngine.Object value, string message)
@@ -138,7 +152,8 @@ public static class HealthDemoSceneValidator
     {
         if (Equals(actual, expected) == false)
         {
-            throw new InvalidOperationException($"[HealthDemoSceneValidator] {field} is {actual}, expected {expected}.");
+            throw new InvalidOperationException(
+                $"[HealthDemoSceneValidator] {field} is {actual}, expected {expected}.");
         }
     }
 }

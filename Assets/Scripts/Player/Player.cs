@@ -14,14 +14,12 @@ using UnityEngine;
 [RequireComponent(typeof(DamageFlicker))]
 [RequireComponent(typeof(PlayerAnimator))]
 [RequireComponent(typeof(HealthUI))]
-[RequireComponent(typeof(Vampirism))]
 
 public class Player : MonoBehaviour, ITargetable
 {
     private const int ContactDamage = 1;
     private const float MovementInputThreshold = 0.01f;
 
-    [SerializeField] private VampirismZone _vampirismZone;
     [SerializeField, Min(0f)] private float _invincibilityDuration = 1f;
 
     private InputReader _input;
@@ -37,20 +35,17 @@ public class Player : MonoBehaviour, ITargetable
     private DamageFlicker _flicker;
     private PlayerAnimator _animator;
     private HealthUI _healthUI;
-    private Vampirism _vampirism;
     private Invincibility _invincibility;
-    private bool _isDead;
+    private bool _hasDied;
     private bool _isSuspended;
 
     public event Action<Pickup> PickupContacted;
     public event Action LevelFinished;
     public event Action Died;
     public event Action RestartRequested;
-    public event Action VampirismFillChanged;
 
-    public float VampirismFill => _vampirism.Fill;
     public Vector3 Position => transform.position;
-    public bool IsTargetable => _health.IsAlive;
+    public bool IsTargetable => IsInactive() == false;
 
     private void Awake()
     {
@@ -67,7 +62,6 @@ public class Player : MonoBehaviour, ITargetable
         _flicker = GetComponent<DamageFlicker>();
         _animator = GetComponent<PlayerAnimator>();
         _healthUI = GetComponent<HealthUI>();
-        _vampirism = GetComponent<Vampirism>();
         _invincibility = new Invincibility(_invincibilityDuration);
     }
 
@@ -80,8 +74,6 @@ public class Player : MonoBehaviour, ITargetable
         _health.Damaged += OnDamaged;
         _health.Died += OnHealthDepleted;
         _invincibility.Changed += OnInvincibilityChanged;
-        _vampirism.Drained += OnVampirismDrained;
-        _vampirism.FillChanged += OnVampirismFillChanged;
     }
 
     private void Start()
@@ -106,25 +98,9 @@ public class Player : MonoBehaviour, ITargetable
         _invincibility.Tick(Time.deltaTime);
         _fallDetector.Check();
 
-        if (_isDead)
+        if (_hasDied)
         {
             return;
-        }
-
-        if (_input.IsVampirismPressed)
-        {
-            _vampirism.Activate();
-        }
-
-        _vampirism.Tick(Time.deltaTime);
-
-        if (_vampirism.IsActive)
-        {
-            _vampirismZone.Show();
-        }
-        else
-        {
-            _vampirismZone.Hide();
         }
 
         float direction = _input.Direction;
@@ -143,13 +119,7 @@ public class Player : MonoBehaviour, ITargetable
 
     private void FixedUpdate()
     {
-        if (_isSuspended)
-        {
-            _mover.Stop();
-            return;
-        }
-
-        if (_isDead)
+        if (IsInactive())
         {
             _mover.Stop();
             return;
@@ -170,21 +140,11 @@ public class Player : MonoBehaviour, ITargetable
         _health.Damaged -= OnDamaged;
         _health.Died -= OnHealthDepleted;
         _invincibility.Changed -= OnInvincibilityChanged;
-        _vampirism.Drained -= OnVampirismDrained;
-        _vampirism.FillChanged -= OnVampirismFillChanged;
-    }
-
-    private void OnValidate()
-    {
-        if (_vampirismZone == null)
-        {
-            Debug.LogError($"VampirismZone not assigned on {gameObject.name}.", gameObject);
-        }
     }
 
     public bool Heal(int amount)
     {
-        if (_isDead)
+        if (IsInactive())
         {
             return false;
         }
@@ -194,7 +154,7 @@ public class Player : MonoBehaviour, ITargetable
 
     public int TakeDamage(int amount, Vector2 sourcePosition)
     {
-        if (_isSuspended)
+        if (IsInactive())
         {
             return 0;
         }
@@ -214,8 +174,6 @@ public class Player : MonoBehaviour, ITargetable
         _mover.Stop();
         _flicker.StopFlickering();
         _animator.SetMovement(0f, _ground.IsGrounded);
-        _vampirism.Interrupt();
-        _vampirismZone.Hide();
     }
 
     private void OnTriggerEntered(Collider2D other)
@@ -269,7 +227,7 @@ public class Player : MonoBehaviour, ITargetable
             return true;
         }
 
-        if (_isDead)
+        if (_hasDied)
         {
             return true;
         }
@@ -299,16 +257,6 @@ public class Player : MonoBehaviour, ITargetable
         _flicker.StopFlickering();
     }
 
-    private void OnVampirismDrained(int amount)
-    {
-        _health.ReceiveHealing(amount);
-    }
-
-    private void OnVampirismFillChanged()
-    {
-        VampirismFillChanged?.Invoke();
-    }
-
     private void OnHealthDepleted()
     {
         Die();
@@ -321,18 +269,16 @@ public class Player : MonoBehaviour, ITargetable
 
     private void Die()
     {
-        if (_isDead)
+        if (_hasDied)
         {
             return;
         }
 
-        _isDead = true;
+        _hasDied = true;
         _input.Block();
         _mover.Stop();
         _flicker.StopFlickering();
         _animator.PlayDeath();
-        _vampirism.Interrupt();
-        _vampirismZone.Hide();
         Died?.Invoke();
     }
 }

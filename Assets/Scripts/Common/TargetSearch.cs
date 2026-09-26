@@ -12,6 +12,16 @@ public static class TargetSearch
 
     public static int Collect(Vector2 origin, float range, LayerMask targetLayer, ref Collider2D[] buffer)
     {
+        if (buffer == null)
+        {
+            buffer = CreateBuffer();
+        }
+
+        if (buffer.Length == 0)
+        {
+            buffer = CreateBuffer();
+        }
+
         ContactFilter2D filter = new ContactFilter2D();
         filter.SetLayerMask(targetLayer);
 

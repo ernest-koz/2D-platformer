@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class DamageKnockback : MonoBehaviour
 {
-    [SerializeField] private float _knockbackX = 4.5f;
-    [SerializeField] private float _knockbackY = 7.5f;
+    [SerializeField, Min(0f)] private float _knockbackX = 4.5f;
+    [SerializeField, Min(0f)] private float _knockbackY = 7.5f;
 
     private Rigidbody2D _rigidbody;
 

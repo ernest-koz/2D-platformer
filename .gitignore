@@ -122,3 +122,14 @@ Assets/Editor/Tests/
 
 # Screenshots (play-test captures, not version-controlled)
 Assets/Screenshots/
+/Assets/Screenshots.meta
+
+# AI assistant tooling (local; not version-controlled)
+.zcode/
+.agents/
+.claude/
+.opencode/
+
+# MCP For Unity components (local editor tooling; not version-controlled)
+/Assets/Plugins/Roslyn/
+/Assets/Plugins/Roslyn.meta

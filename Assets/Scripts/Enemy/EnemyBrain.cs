@@ -51,7 +51,7 @@ public class EnemyBrain : MonoBehaviour, IStompable, ITargetable
     }
 
     public Vector3 Position => transform.position;
-    public bool IsTargetable => _health.IsAlive;
+    public bool IsTargetable => IsAvailable;
 
     private void Awake()
     {
@@ -140,19 +140,19 @@ public class EnemyBrain : MonoBehaviour, IStompable, ITargetable
         _animator.SetSpeed(0f);
     }
 
-    public void Defeat(Vector2 sourcePosition)
+    public void TakeStompDamage(int amount, Vector2 sourcePosition)
     {
         if (IsAvailable == false)
         {
             return;
         }
 
-        TakeDamage(_health.Current, sourcePosition);
+        _health.TakeDamage(amount, sourcePosition);
     }
 
     public int TakeDamage(int amount, Vector2 sourcePosition)
     {
-        if (_isSuspended)
+        if (IsAvailable == false)
         {
             return 0;
         }
@@ -249,6 +249,7 @@ public class EnemyBrain : MonoBehaviour, IStompable, ITargetable
         _mover.Stop();
         _collider.enabled = false;
         _rigidbody.velocity = new Vector2(0f, DeathVelocityY);
+        _animator.SetSpeed(0f);
         _animator.PlayDeath();
         Died?.Invoke(this);
     }

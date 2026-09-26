@@ -5,8 +5,9 @@ using UnityEngine;
 public class PlayerStomp : MonoBehaviour
 {
     [Header("Stomp")]
-    [SerializeField] private float _bounceForce = 14f;
-    [SerializeField] private float _checkRadius = 0.35f;
+    [SerializeField, Min(0f)] private float _bounceForce = 14f;
+    [SerializeField, Min(0f)] private float _checkRadius = 0.35f;
+    [SerializeField, Min(1)] private int _damage = 1;
     [SerializeField] private LayerMask _enemyLayer;
 
     private Rigidbody2D _rigidbody;
@@ -55,7 +56,7 @@ public class PlayerStomp : MonoBehaviour
             return;
         }
 
-        enemy.Defeat(transform.position);
+        enemy.TakeStompDamage(_damage, transform.position);
 
         Bounce();
     }

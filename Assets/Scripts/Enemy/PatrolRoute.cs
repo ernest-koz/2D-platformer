@@ -2,11 +2,11 @@ using UnityEngine;
 
 public class PatrolRoute : MonoBehaviour
 {
+    private const float LeftDirection = -1f;
+    private const float RightDirection = 1f;
+
     [SerializeField] private float _leftBoundary = -3f;
     [SerializeField] private float _rightBoundary = 3f;
-
-    public float LeftBoundary => _leftBoundary;
-    public float RightBoundary => _rightBoundary;
 
     private void OnDrawGizmosSelected()
     {
@@ -22,7 +22,7 @@ public class PatrolRoute : MonoBehaviour
         {
             if (currentX >= _rightBoundary)
             {
-                return -1f;
+                return LeftDirection;
             }
         }
 
@@ -30,7 +30,7 @@ public class PatrolRoute : MonoBehaviour
         {
             if (currentX <= _leftBoundary)
             {
-                return 1f;
+                return RightDirection;
             }
         }
 

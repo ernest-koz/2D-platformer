@@ -11,7 +11,6 @@ public class GameSession : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private Player _player;
-    [SerializeField] private VampirismView _vampirismView;
 
     [Header("Enemies")]
     [SerializeField] private EnemyBrain[] _enemies = new EnemyBrain[0];
@@ -49,7 +48,6 @@ public class GameSession : MonoBehaviour
         CountLevelPickups();
         CountEnemies();
         _coinView.Render(_totalCoinsCollected);
-        _vampirismView.Render(_player.VampirismFill);
     }
 
     private void Update()
@@ -73,11 +71,6 @@ public class GameSession : MonoBehaviour
         if (_player == null)
         {
             Debug.LogError($"Player not assigned on {gameObject.name}.", gameObject);
-        }
-
-        if (_vampirismView == null)
-        {
-            Debug.LogError($"VampirismView not assigned on {gameObject.name}.", gameObject);
         }
 
         for (int i = 0; i < _enemies.Length; i++)
@@ -108,7 +101,7 @@ public class GameSession : MonoBehaviour
         _coinView.Render(_totalCoinsCollected);
     }
 
-    public void RestartLevel()
+    private void RestartLevel()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
@@ -134,11 +127,6 @@ public class GameSession : MonoBehaviour
 
         foreach (PickupSpawner spawner in _coinSpawners)
         {
-            if (spawner == null)
-            {
-                continue;
-            }
-
             _totalCoinsInLevel += spawner.TotalCount;
         }
     }
@@ -149,11 +137,6 @@ public class GameSession : MonoBehaviour
 
         foreach (EnemyBrain enemy in _enemies)
         {
-            if (enemy == null)
-            {
-                continue;
-            }
-
             _totalEnemiesInLevel++;
         }
     }
@@ -164,7 +147,6 @@ public class GameSession : MonoBehaviour
         _player.LevelFinished += OnLevelFinished;
         _player.Died += OnPlayerDied;
         _player.RestartRequested += OnRestartRequested;
-        _player.VampirismFillChanged += OnVampirismFillChanged;
     }
 
     private void UnsubscribePlayerEvents()
@@ -173,18 +155,12 @@ public class GameSession : MonoBehaviour
         _player.LevelFinished -= OnLevelFinished;
         _player.Died -= OnPlayerDied;
         _player.RestartRequested -= OnRestartRequested;
-        _player.VampirismFillChanged -= OnVampirismFillChanged;
     }
 
     private void SubscribeEnemyEvents()
     {
         foreach (EnemyBrain enemy in _enemies)
         {
-            if (enemy == null)
-            {
-                continue;
-            }
-
             enemy.Died += OnEnemyDied;
         }
     }
@@ -200,16 +176,6 @@ public class GameSession : MonoBehaviour
 
             enemy.Died -= OnEnemyDied;
         }
-    }
-
-    private void OnVampirismFillChanged()
-    {
-        if (IsPlaying() == false)
-        {
-            return;
-        }
-
-        _vampirismView.Render(_player.VampirismFill);
     }
 
     private void OnPickupContacted(Pickup pickup)

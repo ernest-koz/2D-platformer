@@ -10,11 +10,12 @@ public class HoverCursor : MonoBehaviour, IPointerEnterHandler, IPointerExitHand
 
     private void OnDisable()
     {
-        if (_isHandShown)
+        if (_isHandShown == false)
         {
-            Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
-            _isHandShown = false;
+            return;
         }
+
+        HideHand();
     }
 
     private void OnValidate()

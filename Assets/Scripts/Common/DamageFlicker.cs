@@ -5,7 +5,7 @@ public class DamageFlicker : MonoBehaviour
     private const int FlickerParityDivisor = 2;
 
     [SerializeField] private SpriteRenderer _spriteRenderer;
-    [SerializeField] private float _frequency = 18f;
+    [SerializeField, Min(0.01f)] private float _frequency = 18f;
 
     private bool _isFlickering;
 

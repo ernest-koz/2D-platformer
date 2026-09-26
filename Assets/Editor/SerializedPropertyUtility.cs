@@ -7,41 +7,17 @@ public static class SerializedPropertyUtility
 {
     public static void SetObjectReference(Object target, string propertyName, Object value)
     {
-        SerializedProperty property = FindPropertyForWrite(target, propertyName);
-
-        if (property == null)
-        {
-            return;
-        }
-
-        property.objectReferenceValue = value;
-        property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
+        WriteProperty(target, propertyName, property => property.objectReferenceValue = value);
     }
 
     public static void SetInteger(Object target, string propertyName, int value)
     {
-        SerializedProperty property = FindPropertyForWrite(target, propertyName);
-
-        if (property == null)
-        {
-            return;
-        }
-
-        property.intValue = value;
-        property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
+        WriteProperty(target, propertyName, property => property.intValue = value);
     }
 
     public static void SetFloat(Object target, string propertyName, float value)
     {
-        SerializedProperty property = FindPropertyForWrite(target, propertyName);
-
-        if (property == null)
-        {
-            return;
-        }
-
-        property.floatValue = value;
-        property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
+        WriteProperty(target, propertyName, property => property.floatValue = value);
     }
 
     public static void SetLayerMask(Object target, string propertyName, int layerIndex)
@@ -52,15 +28,7 @@ public static class SerializedPropertyUtility
             return;
         }
 
-        SerializedProperty property = FindPropertyForWrite(target, propertyName);
-
-        if (property == null)
-        {
-            return;
-        }
-
-        property.intValue = 1 << layerIndex;
-        property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
+        WriteProperty(target, propertyName, property => property.intValue = 1 << layerIndex);
     }
 
     public static int GetInteger(Object target, string propertyName)
@@ -90,6 +58,19 @@ public static class SerializedPropertyUtility
         Object.DestroyImmediate(child.gameObject);
     }
 
+    private static void WriteProperty(Object target, string propertyName, Action<SerializedProperty> write)
+    {
+        SerializedProperty property = FindPropertyForWrite(target, propertyName);
+
+        if (property == null)
+        {
+            return;
+        }
+
+        write(property);
+        property.serializedObject.ApplyModifiedPropertiesWithoutUndo();
+    }
+
     private static SerializedProperty FindPropertyForWrite(Object target, string propertyName)
     {
         SerializedObject serialized = new SerializedObject(target);
@@ -111,7 +92,8 @@ public static class SerializedPropertyUtility
 
         if (property == null)
         {
-            throw new InvalidOperationException($"Serialized property '{propertyName}' not found on {target.GetType().Name}.");
+            throw new InvalidOperationException(
+                $"Serialized property '{propertyName}' not found on {target.GetType().Name}.");
         }
 
         return property;

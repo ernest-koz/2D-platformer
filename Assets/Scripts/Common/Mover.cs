@@ -5,8 +5,8 @@ using UnityEngine;
 public class Mover : MonoBehaviour
 {
     [Header("Tuning")]
-    [SerializeField] private float _moveSpeed = 5.5f;
-    [SerializeField] private float _smoothTime = 0.08f;
+    [SerializeField, Min(0f)] private float _moveSpeed = 5.5f;
+    [SerializeField, Min(0f)] private float _smoothTime = 0.08f;
 
     private Rigidbody2D _rigidbody;
     private float _velocitySmoothing;

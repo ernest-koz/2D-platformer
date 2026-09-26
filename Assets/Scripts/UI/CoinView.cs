@@ -19,8 +19,8 @@ public class CoinView : MonoBehaviour
         }
     }
 
-    public void Render(int totalCoins)
+    public void Render(int total)
     {
-        _text.text = string.Format(_format, totalCoins);
+        _text.text = string.Format(_format, total);
     }
 }

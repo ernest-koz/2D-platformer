@@ -104,5 +104,6 @@ public class EnemyStrike : MonoBehaviour
     public void CancelWindup()
     {
         _isWindingUp = false;
+        _remainingWindupTime = 0f;
     }
 }

@@ -9,16 +9,17 @@ public static class HealthBarWorldInstaller
     private const string ScenePath = "Assets/SampleScene.unity";
     private const string PrefabPath = "Assets/Prefabs/HealthBarWorld.prefab";
     private const string BarName = "HealthBarWorld";
+    private const string CanvasName = "Canvas";
+    private const string SliderName = "Slider";
     private const float HeadMargin = 0.25f;
     private const float FallbackHeadOffset = 1.2f;
+    private const float Half = 0.5f;
     private const int SortingOrder = 10;
     private const float CanvasWidth = 160f;
     private const float CanvasHeight = 22f;
     private const float CanvasScale = 0.01f;
     private const float BarWorldWidth = 0.9f;
     private const float MinimalCharacterScale = 0.0001f;
-    private const string SliderName = "Slider";
-    private const float Half = 0.5f;
 
     private static readonly Color BarFillColor = new Color(0.85f, 0.25f, 0.25f);
 
@@ -28,7 +29,7 @@ public static class HealthBarWorldInstaller
         Install();
     }
 
-    public static void Install()
+    private static void Install()
     {
         if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo() == false)
         {
@@ -59,19 +60,21 @@ public static class HealthBarWorldInstaller
 
     private static void DestroyExistingBars()
     {
-        foreach (Transform bar in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        Transform[] transforms = Object.FindObjectsByType<Transform>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+
+        foreach (Transform bar in transforms)
         {
             if (bar == null)
             {
                 continue;
             }
 
-            if (bar.name != BarName)
+            if (bar.name == BarName)
             {
-                continue;
+                Object.DestroyImmediate(bar.gameObject);
             }
-
-            Object.DestroyImmediate(bar.gameObject);
         }
     }
 
@@ -81,6 +84,13 @@ public static class HealthBarWorldInstaller
         bar.name = BarName;
 
         Slider slider = bar.GetComponentInChildren<Slider>();
+
+        if (slider == null)
+        {
+            Debug.LogError($"[HealthBarWorldInstaller] Prefab {PrefabPath} has no Slider.", bar);
+            return;
+        }
+
         SmoothHealthBar view = slider.gameObject.AddComponent<SmoothHealthBar>();
         SerializedPropertyUtility.SetObjectReference(view, "_slider", slider);
         SerializedPropertyUtility.SetObjectReference(view, "_health", character.GetComponent<Health>());
@@ -155,7 +165,7 @@ public static class HealthBarWorldInstaller
         GameObject root = new GameObject(BarName);
         root.AddComponent<WorldBillboard>();
 
-        GameObject canvasObject = new GameObject("Canvas", typeof(RectTransform), typeof(Canvas));
+        GameObject canvasObject = new GameObject(CanvasName, typeof(RectTransform), typeof(Canvas));
         canvasObject.transform.SetParent(root.transform, false);
 
         Canvas canvas = canvasObject.GetComponent<Canvas>();
@@ -167,31 +177,16 @@ public static class HealthBarWorldInstaller
         canvasRect.localScale = Vector3.one * CanvasScale;
 
         DefaultControls.Resources resources = EditorUiSceneUtility.CreateResources();
-
-        GameObject sliderObject = DefaultControls.CreateSlider(resources);
-        sliderObject.name = SliderName;
-        sliderObject.transform.SetParent(canvasRect, false);
-
-        RectTransform sliderRect = (RectTransform)sliderObject.transform;
-        sliderRect.anchorMin = Vector2.zero;
-        sliderRect.anchorMax = Vector2.one;
-        sliderRect.offsetMin = Vector2.zero;
-        sliderRect.offsetMax = Vector2.zero;
-
-        Slider slider = sliderObject.GetComponent<Slider>();
-        slider.transition = Selectable.Transition.None;
-        slider.interactable = false;
-        slider.minValue = 0f;
-        slider.maxValue = 1f;
-        slider.value = 1f;
-
-        SerializedPropertyUtility.DestroyChildIfExists(sliderObject.transform, HealthDemoConstants.SliderHandleAreaName);
-
-        Image background = sliderObject.transform.Find(HealthDemoConstants.SliderBackgroundName).GetComponent<Image>();
-        background.color = HealthDemoConstants.SliderBackgroundColor;
-
-        Image fill = sliderObject.transform.Find(HealthDemoConstants.SliderFillAreaFillName).GetComponent<Image>();
-        fill.color = new Color(0.85f, 0.25f, 0.25f);
+        Slider slider = EditorUiSceneUtility.CreateSlider(
+            canvasRect,
+            SliderName,
+            resources,
+            BarFillColor,
+            HealthDemoConstants.SliderBackgroundColor);
+        EditorUiSceneUtility.Stretch((RectTransform)slider.transform);
+        SerializedPropertyUtility.DestroyChildIfExists(
+            slider.transform,
+            EditorUiSceneUtility.SliderHandleAreaName);
 
         GameObject prefabAsset = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
         Object.DestroyImmediate(root);
