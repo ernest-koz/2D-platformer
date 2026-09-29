@@ -4,7 +4,6 @@ using UnityEngine.SceneManagement;
 [RequireComponent(typeof(CoinView))]
 [RequireComponent(typeof(GameOverView))]
 [RequireComponent(typeof(FinishView))]
-
 public class GameSession : MonoBehaviour
 {
     private const float EnemyDestructionDelay = 2f;
@@ -21,8 +20,6 @@ public class GameSession : MonoBehaviour
     private GameState _state = GameState.Playing;
     private int _totalCoinsCollected;
     private int _enemiesDefeated;
-    private int _totalCoinsInLevel;
-    private int _totalEnemiesInLevel;
     private float _playTime;
     private CoinView _coinView;
     private GameOverView _gameOverView;
@@ -45,8 +42,6 @@ public class GameSession : MonoBehaviour
 
     private void Start()
     {
-        CountLevelPickups();
-        CountEnemies();
         _coinView.Render(_totalCoinsCollected);
     }
 
@@ -119,26 +114,6 @@ public class GameSession : MonoBehaviour
         }
 
         _enemiesDefeated++;
-    }
-
-    private void CountLevelPickups()
-    {
-        _totalCoinsInLevel = 0;
-
-        foreach (PickupSpawner spawner in _coinSpawners)
-        {
-            _totalCoinsInLevel += spawner.TotalCount;
-        }
-    }
-
-    private void CountEnemies()
-    {
-        _totalEnemiesInLevel = 0;
-
-        foreach (EnemyBrain enemy in _enemies)
-        {
-            _totalEnemiesInLevel++;
-        }
     }
 
     private void SubscribePlayerEvents()
@@ -288,12 +263,19 @@ public class GameSession : MonoBehaviour
 
     private SessionStats BuildStats()
     {
+        int totalCoinsInLevel = 0;
+
+        foreach (PickupSpawner spawner in _coinSpawners)
+        {
+            totalCoinsInLevel += spawner.TotalCount;
+        }
+
         return new SessionStats(
             _totalCoinsCollected,
             _enemiesDefeated,
             _playTime,
-            _totalCoinsInLevel,
-            _totalEnemiesInLevel);
+            totalCoinsInLevel,
+            _enemies.Length);
     }
 }
 

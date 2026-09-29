@@ -18,14 +18,13 @@ public static class EditorUiSceneUtility
     private const float ReferenceHeight = 1080f;
 
     public const string UiSpritePath = "UI/Skin/UISprite.psd";
-    public const string SliderFillAreaName = "Fill Area";
-    public const string SliderHandleAreaName = "Handle Slide Area";
+    private const string SliderHandleAreaName = "Handle Slide Area";
     private const string KnobSpritePath = "UI/Skin/Knob.psd";
     private const string SliderBackgroundName = "Background";
     private const string SliderFillAreaFillName = "Fill Area/Fill";
 
     private static readonly Vector2 TopAnchor = new Vector2(0.5f, 1f);
-    private static readonly Vector2 CenterAnchor = new Vector2(0.5f, 0.5f);
+    public static readonly Color SliderBackgroundColor = new Color(0.12f, 0.12f, 0.12f, 0.9f);
 
     public static Canvas CreateCanvas(Transform parent, float matchWidthOrHeight)
     {
@@ -110,6 +109,18 @@ public static class EditorUiSceneUtility
         return slider;
     }
 
+    public static Slider CreateBarSlider(
+        Transform parent,
+        string name,
+        DefaultControls.Resources resources,
+        Color fillColor)
+    {
+        Slider slider = CreateSlider(parent, name, resources, fillColor, SliderBackgroundColor);
+        SerializedPropertyUtility.DestroyChildIfExists(slider.transform, SliderHandleAreaName);
+
+        return slider;
+    }
+
     public static void Stretch(RectTransform rect)
     {
         rect.anchorMin = Vector2.zero;
@@ -120,9 +131,6 @@ public static class EditorUiSceneUtility
 
     public static void AnchorTop(RectTransform rect, Vector2 position, Vector2 size) =>
         Anchor(rect, TopAnchor, position, size);
-
-    public static void AnchorCenter(RectTransform rect, Vector2 position, Vector2 size) =>
-        Anchor(rect, CenterAnchor, position, size);
 
     public static void Anchor(RectTransform rect, Vector2 anchor, Vector2 position, Vector2 size)
     {
@@ -137,17 +145,17 @@ public static class EditorUiSceneUtility
     {
         return new DefaultControls.Resources
         {
-            standard = AssetDatabaseResource<Sprite>(UiSpritePath),
-            background = AssetDatabaseResource<Sprite>(BackgroundSpritePath),
-            inputField = AssetDatabaseResource<Sprite>(InputFieldSpritePath),
-            knob = AssetDatabaseResource<Sprite>(KnobSpritePath),
-            checkmark = AssetDatabaseResource<Sprite>(CheckmarkSpritePath),
-            dropdown = AssetDatabaseResource<Sprite>(DropdownArrowSpritePath),
-            mask = AssetDatabaseResource<Sprite>(UiMaskSpritePath)
+            standard = LoadBuiltinResource<Sprite>(UiSpritePath),
+            background = LoadBuiltinResource<Sprite>(BackgroundSpritePath),
+            inputField = LoadBuiltinResource<Sprite>(InputFieldSpritePath),
+            knob = LoadBuiltinResource<Sprite>(KnobSpritePath),
+            checkmark = LoadBuiltinResource<Sprite>(CheckmarkSpritePath),
+            dropdown = LoadBuiltinResource<Sprite>(DropdownArrowSpritePath),
+            mask = LoadBuiltinResource<Sprite>(UiMaskSpritePath)
         };
     }
 
-    private static T AssetDatabaseResource<T>(string path) where T : Object
+    private static T LoadBuiltinResource<T>(string path) where T : Object
     {
         return UnityEditor.AssetDatabase.GetBuiltinExtraResource<T>(path);
     }

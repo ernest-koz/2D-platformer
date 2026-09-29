@@ -12,7 +12,15 @@ public class EnemyTargeting : MonoBehaviour
     public float DetectRange => _detectRange;
     public float ChaseRange => _chaseRange;
 
-    public ITargetable FindNearestTarget(float range)
+    private void OnValidate()
+    {
+        if (_targetLayer.value == 0)
+        {
+            Debug.LogError($"{nameof(EnemyTargeting)} target layer not assigned on {gameObject.name}.", gameObject);
+        }
+    }
+
+    public ITargetable FindNearest(float range)
     {
         int count = TargetSearch.Collect(transform.position, range, _targetLayer, ref _targetBuffer);
 

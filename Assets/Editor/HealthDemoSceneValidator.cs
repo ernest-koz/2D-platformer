@@ -1,12 +1,14 @@
 using System;
 using TMPro;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public static class HealthDemoSceneValidator
 {
+    private const float NormalizedMinimumValue = 0f;
+    private const float NormalizedMaximumValue = 1f;
+    private const float InitialNormalizedValue = 1f;
     public static void Validate(string scenePath)
     {
         GameObject root = GameObject.Find(HealthDemoConstants.DemoRootName);
@@ -22,7 +24,7 @@ public static class HealthDemoSceneValidator
         Canvas canvas = root.GetComponentInChildren<Canvas>();
         ThrowIfNull(canvas, "Canvas not found");
         ThrowIfNull(UnityEngine.Object.FindFirstObjectByType<EventSystem>(), "EventSystem not found");
-        ThrowIfNull(UnityEngine.Object.FindFirstObjectByType<Camera>(), "Main Camera not found");
+        ThrowIfNull(UnityEngine.Object.FindFirstObjectByType<Camera>(), "Camera not found");
 
         ValidateHealthText(canvas, health);
         ValidateInstantBar(canvas, health);
@@ -80,9 +82,9 @@ public static class HealthDemoSceneValidator
 
         Slider slider = host.GetComponent<Slider>();
         ThrowIfNull(slider, $"{name} has no Slider");
-        AssertEqual(slider.minValue, 0f, $"{name}.minValue");
-        AssertEqual(slider.maxValue, 1f, $"{name}.maxValue");
-        AssertEqual(slider.value, 1f, $"{name}.value");
+        AssertEqual(slider.minValue, NormalizedMinimumValue, $"{name}.minValue");
+        AssertEqual(slider.maxValue, NormalizedMaximumValue, $"{name}.maxValue");
+        AssertEqual(slider.value, InitialNormalizedValue, $"{name}.value");
         AssertEqual(slider.interactable, false, $"{name} must not be interactable");
         AssertEqual(slider.transition, Selectable.Transition.None, $"{name} must use no transition");
 

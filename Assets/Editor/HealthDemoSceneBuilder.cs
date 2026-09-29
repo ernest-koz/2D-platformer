@@ -25,6 +25,7 @@ public static class HealthDemoSceneBuilder
     private const float HealthTextFontSize = 54f;
     private const float BarCaptionFontSize = 26f;
     private const float ButtonCaptionFontSize = 32f;
+    private const float MatchWidth = 0f;
 
     private static readonly Color WoodenTint = new Color(0.7547f, 0.6372f, 0.6372f);
     private static readonly Color SceneBackgroundColor = new Color(0.08f, 0.08f, 0.10f);
@@ -92,7 +93,7 @@ public static class HealthDemoSceneBuilder
         Health health = root.AddComponent<Health>();
         SerializedPropertyUtility.SetInteger(health, "_maximum", HealthDemoConstants.MaximumHealth);
 
-        Canvas canvas = EditorUiSceneUtility.CreateCanvas(root.transform, 0f);
+        Canvas canvas = EditorUiSceneUtility.CreateCanvas(root.transform, MatchWidth);
         DefaultControls.Resources resources = EditorUiSceneUtility.CreateResources();
 
         RectTransform panel = CreatePanel(canvas.transform);
@@ -202,8 +203,7 @@ public static class HealthDemoSceneBuilder
         Slider slider = CreateBarSlider(parent, layout, resources);
 
         HealthBar view = slider.gameObject.AddComponent<HealthBar>();
-        SerializedPropertyUtility.SetObjectReference(view, "_health", health);
-        SerializedPropertyUtility.SetObjectReference(view, "_slider", slider);
+        WireBarView(view, health, slider);
     }
 
     private static void CreateSmoothBar(
@@ -216,6 +216,11 @@ public static class HealthDemoSceneBuilder
 
         SmoothHealthBar view = slider.gameObject.AddComponent<SmoothHealthBar>();
         SerializedPropertyUtility.SetFloat(view, "_fillDuration", HealthDemoConstants.SmoothFillDuration);
+        WireBarView(view, health, slider);
+    }
+
+    private static void WireBarView(HealthBar view, Health health, Slider slider)
+    {
         SerializedPropertyUtility.SetObjectReference(view, "_health", health);
         SerializedPropertyUtility.SetObjectReference(view, "_slider", slider);
     }
@@ -229,7 +234,7 @@ public static class HealthDemoSceneBuilder
             layout.Name,
             resources,
             layout.FillColor,
-            HealthDemoConstants.SliderBackgroundColor);
+            EditorUiSceneUtility.SliderBackgroundColor);
         EditorUiSceneUtility.AnchorTop((RectTransform)slider.transform, layout.Position, BarSliderSize);
 
         return slider;

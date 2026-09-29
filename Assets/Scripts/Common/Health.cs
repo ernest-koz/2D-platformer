@@ -3,7 +3,6 @@ using UnityEngine;
 
 public class Health : MonoBehaviour, IHealthTarget
 {
-    [Header("Health")]
     [SerializeField, Min(1)] private int _maximum = 3;
 
     private int _current;

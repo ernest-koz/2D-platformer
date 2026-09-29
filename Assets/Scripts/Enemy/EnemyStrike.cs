@@ -1,7 +1,6 @@
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteFacing))]
-
 public class EnemyStrike : MonoBehaviour
 {
     private const float AttackCircleRadiusFraction = 0.6f;
@@ -25,6 +24,14 @@ public class EnemyStrike : MonoBehaviour
     private void Awake()
     {
         _facing = GetComponent<SpriteFacing>();
+    }
+
+    private void OnValidate()
+    {
+        if (_targetLayer.value == 0)
+        {
+            Debug.LogError($"{nameof(EnemyStrike)} target layer not assigned on {gameObject.name}.", gameObject);
+        }
     }
 
     private void OnDisable()
@@ -87,6 +94,11 @@ public class EnemyStrike : MonoBehaviour
             _targetLayer);
 
         if (hit.collider == null)
+        {
+            return true;
+        }
+
+        if (hit.collider.gameObject == gameObject)
         {
             return true;
         }

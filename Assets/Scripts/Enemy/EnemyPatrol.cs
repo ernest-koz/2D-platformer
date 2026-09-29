@@ -4,7 +4,6 @@ using UnityEngine;
 [RequireComponent(typeof(PatrolRoute))]
 [RequireComponent(typeof(SpriteFacing))]
 [RequireComponent(typeof(GroundDetector))]
-
 public class EnemyPatrol : MonoBehaviour
 {
     private Mover _mover;
@@ -20,7 +19,7 @@ public class EnemyPatrol : MonoBehaviour
         _ground = GetComponent<GroundDetector>();
     }
 
-    public void Tick()
+    public void Tick(float deltaTime)
     {
         if (_ground.IsGrounded == false)
         {
@@ -37,7 +36,7 @@ public class EnemyPatrol : MonoBehaviour
 
         float patrolDirection = _route.GetDirectionToward(transform.position.x, _facing.Direction);
 
-        _mover.Move(patrolDirection);
+        _mover.Move(patrolDirection, deltaTime);
         _facing.Face(patrolDirection);
     }
 }

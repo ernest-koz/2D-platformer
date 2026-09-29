@@ -3,13 +3,6 @@ using UnityEngine.UI;
 
 public class VampirismView : MonoBehaviour
 {
-    private enum Phase
-    {
-        Idle,
-        Ability,
-        Cooldown
-    }
-
     [SerializeField] private Slider _slider;
     [SerializeField] private SpriteRenderer _zone;
 
@@ -74,5 +67,12 @@ public class VampirismView : MonoBehaviour
     private void RenderFill(float fill)
     {
         _slider.value = Mathf.Clamp01(fill);
+    }
+
+    private enum Phase
+    {
+        Idle,
+        Ability,
+        Cooldown
     }
 }

@@ -26,7 +26,7 @@ public static class VampirismInstaller
         Install();
     }
 
-    public static void Install()
+    private static void Install()
     {
         if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo() == false)
         {
@@ -51,13 +51,22 @@ public static class VampirismInstaller
             return;
         }
 
+        Canvas hud = FindHudCanvas();
+
+        if (hud == null)
+        {
+            Debug.LogError($"[VampirismInstaller] HUD canvas not found in {ScenePath}.");
+            return;
+        }
+
         VampirismDamager damager = EnsureDamager(player, enemyLayer);
         Vampirism vampirism = EnsureVampirism(player);
         SpriteRenderer zone = CreateZone(player, damager);
-        VampirismView view = CreateHudBar(zone);
+        VampirismView view = CreateHudBar(hud, zone);
 
         if (view == null)
         {
+            Debug.LogError($"[VampirismInstaller] Existing bar '{BarName}' has no {nameof(VampirismView)} component.");
             return;
         }
 
@@ -109,7 +118,8 @@ public static class VampirismInstaller
             renderer.sprite = resources.knob;
             renderer.color = ZoneColor;
             renderer.sortingOrder = ZoneSortingOrder;
-            zone.transform.localScale = Vector3.one * (damager.Radius * DiameterScale / GetSpriteWorldSize(renderer.sprite));
+            zone.transform.localScale = Vector3.one *
+                (damager.Radius * DiameterScale / GetSpriteWorldSize(renderer.sprite));
 
             zoneTransform = zone.transform;
         }
@@ -132,28 +142,23 @@ public static class VampirismInstaller
         return sprite.bounds.size.x;
     }
 
-    private static VampirismView CreateHudBar(SpriteRenderer zone)
+    private static VampirismView CreateHudBar(Canvas hud, SpriteRenderer zone)
     {
-        Canvas hud = FindHudCanvas();
-
-        if (hud == null)
-        {
-            Debug.LogError($"[VampirismInstaller] HUD canvas not found in {ScenePath}.");
-            return null;
-        }
-
         Transform existingBar = hud.transform.Find(BarName);
 
-        if (existingBar != null)
+        if (existingBar == null)
         {
-            return existingBar.GetComponent<VampirismView>();
+            return CreateBarView(hud.transform, zone);
         }
 
-        DefaultControls.Resources resources = EditorUiSceneUtility.CreateResources();
-        Slider slider = EditorUiSceneUtility.CreateSlider(hud.transform, BarName, resources, BarFillColor, HealthDemoConstants.SliderBackgroundColor);
-        GameObject barObject = slider.gameObject;
+        return existingBar.GetComponent<VampirismView>();
+    }
 
-        SerializedPropertyUtility.DestroyChildIfExists(barObject.transform, EditorUiSceneUtility.SliderHandleAreaName);
+    private static VampirismView CreateBarView(Transform hudParent, SpriteRenderer zone)
+    {
+        DefaultControls.Resources resources = EditorUiSceneUtility.CreateResources();
+        Slider slider = EditorUiSceneUtility.CreateBarSlider(hudParent, BarName, resources, BarFillColor);
+        GameObject barObject = slider.gameObject;
         EditorUiSceneUtility.Anchor((RectTransform)barObject.transform, Vector2.zero, BarPosition, BarSize);
 
         VampirismView view = barObject.AddComponent<VampirismView>();
@@ -169,7 +174,14 @@ public static class VampirismInstaller
 
         foreach (Canvas canvas in canvases)
         {
-            if (canvas.renderMode == RenderMode.ScreenSpaceOverlay && canvas.transform.Find(CoinTextName) != null)
+            Transform coinText = canvas.transform.Find(CoinTextName);
+
+            if (coinText == null)
+            {
+                continue;
+            }
+
+            if (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
             {
                 return canvas;
             }

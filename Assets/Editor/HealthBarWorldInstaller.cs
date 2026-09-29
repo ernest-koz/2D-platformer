@@ -50,8 +50,10 @@ public static class HealthBarWorldInstaller
 
         foreach (Transform character in CollectCharacters())
         {
-            InstallBar(character, prefab);
-            installed++;
+            if (InstallBar(character, prefab))
+            {
+                installed++;
+            }
         }
 
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
@@ -66,11 +68,6 @@ public static class HealthBarWorldInstaller
 
         foreach (Transform bar in transforms)
         {
-            if (bar == null)
-            {
-                continue;
-            }
-
             if (bar.name == BarName)
             {
                 Object.DestroyImmediate(bar.gameObject);
@@ -78,7 +75,7 @@ public static class HealthBarWorldInstaller
         }
     }
 
-    private static void InstallBar(Transform character, GameObject prefab)
+    private static bool InstallBar(Transform character, GameObject prefab)
     {
         GameObject bar = (GameObject)PrefabUtility.InstantiatePrefab(prefab, character);
         bar.name = BarName;
@@ -88,7 +85,7 @@ public static class HealthBarWorldInstaller
         if (slider == null)
         {
             Debug.LogError($"[HealthBarWorldInstaller] Prefab {PrefabPath} has no Slider.", bar);
-            return;
+            return false;
         }
 
         SmoothHealthBar view = slider.gameObject.AddComponent<SmoothHealthBar>();
@@ -105,6 +102,8 @@ public static class HealthBarWorldInstaller
             0f,
             GetHeadOffset(character.gameObject) / characterScale.y,
             0f);
+
+        return true;
     }
 
     private static IEnumerable<Transform> CollectCharacters()
@@ -177,16 +176,8 @@ public static class HealthBarWorldInstaller
         canvasRect.localScale = Vector3.one * CanvasScale;
 
         DefaultControls.Resources resources = EditorUiSceneUtility.CreateResources();
-        Slider slider = EditorUiSceneUtility.CreateSlider(
-            canvasRect,
-            SliderName,
-            resources,
-            BarFillColor,
-            HealthDemoConstants.SliderBackgroundColor);
+        Slider slider = EditorUiSceneUtility.CreateBarSlider(canvasRect, SliderName, resources, BarFillColor);
         EditorUiSceneUtility.Stretch((RectTransform)slider.transform);
-        SerializedPropertyUtility.DestroyChildIfExists(
-            slider.transform,
-            EditorUiSceneUtility.SliderHandleAreaName);
 
         GameObject prefabAsset = PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
         Object.DestroyImmediate(root);

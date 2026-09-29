@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public static class HealthDemoConstants
 {
     public const int MaximumHealth = 100;
@@ -14,6 +12,4 @@ public static class HealthDemoConstants
     public const string SmoothBarName = "SmoothHealthBar";
     public const string DamageButtonName = "DamageButton";
     public const string HealButtonName = "HealButton";
-
-    public static readonly Color SliderBackgroundColor = new Color(0.12f, 0.12f, 0.12f, 0.9f);
 }

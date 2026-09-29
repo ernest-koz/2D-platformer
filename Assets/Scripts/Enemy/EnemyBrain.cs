@@ -13,7 +13,6 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Collider2D))]
-
 public class EnemyBrain : MonoBehaviour, IStompable, ITargetable
 {
     private const float DeathVelocityY = -9f;
@@ -103,20 +102,21 @@ public class EnemyBrain : MonoBehaviour, IStompable, ITargetable
         }
 
         _ground.Refresh();
-        _strike.TickCooldown(Time.fixedDeltaTime);
+        float deltaTime = Time.fixedDeltaTime;
+        _strike.TickCooldown(deltaTime);
 
         switch (_state)
         {
             case State.Patrol:
-                TickPatrol();
+                TickPatrol(deltaTime);
                 break;
 
             case State.Chase:
-                TickChase();
+                TickChase(deltaTime);
                 break;
 
             case State.Attack:
-                TickAttack();
+                TickAttack(deltaTime);
                 break;
         }
     }
@@ -160,24 +160,24 @@ public class EnemyBrain : MonoBehaviour, IStompable, ITargetable
         return _invincibility.ApplyDamage(_health, amount, sourcePosition);
     }
 
-    private void TickPatrol()
+    private void TickPatrol(float deltaTime)
     {
-        ITargetable target = _targeting.FindNearestTarget(_targeting.DetectRange);
+        ITargetable target = _targeting.FindNearest(_targeting.DetectRange);
 
         if (target == null)
         {
-            _patrol.Tick();
+            _patrol.Tick(deltaTime);
             return;
         }
 
         _state = State.Chase;
     }
 
-    private void TickChase()
+    private void TickChase(float deltaTime)
     {
-        ITargetable target = _targeting.FindNearestTarget(_targeting.ChaseRange);
+        ITargetable target = _targeting.FindNearest(_targeting.ChaseRange);
 
-        if (_chase.Tick(target) == false)
+        if (_chase.Tick(target, deltaTime) == false)
         {
             _state = State.Patrol;
             return;
@@ -189,11 +189,11 @@ public class EnemyBrain : MonoBehaviour, IStompable, ITargetable
         }
     }
 
-    private void TickAttack()
+    private void TickAttack(float deltaTime)
     {
         _mover.Stop();
 
-        ITargetable target = _targeting.FindNearestTarget(_targeting.ChaseRange);
+        ITargetable target = _targeting.FindNearest(_targeting.ChaseRange);
 
         if (target == null)
         {
@@ -221,7 +221,7 @@ public class EnemyBrain : MonoBehaviour, IStompable, ITargetable
             _animator.PlayAttack();
         }
 
-        if (_strike.TickWindup(Time.fixedDeltaTime))
+        if (_strike.TickWindup(deltaTime))
         {
             _state = State.Chase;
         }
@@ -246,6 +246,7 @@ public class EnemyBrain : MonoBehaviour, IStompable, ITargetable
         }
 
         _state = State.Dead;
+        _strike.CancelWindup();
         _mover.Stop();
         _collider.enabled = false;
         _rigidbody.velocity = new Vector2(0f, DeathVelocityY);

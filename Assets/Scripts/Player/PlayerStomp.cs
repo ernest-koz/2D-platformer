@@ -1,7 +1,6 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-
 public class PlayerStomp : MonoBehaviour
 {
     [Header("Stomp")]
@@ -15,6 +14,14 @@ public class PlayerStomp : MonoBehaviour
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody2D>();
+    }
+
+    private void OnValidate()
+    {
+        if (_enemyLayer.value == 0)
+        {
+            Debug.LogError($"{nameof(PlayerStomp)} enemy layer not assigned on {gameObject.name}.", gameObject);
+        }
     }
 
     public bool CanStomp(Collider2D enemyCollider)

@@ -1,7 +1,6 @@
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteRenderer))]
-
 public class SpriteFacing : MonoBehaviour
 {
     private const float FlipAngleDegrees = 180f;

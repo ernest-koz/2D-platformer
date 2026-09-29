@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class GroundDetector : MonoBehaviour
 {
+    private static readonly Color GroundGizmoColor = Color.green;
+
     [Header("Ground check")]
     [SerializeField] private Transform _groundCheck;
     [SerializeField, Min(0.01f)] private float _groundCheckRadius = 0.22f;
@@ -30,7 +32,7 @@ public class GroundDetector : MonoBehaviour
             return;
         }
 
-        Gizmos.color = Color.green;
+        Gizmos.color = GroundGizmoColor;
         Gizmos.DrawWireSphere(_groundCheck.position, _groundCheckRadius);
     }
 

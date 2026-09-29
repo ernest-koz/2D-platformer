@@ -3,7 +3,6 @@ using UnityEngine;
 [RequireComponent(typeof(Mover))]
 [RequireComponent(typeof(SpriteFacing))]
 [RequireComponent(typeof(GroundDetector))]
-
 public class EnemyChase : MonoBehaviour
 {
     private Mover _mover;
@@ -17,7 +16,7 @@ public class EnemyChase : MonoBehaviour
         _ground = GetComponent<GroundDetector>();
     }
 
-    public bool Tick(ITargetable target)
+    public bool Tick(ITargetable target, float deltaTime)
     {
         if (target == null)
         {
@@ -37,7 +36,7 @@ public class EnemyChase : MonoBehaviour
             return false;
         }
 
-        _mover.Move(_facing.Direction);
+        _mover.Move(_facing.Direction, deltaTime);
         return true;
     }
 }

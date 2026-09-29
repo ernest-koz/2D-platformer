@@ -46,9 +46,12 @@ public class Invincibility
 
         int applied = target.TakeDamage(amount, sourcePosition);
 
-        if (applied > 0 && target.IsAlive)
+        if (applied > 0)
         {
-            Begin();
+            if (target.IsAlive)
+            {
+                Begin();
+            }
         }
 
         return applied;
@@ -56,16 +59,12 @@ public class Invincibility
 
     private void Begin()
     {
-        if (IsActive)
+        if (_duration <= 0f)
         {
             return;
         }
 
         _remainingTime = _duration;
-
-        if (IsActive)
-        {
-            Changed?.Invoke(true);
-        }
+        Changed?.Invoke(true);
     }
 }

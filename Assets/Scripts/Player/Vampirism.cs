@@ -43,8 +43,8 @@ public class Vampirism : MonoBehaviour
             return;
         }
 
-        _abilityProcess = StartCoroutine(AbilityProcess());
         _isRunning = true;
+        _abilityProcess = StartCoroutine(AbilityProcess());
     }
 
     public void Interrupt()
@@ -57,13 +57,17 @@ public class Vampirism : MonoBehaviour
         StopCoroutine(_abilityProcess);
         _abilityProcess = null;
         _isRunning = false;
-
-        if (_view == null)
-        {
-            return;
-        }
-
         _view.Stop();
+    }
+
+    private void Drain()
+    {
+        int drained = _damager.Tick(transform.position, Time.deltaTime);
+
+        if (drained > 0)
+        {
+            Drained?.Invoke(drained);
+        }
     }
 
     private IEnumerator AbilityProcess()
@@ -92,15 +96,5 @@ public class Vampirism : MonoBehaviour
         _view.Stop();
         _abilityProcess = null;
         _isRunning = false;
-    }
-
-    private void Drain()
-    {
-        int drained = _damager.Tick(transform.position, Time.deltaTime);
-
-        if (drained > 0)
-        {
-            Drained?.Invoke(drained);
-        }
     }
 }

@@ -1,7 +1,6 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
-
 public class Mover : MonoBehaviour
 {
     [Header("Tuning")]
@@ -16,7 +15,7 @@ public class Mover : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody2D>();
     }
 
-    public void Move(float direction)
+    public void Move(float direction, float deltaTime)
     {
         if (_smoothTime > 0f)
         {
@@ -25,7 +24,9 @@ public class Mover : MonoBehaviour
                 _rigidbody.velocity.x,
                 targetVelocityX,
                 ref _velocitySmoothing,
-                _smoothTime);
+                _smoothTime,
+                Mathf.Infinity,
+                deltaTime);
 
             _rigidbody.velocity = new Vector2(smoothVelocityX, _rigidbody.velocity.y);
         }

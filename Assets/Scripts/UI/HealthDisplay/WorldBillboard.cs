@@ -14,11 +14,11 @@ public class WorldBillboard : MonoBehaviour
         if (_camera == null)
         {
             _camera = Camera.main;
+        }
 
-            if (_camera == null)
-            {
-                return;
-            }
+        if (_camera == null)
+        {
+            return;
         }
 
         transform.rotation = Quaternion.LookRotation(transform.position - _camera.transform.position);

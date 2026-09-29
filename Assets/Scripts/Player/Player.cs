@@ -15,7 +15,6 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerAnimator))]
 [RequireComponent(typeof(HealthUI))]
 [RequireComponent(typeof(Vampirism))]
-
 public class Player : MonoBehaviour, ITargetable
 {
     private const int ContactDamage = 1;
@@ -40,6 +39,7 @@ public class Player : MonoBehaviour, ITargetable
     private Invincibility _invincibility;
     private bool _hasDied;
     private bool _isSuspended;
+    private bool _hasFinished;
 
     public event Action<Pickup> PickupContacted;
     public event Action LevelFinished;
@@ -136,7 +136,7 @@ public class Player : MonoBehaviour, ITargetable
 
         _ground.Refresh();
         _stomp.TryStomp();
-        _mover.Move(_input.Direction);
+        _mover.Move(_input.Direction, Time.fixedDeltaTime);
         _jumper.ApplyPhysics(Time.fixedDeltaTime);
     }
 
@@ -194,6 +194,11 @@ public class Player : MonoBehaviour, ITargetable
             return;
         }
 
+        if (_hasFinished)
+        {
+            return;
+        }
+
         if (other.TryGetComponent(out Pickup pickup))
         {
             PickupContacted?.Invoke(pickup);
@@ -202,6 +207,7 @@ public class Player : MonoBehaviour, ITargetable
 
         if (other.TryGetComponent(out FinishTrigger _))
         {
+            _hasFinished = true;
             LevelFinished?.Invoke();
         }
     }
