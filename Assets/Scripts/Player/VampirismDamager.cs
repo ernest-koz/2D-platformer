@@ -6,7 +6,7 @@ public class VampirismDamager : MonoBehaviour
 
     [Header("Drain")]
     [SerializeField, Min(0.1f)] private float _radius = 3f;
-    [SerializeField, Min(0f)] private float _drainPerSecond = 5f;
+    [SerializeField, Min(0f)] private float _drainPerSecond = 1f;
     [SerializeField] private LayerMask _targetLayer;
 
     private Collider2D[] _targetBuffer = TargetSearch.CreateBuffer();
