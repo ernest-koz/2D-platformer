@@ -14,6 +14,7 @@ using UnityEngine;
 [RequireComponent(typeof(DamageFlicker))]
 [RequireComponent(typeof(PlayerAnimator))]
 [RequireComponent(typeof(HealthUI))]
+[RequireComponent(typeof(Vampirism))]
 
 public class Player : MonoBehaviour, ITargetable
 {
@@ -35,6 +36,7 @@ public class Player : MonoBehaviour, ITargetable
     private DamageFlicker _flicker;
     private PlayerAnimator _animator;
     private HealthUI _healthUI;
+    private Vampirism _vampirism;
     private Invincibility _invincibility;
     private bool _hasDied;
     private bool _isSuspended;
@@ -62,6 +64,7 @@ public class Player : MonoBehaviour, ITargetable
         _flicker = GetComponent<DamageFlicker>();
         _animator = GetComponent<PlayerAnimator>();
         _healthUI = GetComponent<HealthUI>();
+        _vampirism = GetComponent<Vampirism>();
         _invincibility = new Invincibility(_invincibilityDuration);
     }
 
@@ -73,6 +76,7 @@ public class Player : MonoBehaviour, ITargetable
         _health.Changed += OnHealthChanged;
         _health.Damaged += OnDamaged;
         _health.Died += OnHealthDepleted;
+        _vampirism.Drained += OnVampirismDrained;
         _invincibility.Changed += OnInvincibilityChanged;
     }
 
@@ -101,6 +105,11 @@ public class Player : MonoBehaviour, ITargetable
         if (_hasDied)
         {
             return;
+        }
+
+        if (_input.IsVampirismPressed)
+        {
+            _vampirism.Activate();
         }
 
         float direction = _input.Direction;
@@ -139,6 +148,7 @@ public class Player : MonoBehaviour, ITargetable
         _health.Changed -= OnHealthChanged;
         _health.Damaged -= OnDamaged;
         _health.Died -= OnHealthDepleted;
+        _vampirism.Drained -= OnVampirismDrained;
         _invincibility.Changed -= OnInvincibilityChanged;
     }
 
@@ -172,6 +182,7 @@ public class Player : MonoBehaviour, ITargetable
         _isSuspended = true;
         _input.Block();
         _mover.Stop();
+        _vampirism.Interrupt();
         _flicker.StopFlickering();
         _animator.SetMovement(0f, _ground.IsGrounded);
     }
@@ -277,8 +288,14 @@ public class Player : MonoBehaviour, ITargetable
         _hasDied = true;
         _input.Block();
         _mover.Stop();
+        _vampirism.Interrupt();
         _flicker.StopFlickering();
         _animator.PlayDeath();
         Died?.Invoke();
+    }
+
+    private void OnVampirismDrained(int amount)
+    {
+        Heal(amount);
     }
 }
